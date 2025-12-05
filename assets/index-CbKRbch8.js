@@ -57,7 +57,7 @@ Error generating stack: `+e.message+`
   left: 50%;
   top: 20px;
   bottom: 20px;
-  width: 2px;
+  width: 1px;
   background-color: #333;
   transform: translateX(-50%);
   z-index: 0;
@@ -76,7 +76,7 @@ Error generating stack: `+e.message+`
   height: 16px;
   border-radius: 50%;
   background: white;
-  border: 4px solid #1a1a1a;
+  border: 2px solid #1a1a1a;
   z-index: 2;
   transition: all 0.3s ease;
   cursor: pointer;
@@ -117,7 +117,7 @@ Error generating stack: `+e.message+`
 /* Connectors */
 .map-connector {
   position: absolute;
-  height: 2px;
+  height: 1px;
   background: #333;
   top: 50%;
   z-index: 0;
