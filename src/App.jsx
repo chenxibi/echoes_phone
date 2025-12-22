@@ -5324,7 +5324,7 @@ ${recentHistory}
                   <div className="flex justify-between items-center mb-3 border-b border-gray-200/50 pb-2">
                     <div className="flex items-center gap-2">
                       <h3 className="text-xs font-bold uppercase text-gray-700">
-                        共同经历 & 约定
+                        TA的记事本
                       </h3>
                       <span className="bg-black text-white text-[9px] px-1.5 py-0.5 rounded-md font-mono">
                         {sharedEvents.filter(e => e.type === 'pending').length} PENDING
@@ -5494,7 +5494,7 @@ ${recentHistory}
                 <div className="flex justify-between items-center mb-3 px-1">
                   <div className="flex items-center gap-2">
                     <h3 className="text-xs font-bold uppercase text-gray-700">
-                      他眼中的我 (已收录信息)
+                      关于你的一切
                     </h3>
                     <Sparkles size={12} className="text-[#D4C5A9]" />
                   </div>
