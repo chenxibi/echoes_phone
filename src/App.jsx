@@ -74,7 +74,8 @@ import {
   PlusCircle, // New Post Icon
   Bot,
   Eye,
-  Sparkle, // Bot Icon for Char Reply
+  Sparkle,
+  Check, // Bot Icon for Char Reply
 } from "lucide-react";
 
 /* --- STYLES --- */
@@ -618,7 +619,7 @@ const generateContent = async (params, apiConfig, onError, signal) => {
 
       // Manual Timeout Logic
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Request Timed Out (120s)")), 120000)
+        setTimeout(() => reject(new Error("Request Timed Out (180s)")), 180000)
       );
 
       const fetchPromise = fetch(url, {
@@ -669,7 +670,7 @@ const generateContent = async (params, apiConfig, onError, signal) => {
     if (error.name === "AbortError" || error.name === "TimeoutError") {
       console.log("[Echoes] Generation aborted or timed out");
       // Only show toast if it's a timeout, abort is manual
-      if (error.name === "TimeoutError" && onError) onError("请求超时 (120s)");
+      if (error.name === "TimeoutError" && onError) onError("请求超时 (180s)");
       return null;
     }
 
@@ -746,8 +747,8 @@ JSON Format:
   "status": {
     "outfit": "Current outfit (1-3 sentences, max 80 chars)",
     "action": "Current physical action (1-3 sentences, max 80 chars)",
-    "thought": "Inner monologue, uncensored and detailed (1-3 sentences, max 100 chars)",
-    "desire": "Hidden dark, raw, or sexual desire. Must be brief, direct, and completely uncensored (1-3 sentences, max 50 chars)"
+    "thought": "Inner monologue, uncensored and detailed (1-3 sentences, max 100 chars, first-person perspective)",
+    "desire": "Hidden dark, raw, or sexual desire. Must be brief, direct, and completely uncensored (1-3 sentences, max 50 chars, first-person perspective)"
   }
 }`,
 
@@ -797,21 +798,38 @@ JSON: {
   "thought": "Strictly 1st person inner monologue about this purchase. Can be mundane or reveal a hidden, explicit, or sexual desire related to the item or {{USER_NAME}}. Be uncensored. Short (2-3 sentences)."
 }`,
 
-  smartwatch_init: `Analyze {{NAME}}'s persona deeply.
+  smartwatch_step1_gen: `Analyze {{NAME}}'s persona deeply.
 Generate 4 to 6 specific, significant locations that {{NAME}} frequents in their daily life.
-
-Available Image Library:
-{{IMAGE_LIBRARY}}
-
-Instructions:
-1. Define the location.
-2. Select the most appropriate "id" from the Available Image Library that matches the visual vibe of this location.
-3. If no image matches perfectly, you may verify keywords or choose the closest vibe, or leave "imageId" as null.
+**CRITICAL REQUIREMENT**: 
+1. These locations must be derived STRICTLY from the character's background, job, habits, and story context. 
+2. Do NOT act like a game designer trying to save assets. If the character lives in a trash heap, generate "Trash Heap". 
+3. Focus on atmospheric and narrative significance.
 
 JSON Format:
 {
   "locations": [
-    { "name": "Location Name", "desc": "Short description", "imageId": "id_from_library_or_null" },
+    { "name": "Location Name", "desc": "Atmospheric description based on persona" },
+    ...
+  ]
+}`,
+
+  smartwatch_step2_match: `You are an Asset Matcher.
+Here are the locations generated for the character:
+{{GENERATED_LOCATIONS}}
+
+Here is the available Image Library:
+{{IMAGE_LIBRARY}}
+
+Instructions:
+1. For each location, find the BEST visual match from the library.
+2. If a library image fits the "vibe" and description well, assign its "id".
+3. **CRITICAL**: If NO image fits well (e.g., location is "Dirty Sewer" but images are all "Luxury Homes"), you MUST set "imageId" to null.
+4. Return the list merging the original data with the imageId.
+
+JSON Format:
+{
+  "locations": [
+    { "name": "Original Name", "desc": "Original Desc", "imageId": "id_from_library_or_null" },
     ...
   ]
 }`,
@@ -844,7 +862,8 @@ User: {{USER_NAME}}.
 Instructions:
 1. Generate 3-5 "Normal" search queries. These should relate to {{NAME}}'s job, hobbies, lifestyles, or other parts of daily life.
 2. Generate 1-3 "Incognito/Private" search queries. These MUST be strictly PRIVATE, explicit, NSFW, or reveal taboo desires/deep obsessions about {{USER_NAME}}, or explore the character's kinks. Be completely uncensored and do not hold back.
-3. For each query, provide a snippet of the page content ("detail").
+3. If the {{NAME}} and {{USER_NAME}} have never interacted in a sexual way in their chat history, do not generate "Incognito/Private" search queries.
+4. For each query, provide a snippet of the page content ("detail").
 
 JSON: {
   "normal": [
@@ -1079,31 +1098,47 @@ const STYLE_PROMPTS = {
   4. Pure dialogue ONLY. No brackets.`,
 
   novel: `Literary Style: Warm, Plain, and Grounded.
-  1. Narrative Voice: Adopt a calm, leisurely, and kind observer's perspective. Tell the story slowly with warmth, avoiding dramatic or judgmental tones.
+  1. Narrative Voice: Adopt a calm, leisurely, and kind observer's perspective. Tell the story slowly with warmth, avoiding dramatic or judgmental tones. Maintain a third-person perspective for {{char}} (referring to them by Name/He/She), while directly addressing {{user}} as 'you'.
   2. Diction ("白描/Bai Miao"): Use simple, unadorned spoken language. Avoid flowery adjectives. Rely on precise verbs and nouns to create a clean, "fresh water" texture.
   3. Atmosphere: Focus on the "smoke and fire" of daily life. deeply engage the senses—describe the specific smell of food, the texture of objects, and ambient sounds to make the scene tangible.
   4. Emotional Restraint: Do NOT state emotions directly. Reveal deep feelings solely through subtle physical actions, micro-expressions, and environmental details. Keep the emotional temperature constant and gentle.
-  5. Rhythm: Mimic the bouncy, elastic rhythm of natural speech. Use short, crisp sentences mixed with relaxed narration.`,
+  5. Rhythm: Mimic the bouncy, elastic rhythm of natural speech. Use short, crisp sentences mixed with relaxed narration.
+  6. Output Structure: This must be a unified, cohesive narrative stream. Output the entire response as ONE SINGLE, CONTINUOUS message.`,
 };
 
-const CHARACTER_CREATION_PROMPT = `# Role: 专家级角色架构师 & 提示词工程师
+const CHARACTER_CREATION_PROMPT = `# Role: 专家级角色架构师 & 提示词工程师 (Expert Character Architect)
 
-## Core Objective
-将用户的简短描述扩充为高精度、高密度、逻辑闭环的JSON格式角色卡。
+## Core Objective (核心目标)
+你的任务是将用户的简短描述（User Input），扩充为一份**高精度、高密度、逻辑闭环**的JSON格式角色卡。
 
-**关键原则**：这份角色卡是写给AI大模型看的。为防止模型产生幻觉或OOC，你必须将设定颗粒度推向极致。哪怕是用户未提及的细节（如父母职业、童年阴影、穿衣品牌、体味、性癖成因），你也必须基于心理学逻辑进行合理的"强制补全"。
+**关键原则**：这份角色卡是写给**AI大模型**看的“系统指令集”。为了防止模型在扮演时产生幻觉或OOC（角色崩坏），你必须将设定的颗粒度推向极致。**哪怕是用户未提及的细节（如父母职业、童年阴影、具体的穿衣品牌、体味、性癖成因），你也必须基于心理学逻辑进行合理的“强制补全”。**
 
-## Design Philosophy (防OOC机制)
+## Design Philosophy (设计哲学 - 防OOC机制)
 
-1. **生理与感官锚点**: 不写"身材好"，写具体样子；不写"声音好听"，写具体听感；不写"有钱"，写体现有钱的细节。
+### 1. 生理与感官锚点 (Physiological & Sensory Anchors)
+* **抽象法则**：严禁使用笼统的形容词（如“身材好”、“声音好听”、“有钱”）。
+* **执行策略**：你必须将抽象特质转化为**具象的物理证据**。描述骨架大小、肌肉或脂肪的具体分布、具体的伤疤或胎记、声线的质感（如沙哑、鼻音、语速）、以及具体的物质占有（特定的品牌偏好、使用痕迹）来反映其地位或品味。
 
-2. **原生家庭与宿命论**: 性格不是凭空产生。必须详细构建原生家庭图谱。
+### 2. 原生家庭与宿命论 (Origin & Determinism)
+* **抽象法则**：性格不是真空产生的，现在的行为必须能在过去找到病灶。
+* **执行策略**：必须构建详细的**原生家庭图谱**（父母的姓名、职业、性格及婚姻动态）。必须定义青春期发生的具体**“转折点事件”**，解释为何他形成了现在的世界观。
 
-3. **社会关系网**: 必须创造3-4个具体NPC，用来界定主角性格边界。
+### 3. 社会关系网 (Social Ecology)
+* **抽象法则**：人是社会关系的总和。
+* **执行策略**：必须创造3-4个具体的、有名字的**NPC（配角）**。明确定义他们在主角生命中的**功能性角色**（如：纵容者、情感锚点、宿敌）。
 
-4. **欲望的病理分析**: NSFW部分必须解释为什么有这个性癖。
+### 4. 欲望的病理分析 (Pathology of Desire - NSFW Logic)
+* **抽象法则**：性癖是心理需求的生理投射。
+* **执行策略**：不要只列出XP（性癖）清单。必须解释**心理成因**（例如：控制欲源于生活失序，受虐欲源于渴望卸下重担）。必须精确描写解剖学细节（尺寸、颜色、形状）及生理反应机制。
 
-5. **具体的时空坐标**: 设定具体居住环境和时间线。
+### 5. 世界构建与氛围 (World Building & Atmosphere)
+* **抽象法则**：环境必须是角色性格的容器。
+* **执行策略**：
+    * **命名**：创建一个具有美感或地域特色的**虚构城市名**（除非角色设定为外国人）。
+    * **氛围**：定义城市的感官侧写（气候模式、主色调、气味、社会阶层撕裂感）。城市的氛围必须为角色的叙事服务（例如：忧郁的角色生活在多雨的旧城区）。
+
+### 6. 文化语境
+* **默认设置**：除非用户明确要求生成西方/外国角色，否则默认生成**中式人名**和**中国社会文化背景**。
 
 ## Output Format
 严格按以下JSON结构输出，内容部分使用YAML格式。
@@ -1112,22 +1147,22 @@ const CHARACTER_CREATION_PROMPT = `# Role: 专家级角色架构师 & 提示词�
 {
   "name": "角色名",
   "description": "<info>\\n<character>\\n\`\`\`yaml\\n角色名:\\n  Chinese_name: \\n  Nickname: (朋友/长辈/仇人的不同称呼)\\n  age: \\n  birthday: (具体日期+星座)\\n  gender: \\n  height: \\n  weight: \\n  identity:\\n    - (表层职业)\\n    - (深层身份/爱好)\\n\\n  appearance:\\n    hair: (发色、发质、刘海、染烫)\\n    eyes: (瞳色、眼型、眼神)\\n    skin: (肤色、触感、体温、痣/疤痕/纹身)\\n    face_style: (五官细节)\\n    build: (骨架、肌肉/脂肪分布、体态)\\n    attire:\\n      business: (工作穿搭含品牌)\\n      casual: (私下穿搭)\\n      accessories: (首饰来源)\\n    scent: (混合气味)\\n    voice: (声线、语速、口癖)\\n\\n  background_story:\\n    Family_Origin:\\n      - (父亲姓名/职业/性格)\\n      - (母亲姓名/职业/性格)\\n      - (家庭氛围)\\n    Childhood_0to12:\\n      - (塑造底色的童年事件)\\n    Adolescence_13to18:\\n      - (求学、友谊、初恋/性启蒙)\\n      - (关键转折点)\\n    Present:\\n      - (现状、经济、居住、心理)\\n      - (与{{user}}的羁绊起始)\\n\\n  personality:\\n    default:\\n      traits:\\n        - 特质1: 深度解析\\n        - 特质2: 深度解析\\n    private_romantic:\\n      traits:\\n        - 反差特质1: 解析\\n        - 反差特质2: 解析\\n\\n  social_status:\\n    Reputation: (外界评价)\\n    NPCs:\\n      - NPC1: 关系描述\\n      - NPC2: 关系描述\\n      - NPC3: 关系描述\\n\\n  lifestyle:\\n    Diet: (口味偏好)\\n    Routine: (作息规律)\\n    Hobbies: (具体爱好)\\n    Living: (居住环境描写)\\n\\n  NSFW_information:\\n    Orientation: \\n    Experience: \\n    Anatomy: (隐私部位具体描写)\\n    Sexual_Role: \\n    Sexual_Habits:\\n      - 前戏偏好\\n      - 性爱风格\\n      - 事后反应\\n    Kinks: (性癖列表及成因)\\n    Limits: (雷点)\\n\`\`\`\\n</character>\\n\\n<writing_rule>\\n(写作风格指导)\\n</writing_rule>\\n</info>",
-  "first_mes": "(300-600字沉浸感开场白，含环境五感描写、角色动作、与{{user}}互动契机)",
+  "first_mes": "(一段500-800字的沉浸式开场白。必须包含：1. 环境的五感描写。2. 角色当下的具体动作。3. 与{{user}}互动的直接契机。))",
   "character_book": {
     "entries": [
       {
-        "keys": [],
-        "secondary_keys": [],
-        "comment": "世界观",
-        "content": "城市背景、社会人文特征",
+        "keys": ["World", "City", "Setting"],
+        "secondary_keys": ["Location", "Background"],
+        "comment": "世界观与城市氛围构建",
+        "content": "【城市名】：(起一个有质感的虚构名字)\n【气候与色调】：(例如：天气模式、主色调、湿度、光影感)\n【社会肌理】：(社会阶层差异、城市贫富结构、整体氛围)\n【感官细节】：(标志性的气味、背景噪音、城市的触感)\n【地标】：(与角色生活紧密相关的具体地点)",
         "constant": true,
         "enabled": true
       },
       {
-        "keys": [],
-        "secondary_keys": [],
-        "comment": "NPC-名字",
-        "content": "NPC详细信息",
+        "keys": ["NPC_Name_1"],
+        "secondary_keys": ["Relationship"],
+        "comment": "核心NPC档案",
+        "content": "【姓名】：\n【外貌印象】：(一句话视觉速写)\n【性格】：(对主角的态度)\n【功能】：(在剧本中的作用)",
         "constant": false,
         "enabled": true
       }
@@ -1141,8 +1176,8 @@ const CHARACTER_CREATION_PROMPT = `# Role: 专家级角色架构师 & 提示词�
   "spec_version": "3.0",
   "data": {
     "name": "角色名",
-    "description": "(同上description)",
-    "first_mes": "(同上first_mes)",
+    "description": "（！！！必须完整重复上方生成的description内容，严禁使用“同上”或占位符，必须包含完整的YAML和设定详情）", 
+    "first_mes": "（！！！必须完整重复上方生成的first_mes内容）",
     "system_prompt": "",
     "post_history_instructions": "",
     "tags": [],
@@ -1157,41 +1192,74 @@ const CHARACTER_CREATION_PROMPT = `# Role: 专家级角色架构师 & 提示词�
     }
   }
 }
+
 \`\`\``;
+
+/* --- UTILS --- 部分的 cleanCharacterJson 函数替换为： */
 
 const cleanCharacterJson = (jsonContent) => {
   try {
-    const data =
+    const rawObj =
       typeof jsonContent === "string" ? JSON.parse(jsonContent) : jsonContent;
-    const root = data.data ? data.data : data;
-    const name = root.name || "Unknown";
 
-    let description = root.description || root.persona || "";
+    // 1. 分别获取外层和内层数据
+    const outerData = rawObj;
+    const innerData = rawObj.data || {};
 
-    const charTagMatch = description.match(
-      /<character>([\s\S]*?)<\/character>/i
-    );
-    if (charTagMatch) description = charTagMatch[1].trim();
+    // 2. 智能提取 Description
+    // 逻辑：如果 innerDesc 包含"同上" 或 长度明显短于 outerDesc，就使用 outerDesc
+    const outerDesc = outerData.description || outerData.persona || "";
+    const innerDesc = innerData.description || innerData.persona || "";
 
-    let richDescription = description;
+    let finalDesc = innerDesc;
+    if (
+      !innerDesc ||
+      innerDesc.includes("同上") ||
+      innerDesc.includes("same as") ||
+      (outerDesc.length > innerDesc.length && outerDesc.length > 50)
+    ) {
+      finalDesc = outerDesc;
+    }
 
-    if (root.personality)
-      richDescription += `\n\n[Personality Traits]: ${root.personality}`;
+    // 3. 智能提取 Name
+    const name = innerData.name || outerData.name || "Unknown";
 
-    if (root.scenario)
-      richDescription += `\n\n[Current Scenario]: ${root.scenario}`;
+    // 4. 清洗 Description (处理 XML 标签)
+    // 很多时候 Prompt 会生成 <character> 包裹的内容，这里提取出来
+    let richDescription = finalDesc;
+    const charTagMatch = finalDesc.match(/<character>([\s\S]*?)<\/character>/i);
+    if (charTagMatch) richDescription = charTagMatch[1].trim();
 
+    // 如果还有 personality 字段，追加进去
+    if (outerData.personality && typeof outerData.personality === "string") {
+      richDescription += `\n\n[Personality Traits]: ${outerData.personality}`;
+    }
+
+    // 5. 组合最终文本 Key
     let cleanText = `Name: ${name}\n\nDescription:\n${richDescription}`;
 
-    let worldBookEntries = [];
-    if (root.character_book && root.character_book.entries) {
-      worldBookEntries = root.character_book.entries.map((entry) => ({
-        id: entry.id,
-        name: entry.comment || entry.keys?.[0] || `Entry ${entry.id}`,
+    // 6. 处理 WorldBook (世界书)
+    // 同样优先取有内容的那一边
+    let rawEntries = [];
+    if (
+      innerData.character_book &&
+      innerData.character_book.entries &&
+      innerData.character_book.entries.length > 0
+    ) {
+      rawEntries = innerData.character_book.entries;
+    } else if (outerData.character_book && outerData.character_book.entries) {
+      rawEntries = outerData.character_book.entries;
+    }
+
+    // 格式化世界书
+    const worldBookEntries = rawEntries
+      .map((entry) => ({
+        id: entry.id || Date.now() + Math.random(),
+        name: entry.comment || entry.keys?.[0] || entry.name || `Entry`,
         content: entry.content,
         enabled: entry.enabled !== false,
-      }));
-    }
+      }))
+      .filter((e) => e.content); // 过滤空条目
 
     return {
       rawText: cleanText.trim(),
@@ -1200,7 +1268,6 @@ const cleanCharacterJson = (jsonContent) => {
     };
   } catch (e) {
     console.error("Character Parse Error", e);
-    // 出错时的兜底
     return {
       rawText:
         typeof jsonContent === "string"
@@ -1324,6 +1391,10 @@ const SettingsPanel = ({
   // --- 指令参数 ---
   prompts,
   setPrompts,
+
+  // --- 数据备份参数 ---
+  onExportChat,
+  onImportChat,
 }) => (
   <div className="flex flex-col h-full">
     <div className="space-y-10 overflow-y-auto custom-scrollbar flex-grow px-1 pb-10">
@@ -1716,6 +1787,41 @@ const SettingsPanel = ({
         </section>
       )}
 
+      <section>
+        <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4 border-b border-gray-200/50 pb-2">
+          数据管理
+        </h3>
+        <div className="glass-card p-4 rounded-xl space-y-3">
+          <p className="text-[9px] text-gray-400 mb-2">
+            将聊天记录导出为文件保存，或从文件恢复。
+            <br />
+            (建议定期备份，以免浏览器缓存丢失)
+          </p>
+          <div className="flex gap-3">
+            {/* 导出按钮 */}
+            <button
+              onClick={onExportChat}
+              className="flex-1 py-3 bg-black text-white rounded-xl text-xs font-bold hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 shadow-md"
+            >
+              <Save size={14} />
+              导出备份
+            </button>
+
+            {/* 导入按钮 (关联隐藏的 input) */}
+            <label className="flex-1 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl text-xs font-bold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+              <Upload size={14} />
+              导入恢复
+              <input
+                type="file"
+                accept=".json"
+                className="hidden"
+                onChange={onImportChat}
+              />
+            </label>
+          </div>
+        </div>
+      </section>
+
       {/*<section>
         <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4 border-b border-gray-200/50 pb-2">
           指令
@@ -1792,7 +1898,9 @@ const CreationAssistantModal = ({
                 <textarea
                   value={inputVal} // 使用 props.inputVal
                   onChange={(e) => setInputVal(e.target.value)} // 使用 props.setInputVal
-                  placeholder="例如：阳光开朗的青梅竹马..."
+                  placeholder={
+                    "描述角色特点，如“阳光开朗的青梅竹马”\n也可以直接输入喜欢的IP角色名字，如“Jason Todd - 红头罩”"
+                  }
                   className="w-full h-32 p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm resize-none outline-none focus:border-[#7A2A3A] transition-colors"
                   autoFocus // 加上这个体验更好
                 />
@@ -1821,24 +1929,77 @@ const CreationAssistantModal = ({
             </>
           ) : (
             <>
-              {/* 预览区域 */}
-              <div className="bg-gray-50 p-4 rounded-xl max-h-64 overflow-y-auto custom-scrollbar">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-12 h-12 bg-[#7A2A3A] rounded-full flex items-center justify-center text-white text-lg font-bold">
+              {/* === 预览与编辑区域 (纯展示与编辑，无额外逻辑) === */}
+              <div className="flex flex-col gap-3 h-[60vh] overflow-hidden">
+                {/* 1. 顶部：头像与名字编辑 */}
+                <div className="flex items-center gap-3 shrink-0 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                  <div className="w-12 h-12 bg-[#7A2A3A] rounded-full flex items-center justify-center text-white text-lg font-bold shrink-0">
                     {previewData.name?.[0] || "?"}
                   </div>
-                  <div>
-                    <h4 className="font-bold text-gray-800">
-                      {previewData.name || "未知角色"}
-                    </h4>
-                    <p className="text-[10px] text-gray-400">角色卡已生成</p>
+                  <div className="flex-grow">
+                    <label className="text-[9px] font-bold uppercase text-gray-400 block mb-1">
+                      角色名称
+                    </label>
+                    <input
+                      value={previewData.name || ""}
+                      onChange={(e) =>
+                        setPreviewData((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
+                      }
+                      className="w-full bg-transparent text-sm font-bold text-gray-800 outline-none border-b border-gray-300 focus:border-[#7A2A3A] transition-colors"
+                    />
                   </div>
                 </div>
-                <div className="text-xs text-gray-600 leading-relaxed">
-                  <p className="font-bold text-gray-700 mb-1">开场白预览:</p>
-                  <p className="line-clamp-4 italic">
-                    {previewData.first_mes?.substring(0, 200)}...
-                  </p>
+
+                {/* 2. 中间：可滚动编辑区 */}
+                <div className="flex-grow overflow-y-auto custom-scrollbar space-y-4 pr-1">
+                  {/* 编辑人设 (Raw Prompt) - 用户指定：这将作为 inputKey */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="text-[10px] font-bold uppercase text-gray-400 flex items-center gap-1">
+                        <FileText size={10} /> 核心设定 (Raw Prompt)
+                      </label>
+                      <span className="text-[9px] text-gray-300">
+                        将存入系统设定
+                      </span>
+                    </div>
+                    <textarea
+                      value={previewData.description || ""}
+                      onChange={(e) =>
+                        setPreviewData((prev) => ({
+                          ...prev,
+                          description: e.target.value,
+                        }))
+                      }
+                      className="w-full h-48 p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono resize-y outline-none focus:border-[#7A2A3A] focus:bg-white transition-all leading-relaxed"
+                      placeholder="此处显示角色的人设详情..."
+                    />
+                  </div>
+
+                  {/* 编辑开场白 - 用户指定：仅显示和编辑，不自动发送 */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="text-[10px] font-bold uppercase text-gray-400 flex items-center gap-1">
+                        <MessageCircle size={10} /> 开场白 (First Message)
+                      </label>
+                      <span className="text-[9px] text-gray-300">
+                        仅用于展示/复制
+                      </span>
+                    </div>
+                    <textarea
+                      value={previewData.first_mes || ""}
+                      onChange={(e) =>
+                        setPreviewData((prev) => ({
+                          ...prev,
+                          first_mes: e.target.value,
+                        }))
+                      }
+                      className="w-full h-24 p-3 bg-blue-50/50 border border-blue-100 rounded-xl text-xs resize-y outline-none focus:border-blue-400 focus:bg-white transition-all leading-relaxed text-gray-700"
+                      placeholder="此处显示角色的第一句开场白..."
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -1858,8 +2019,6 @@ const CreationAssistantModal = ({
                   应用角色
                 </button>
               </div>
-
-              {/* ... 导出按钮保持原样，记得把 generatedPreview 改成 previewData ... */}
             </>
           )}
         </div>
@@ -1992,7 +2151,7 @@ const App = () => {
     "echoes_custom_rules"
   );
   const [chatStyle, setChatStyle] = useStickyState(
-    "brackets",
+    "dialogue",
     "echoes_chat_style"
   );
   const [charStickers, setCharStickers] = useStickyState(
@@ -2212,6 +2371,54 @@ const App = () => {
         url: "https://github.com/user-attachments/assets/f5e1ae53-07d5-4149-9c3d-517a3c2cc19d",
         desc: "一个幽默可爱、可以用于调情的表情包，用直白的邀请函写着“上线了，泡我^^！”",
       },
+      {
+        url: "https://github.com/user-attachments/assets/28ec4ac5-cf9a-4610-b286-fb75732266e9",
+        desc: "一只正在大哭流泪的小仓鼠，看起来特别委屈可怜",
+      },
+      {
+        url: "https://github.com/user-attachments/assets/34506d5b-3420-48a9-a083-afc7f683cc4f",
+        desc: "一只可爱但表情凶狠的小白猫，放狠话说“别以为我是小猫我就不能弄你”，好像在奶声奶气地威胁人",
+      },
+      {
+        url: "https://github.com/user-attachments/assets/52501a5a-a98b-46dc-90b5-dde1dbe248c2",
+        desc: "一只戴着头巾的小熊，配文感叹“今天和蛋挞酥皮一样脆弱”，形容自己一碰就碎的心理状态",
+      },
+      {
+        url: "https://github.com/user-attachments/assets/860b750d-9f33-49c6-8f4c-922777874660",
+        desc: "一张粉色的复古Word文档截图，写着霸道又可怕的告白“和我交往吧，要是不答应就死定了”，一种威胁式的求爱",
+      },
+      {
+        url: "https://github.com/user-attachments/assets/15f3aed6-8031-426e-84bd-d25ab65e5270",
+        desc: "一只表情厌世、看透红尘的小狗，配文“狗逼人生”",
+      },
+      {
+        url: "https://github.com/user-attachments/assets/33d7078d-1da7-4811-8cae-984189e663bc",
+        desc: "一只小熊的表情包，配着地狱笑话般的文字“幸福就像巧克力，而我是一条狗”，在那自嘲无福消受幸福",
+      },
+      {
+        url: "https://github.com/user-attachments/assets/0d273ca6-8bff-41ed-912c-07a0b51259e1",
+        desc: "一张模糊且充满压迫感的大脸特写，冷漠地质问“笑脸给多了？”，暗示对方蹬鼻子上脸，自己要发火了",
+      },
+      {
+        url: "https://github.com/user-attachments/assets/57fb6a60-a481-444e-9866-a26e3f01e51f",
+        desc: "一个跪地抱头、痛苦的3D小白人，配文“我真的没时间陪你闹了”，表达出对某人无理取闹的疲惫和绝望",
+      },
+      {
+        url: "https://github.com/user-attachments/assets/0e3963a8-5b8e-41bc-8da9-af367526ee05",
+        desc: "一个长着真人脸的黄豆表情比着大拇指，配了一句谐音梗“这大厦避风了”（这大傻逼疯了）",
+      },
+      {
+        url: "https://github.com/user-attachments/assets/b8cec8bb-57c4-4f61-9b78-d186573c7e39",
+        desc: "一只头顶光环升入天堂的小熊，配文“思考了很久还是决定出国啦——天国”，用一种可爱、荒谬又黑色幽默的方式表达“不想活了/想去死”的消极情绪",
+      },
+      {
+        url: "https://github.com/user-attachments/assets/1ff0555f-d12d-47da-a8cc-0a42e1b0b545",
+        desc: "一只面带微笑、看起来人畜无害的小白兔，配文却是凶狠的“我真的会假装玩SM把你往死里打”，用最可爱的脸说最狠毒的话，威胁感拉满",
+      },
+      {
+        url: "https://github.com/user-attachments/assets/91c936aa-ac14-49be-b75c-d2c6e68b6ee7",
+        desc: "两位表情严肃的警察注视着前方，头顶问号质问“又开始了是吗？”，用来制止对方发癫或做奇怪的事情",
+      },
     ],
     "echoes_user_stickers"
   );
@@ -2327,19 +2534,28 @@ const App = () => {
     if (!generatedPreview) return;
 
     const cleaned = cleanCharacterJson(generatedPreview);
+    const finalDescription = generatedPreview.description || cleaned.rawText;
+    const finalName = generatedPreview.name || cleaned.name;
     setPersona({
-      name: cleaned.name,
-      rawDescription: cleaned.rawText,
+      name: finalName,
+      rawDescription: finalDescription,
       avatar: null,
     });
+    setInputKey(finalDescription);
+
+    // 5. 设置世界书 (如果有)
     setWorldBook(cleaned.worldBook);
-    setInputKey(cleaned.rawText);
+
+    // 6. 重置生成器 UI
+    setShowCreationAssistant(false);
+    setGeneratedPreview(null);
+    setCreationInput("");
 
     // 重置状态
     setShowCreationAssistant(false);
     setGeneratedPreview(null);
     setCreationInput("");
-    showToast("success", `角色「${cleaned.name}」已加载`);
+    showToast("success", `角色「${finalName}」已加载`);
   };
 
   // Effects
@@ -2537,12 +2753,10 @@ const App = () => {
           const json = JSON.parse(e.target.result);
           let newEntries = [];
 
-          // [修改] 增强解析逻辑，兼容你提供的 JSON 格式
           if (json.entries) {
             if (Array.isArray(json.entries)) {
               newEntries = json.entries;
             } else {
-              // 关键修复：你的文件 entries 是对象，需要取 Values
               newEntries = Object.values(json.entries);
             }
           } else if (Array.isArray(json)) {
@@ -2553,33 +2767,32 @@ const App = () => {
             );
           }
 
+          const baseTime = Date.now(); // 提取时间戳到循环外
+
           const formattedEntries = newEntries
-            .map((entry) => {
-              // 1. 获取名字：优先用 comment (如"一键脱毛")
+            .map((entry, index) => {
+              // 引入 index
               let name = entry.comment || entry.name || "未命名词条";
 
-              // 2. 如果没有 comment，尝试从 key 数组里取
               if (!name || name === "未命名词条") {
-                // 兼容 key:[] (你的文件) 和 keys:[] (其他格式)
                 const k = entry.key || entry.keys;
                 if (Array.isArray(k) && k.length > 0) name = k[0];
                 else if (typeof k === "string") name = k;
               }
 
-              // 3. 兼容 disable 字段 (你的文件用 disable: false 表示启用)
               const isEnabled =
                 entry.disable !== undefined
                   ? !entry.disable
                   : entry.enabled !== false;
 
               return {
-                id: entry.uid || entry.id || Date.now() + Math.random(),
+                id: entry.uid || entry.id || baseTime + index + Math.random(),
                 name: name,
                 content: entry.content || "",
                 enabled: isEnabled,
               };
             })
-            .filter((e) => e.content); // 过滤空内容
+            .filter((e) => e.content);
 
           if (formattedEntries.length > 0) {
             setWorldBook((prev) => [...prev, ...formattedEntries]);
@@ -2672,6 +2885,68 @@ const App = () => {
     }
   };
 
+  const exportChatData = () => {
+    if (chatHistory.length === 0) {
+      showToast("error", "暂无聊天记录可导出");
+      return;
+    }
+    const dataToSave = {
+      personaName: persona?.name,
+      userName: userName,
+      history: chatHistory,
+      exportDate: new Date().toLocaleString(),
+    };
+
+    const blob = new Blob([JSON.stringify(dataToSave, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Echoes_Backup_${persona?.name || "Chat"}_${new Date()
+      .toISOString()
+      .slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showToast("success", "聊天记录已导出");
+  };
+
+  // [新增] 导入聊天记录
+  const importChatData = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (data.history && Array.isArray(data.history)) {
+          // 简单校验一下格式
+          if (
+            window.confirm(
+              `确认覆盖当前的聊天记录吗？\n文件包含 ${data.history.length} 条消息。\n(建议先备份当前记录)`
+            )
+          ) {
+            setChatHistory(data.history);
+            showToast("success", "聊天记录已恢复");
+          }
+        } else {
+          showToast("error", "文件格式不正确，找不到历史记录");
+        }
+      } catch (err) {
+        console.error(err);
+        showToast("error", "读取失败: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+    // 重置 input value，允许重复导入同一个文件
+    event.target.value = "";
+  };
+
   const fetchModelsList = async () => {
     if (!apiConfig.baseUrl || !apiConfig.key) {
       showToast("error", "请填写 API 地址和密钥");
@@ -2683,18 +2958,24 @@ const App = () => {
       if (url.endsWith("/chat/completions"))
         url = url.replace("/chat/completions", "");
       let tryUrl = url.endsWith("/models") ? url : `${url}/models`;
+
       const res = await fetch(tryUrl, {
         method: "GET",
         headers: { Authorization: `Bearer ${apiConfig.key}` },
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
+
       if (data.data && Array.isArray(data.data)) {
         const ids = data.data.map((m) => m.id);
         setAvailableModels(ids);
         showToast("success", `已获取 ${ids.length} 个模型`);
-        if (!apiConfig.model && ids.length > 0)
-          setApiConfig((prev) => ({ ...prev, model: ids[0] }));
+
+        if (!ids.includes(apiConfig.model)) {
+          const newDefault = ids[0] || "";
+          setApiConfig((prev) => ({ ...prev, model: newDefault }));
+          if (newDefault) showToast("info", `模型已自动切换为: ${newDefault}`);
+        }
       } else {
         showToast("success", "连接成功 (未能解析模型列表)");
       }
@@ -2889,6 +3170,11 @@ const App = () => {
       "echoes_memory_config",
       "echoes_long_memory",
       "echoes_msg_count",
+      "echoes_sw_locations",
+      "echoes_sw_logs",
+      "echoes_forum_data",
+      "echoes_forum_settings",
+      "echoes_interaction_mode",
     ];
     keysToRemove.forEach((k) => localStorage.removeItem(k));
 
@@ -2904,6 +3190,14 @@ const App = () => {
     setBrowserHistory([]);
     setAvatar(null);
     setUserAvatar(null);
+    setSmartWatchLocations([]);
+    setSmartWatchLogs([]);
+    setForumData({ name: "本地生活圈", posts: [], isInitialized: false });
+    setForumSettings({
+      userNick: "匿名用户",
+      smurfNick: "不是小号",
+      charNick: "匿名用户",
+    });
 
     // Lock
     setIsLocked(true);
@@ -2927,7 +3221,8 @@ const App = () => {
       sender: "me",
       text: displayText,
       isVoice: type === "voice",
-      sticker: sticker,
+      stickerId: sticker ? sticker.id : null,
+      stickerSource: sticker ? "user" : null,
       time: formatTime(getCurrentTimeObj()),
     };
 
@@ -3210,6 +3505,28 @@ const App = () => {
     }
   };
 
+  const toggleMessageSelection = (index) => {
+    const newSet = new Set(selectedMsgs);
+    if (newSet.has(index)) {
+      newSet.delete(index);
+    } else {
+      newSet.add(index);
+    }
+    setSelectedMsgs(newSet);
+  };
+
+  const handleBatchDelete = () => {
+    if (selectedMsgs.size === 0) return;
+    if (window.confirm(`确定要删除选中的 ${selectedMsgs.size} 条消息吗？`)) {
+      // 过滤掉被选中的索引
+      setChatHistory((prev) => prev.filter((_, i) => !selectedMsgs.has(i)));
+      // 重置状态
+      setIsMultiSelectMode(false);
+      setSelectedMsgs(new Set());
+      showToast("success", "已批量删除");
+    }
+  };
+
   // Smart Watch State
   const [smartWatchLocations, setSmartWatchLocations] = useStickyState(
     [],
@@ -3404,6 +3721,8 @@ const App = () => {
     const currentUserName = userName || "User";
     const userNick = forumSettings.userNick || userName || "匿名用户";
 
+    const charNick = forumSettings.charNick || persona.name || "匿名用户";
+
     // 生成针对性的指令 (避免 AI 乱回)
     let targetInstruction = "";
     // [修改] 如果是小号，AI 看到的只是一个陌生昵称，不需要特殊 targeting 指令，也不要禁止回复
@@ -3493,7 +3812,7 @@ ${recentHistory}
       .replaceAll("{{EXISTING_REPLIES}}", existingRepliesStr || "None")
       .replaceAll("{{RELATIONSHIP_CONTEXT}}", relationshipContextBlock)
       .replaceAll("{{NAME}}", persona.name)
-      // 哪怕 Prompt 里没用到，替换一下也不亏，防止遗漏
+      .replaceAll("{{CHAR_NICK}}", charNick)
       .replaceAll("{{CHAR_DESCRIPTION}}", cleanCharDesc)
       .replaceAll("{{WORLD_INFO}}", cleanWorldInfo)
       .replaceAll("{{MODE}}", aiPromptMode);
@@ -3852,57 +4171,86 @@ ${recentHistory}
     showToast("success", "ID已更新，历史记录已同步");
   };
 
-  // 1. Initial Location Generation
+  // 1. Initial Location Generation (Two-Step Logic)
   const initSmartWatch = async () => {
     if (!persona) return;
     setLoading((prev) => ({ ...prev, smartwatch: true }));
 
-    const systemPrompt = prompts.system
-      .replaceAll("{{NAME}}", persona.name)
-      .replaceAll("{{USER_NAME}}", userName || "User")
-      .replaceAll("{{WORLD_INFO}}", getWorldInfoString());
-
-    // --- NEW: Generate Image Library String ---
-    const imageLibraryStr = PRESET_LOCATION_IMAGES.map(
-      (img) => `ID: ${img.id}, Desc: ${img.desc}, Keywords: ${img.keywords}`
-    ).join("\n");
-
-    const prompt = prompts.smartwatch_init
-      .replaceAll("{{NAME}}", persona.name)
-      .replaceAll("{{TITLE}}", persona.title || "Character")
-      .replaceAll("{{IMAGE_LIBRARY}}", imageLibraryStr); // Inject Library
-
     try {
-      const data = await generateContent(
-        { prompt, systemInstruction: systemPrompt },
-        apiConfig,
-        (err) => showToast("error", err)
+      // --- STEP 1: Generate Locations (Blind to Images) ---
+      const systemPrompt = prompts.system
+        .replaceAll("{{NAME}}", persona.name)
+        .replaceAll("{{USER_NAME}}", userName || "User")
+        .replaceAll("{{WORLD_INFO}}", getWorldInfoString());
+
+      const genPrompt = prompts.smartwatch_step1_gen.replaceAll(
+        "{{NAME}}",
+        persona.name
       );
 
-      if (data && data.locations) {
-        // Map layout logic
-        const count = Math.min(Math.max(data.locations.length, 4), 6); // Clamp 4-6
-        const layout = MAP_LAYOUTS[count];
+      // 第一发请求：生成地点
+      const step1Data = await generateContent(
+        { prompt: genPrompt, systemInstruction: systemPrompt },
+        apiConfig,
+        (err) => showToast("error", "Step 1 Error: " + err)
+      );
 
-        const finalLocations = data.locations.slice(0, count).map((loc, i) => {
-          // --- NEW: Match Image ID to URL ---
-          const matchedImage = PRESET_LOCATION_IMAGES.find(
-            (p) => p.id === loc.imageId
-          );
+      if (!step1Data || !step1Data.locations) {
+        throw new Error("Failed to generate locations.");
+      }
 
-          return {
-            id: `loc_${Date.now()}_${i}`,
-            name: loc.name,
-            desc: loc.desc,
-            img: matchedImage ? matchedImage.url : null, // Auto-fill URL
-            layout: layout[i],
-          };
-        });
+      // --- STEP 2: Match Images ---
+      // 准备图片库字符串
+      const imageLibraryStr = PRESET_LOCATION_IMAGES.map(
+        (img) => `ID: ${img.id}, Desc: ${img.desc}, Keywords: ${img.keywords}`
+      ).join("\n");
+
+      // 准备刚才生成的地点字符串
+      const generatedLocsStr = JSON.stringify(step1Data.locations);
+
+      const matchPrompt = prompts.smartwatch_step2_match
+        .replaceAll("{{GENERATED_LOCATIONS}}", generatedLocsStr)
+        .replaceAll("{{IMAGE_LIBRARY}}", imageLibraryStr);
+
+      // 第二发请求：匹配图片
+      const step2Data = await generateContent(
+        {
+          prompt: matchPrompt,
+          systemInstruction: "You are a logical data matcher.",
+        },
+        apiConfig,
+        (err) => showToast("error", "Step 2 Error: " + err)
+      );
+
+      if (step2Data && step2Data.locations) {
+        // Map layout logic (Rendering)
+        const count = Math.min(Math.max(step2Data.locations.length, 4), 6);
+        const layout = MAP_LAYOUTS[count] || MAP_LAYOUTS[4];
+
+        const finalLocations = step2Data.locations
+          .slice(0, count)
+          .map((loc, i) => {
+            // Resolve Image URL locally
+            const matchedImage = PRESET_LOCATION_IMAGES.find(
+              (p) => p.id === loc.imageId
+            );
+
+            return {
+              id: `loc_${Date.now()}_${i}`,
+              name: loc.name,
+              desc: loc.desc,
+              img: matchedImage ? matchedImage.url : null, // If null in JSON, it stays null here
+              layout: layout[i],
+            };
+          });
 
         setSmartWatchLocations(finalLocations);
         // Generate first log immediately
         generateSmartWatchUpdate(finalLocations);
       }
+    } catch (e) {
+      console.error(e);
+      showToast("error", "初始化失败: " + e.message);
     } finally {
       setLoading((prev) => ({ ...prev, smartwatch: false }));
     }
@@ -3992,6 +4340,10 @@ ${recentHistory}
   // 转发内容的临时存储 (用于传给 Chat Prompt)
   const [forwardContext, setForwardContext] = useState(null);
 
+  // Chat Multi-select State (聊天多选状态)
+  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
+  const [selectedMsgs, setSelectedMsgs] = useState(new Set());
+
   /* --- MAIN RENDER --- */
   if (isLocked) {
     return (
@@ -4046,7 +4398,7 @@ ${recentHistory}
 
         <div className="max-w-md w-full space-y-8 z-10 flex flex-col items-center h-auto">
           <div className="text-center flex flex-col items-center space-y-2 mb-4">
-            <h1 className="text-7xl font-extralight text-[#1a1a1a] lock-time">
+            <h1 className="text-7xl font-extralight text-[#1a1a1a] lock-time mb-3">
               {formatTime(getCurrentTimeObj())}
             </h1>
             <p className="text-sm font-sans uppercase tracking-widest text-gray-400">
@@ -4155,7 +4507,8 @@ ${recentHistory}
                 }}
                 className="w-full h-16 glass-card rounded-2xl flex items-center justify-between px-6 cursor-pointer transition-all duration-500 group border border-white/60 shadow-sm hover:bg-white/60 hover:border-[#7A2A3A]/30"
               >
-                <div className="flex flex-col">
+                <div className="flex flex-col items-start text-left">
+                  {" "}
                   <span className="text-xs font-bold tracking-wide text-gray-600 group-hover:text-[#7A2A3A]">
                     创作助手
                   </span>
@@ -4809,301 +5162,375 @@ ${recentHistory}
                     {formatDate(getCurrentTimeObj())}
                   </span>
                 </div>
-                {chatHistory.map((msg, i) => (
-                  <div
-                    key={i}
-                    className={`flex flex-col gap-1 ${
-                      msg.sender === "me" ? "items-end" : "items-start"
-                    } group relative animate-in fade-in slide-in-from-bottom-2`}
-                  >
-                    {/* --- 第一行：头像 + 气泡 + (恢复)状态按钮 --- */}
-                    <div
-                      className={`flex gap-3 relative ${
-                        msg.sender === "me" ? "flex-row-reverse" : "flex-row"
-                      } max-w-full`}
-                    >
-                      {/* 1. 头像 */}
-                      <div
-                        className={`w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden shadow-sm ${
-                          msg.sender === "me"
-                            ? "bg-gray-200"
-                            : "bg-white border border-gray-100"
-                        }`}
-                      >
-                        {msg.sender === "me" ? (
-                          userAvatar ? (
-                            <img
-                              src={userAvatar}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <User size={14} className="text-gray-500" />
-                          )
-                        ) : avatar ? (
-                          <img
-                            src={avatar}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <span className="text-gray-800 text-[10px] font-bold">
-                            {persona?.name?.[0]}
-                          </span>
-                        )}
-                      </div>
+                {chatHistory.map((msg, i) => {
+                  const isSelected = selectedMsgs.has(i);
+                  let stickerUrl = null;
 
-                      {/* 2. 气泡内容 / 编辑框 */}
+                  if (msg.sticker && msg.sticker.url) {
+                    stickerUrl = msg.sticker.url;
+                  } else if (msg.stickerId) {
+                    if (msg.stickerSource === "user") {
+                      const found = userStickers.find(
+                        (s) => s.id === msg.stickerId
+                      );
+                      if (found) stickerUrl = found.url;
+                    } else {
+                      const found = charStickers.find(
+                        (s) => s.id === msg.stickerId
+                      );
+                      if (found) stickerUrl = found.url;
+                    }
+                  }
+
+                  return (
+                    <div
+                      key={i}
+                      onClick={() => {
+                        // 如果在多选模式下，点击任何地方都是切换选中
+                        if (isMultiSelectMode) toggleMessageSelection(i);
+                      }}
+                      className={`flex flex-col gap-1 ${
+                        msg.sender === "me" ? "items-end" : "items-start"
+                      } group relative animate-in fade-in slide-in-from-bottom-2 ${
+                        // 多选模式下增加点击区域和样式提示
+                        isMultiSelectMode
+                          ? "cursor-pointer hover:bg-gray-100/50 p-2 rounded-xl transition-colors"
+                          : ""
+                      }`}
+                    >
+                      {/* --- 第一行：头像 + 气泡 + (恢复)状态按钮 --- */}
                       <div
-                        className={`flex flex-col ${
-                          msg.sender === "me" ? "items-end" : "items-start"
-                        } max-w-[72%] relative`}
+                        className={`flex gap-3 relative ${
+                          msg.sender === "me" ? "flex-row-reverse" : "flex-row"
+                        } max-w-full`}
                       >
-                        {/* 编辑模式判断 */}
-                        {editIndex === i ? (
-                          <div className="flex flex-col gap-2 w-64 animate-in zoom-in-95">
-                            <textarea
-                              value={editContent}
-                              onChange={(e) => setEditContent(e.target.value)}
-                              className="w-full p-2 text-sm border border-gray-300 rounded-xl outline-none focus:border-black transition-colors resize-none h-24 bg-white/90"
-                            />
-                            <div className="flex gap-2 justify-end">
-                              <button
-                                onClick={() => setEditIndex(null)}
-                                className="px-3 py-1 text-xs bg-gray-200 rounded-full text-gray-600"
-                              >
-                                取消
-                              </button>
-                              <button
-                                onClick={() => saveEdit(i)}
-                                className="px-3 py-1 text-xs bg-black text-white rounded-full"
-                              >
-                                保存
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          // 正常显示模式：绑定长按事件
+                        {/* [新增] 多选模式下的 Checkbox */}
+                        {isMultiSelectMode && (
                           <div
-                            onContextMenu={(e) => handleContextMenu(e, i)}
-                            onTouchStart={() => handleTouchStart(i)}
-                            onTouchEnd={handleTouchEnd}
-                            onMouseDown={() => handleTouchStart(i)} // 兼容PC长按
-                            onMouseUp={handleTouchEnd}
-                            className={`cursor-pointer transition-all duration-200 ${
-                              activeMenuIndex === i
-                                ? "scale-95 brightness-90"
-                                : ""
+                            className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                              isSelected
+                                ? "bg-[#7A2A3A] border-[#7A2A3A]"
+                                : "border-gray-300 bg-white"
                             }`}
                           >
-                            {msg.sticker ? (
-                              <div className="w-32 rounded-xl overflow-hidden shadow-sm border border-gray-100">
-                                <img
-                                  src={msg.sticker.url}
-                                  className="w-full h-auto"
-                                />
-                              </div>
-                            ) : (
-                              <div
-                                className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap select-text ${
-                                  msg.sender === "me"
-                                    ? "bg-[#2C2C2C] text-white rounded-tr-none"
-                                    : "bg-white border border-gray-100 text-gray-800 rounded-tl-none"
-                                }`}
-                              >
-                                {msg.isForward ? (
-                                  <div className="text-left max-w-[240px] pl-3 border-l-2 border-white/30 my-1">
-                                    <div className="flex items-center gap-2 mb-1 opacity-70">
-                                      <Share size={10} />
-                                      <span className="text-[10px] font-bold uppercase tracking-wider">
-                                        {msg.forwardData.type === "post"
-                                          ? "帖子"
-                                          : "评论"}
-                                      </span>
-                                    </div>
-
-                                    {msg.forwardData.type === "post" ? (
-                                      <>
-                                        <div className="font-bold text-xs text-white mb-0.5 line-clamp-1">
-                                          {msg.forwardData.title}
-                                        </div>
-                                        <div className="text-[10px] text-white/60 mb-1">
-                                          @{msg.forwardData.author}
-                                        </div>
-                                        <div className="text-xs text-white/80 line-clamp-3 leading-relaxed font-light">
-                                          {msg.forwardData.content}
-                                        </div>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <div className="text-[10px] text-white/60 mb-0.5">
-                                          源自: {msg.forwardData.parentTitle}
-                                        </div>
-                                        <div className="text-[10px] text-white/80 mb-1 font-bold">
-                                          @{msg.forwardData.author}
-                                        </div>
-                                        <div className="text-xs text-white/80 line-clamp-3 leading-relaxed font-light">
-                                          {msg.forwardData.content}
-                                        </div>
-                                      </>
-                                    )}
-                                  </div>
-                                ) : msg.isVoice ? (
-                                  <div className="flex items-center gap-2 min-w-[120px]">
-                                    <span className="opacity-90 italic">
-                                      {msg.text.replace("[语音消息] ", "")}
-                                    </span>
-                                  </div>
-                                ) : (
-                                  msg.text
-                                )}
-                              </div>
+                            {isSelected && (
+                              <Check size={14} className="text-white" />
                             )}
                           </div>
                         )}
+                        {/* 1. 头像 */}
+                        <div
+                          className={`w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden shadow-sm ${
+                            msg.sender === "me"
+                              ? "bg-gray-200"
+                              : "bg-white border border-gray-100"
+                          }`}
+                        >
+                          {msg.sender === "me" ? (
+                            userAvatar ? (
+                              <img
+                                src={userAvatar}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <User size={14} className="text-gray-500" />
+                            )
+                          ) : avatar ? (
+                            <img
+                              src={avatar}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-gray-800 text-[10px] font-bold">
+                              {persona?.name?.[0]}
+                            </span>
+                          )}
+                        </div>
 
-                        {/* --- 长按弹出的菜单 (Overlay) --- */}
-                        {activeMenuIndex === i && (
-                          <div
-                            className="absolute top-full mt-2 z-50 flex flex-col items-center animate-in fade-in zoom-in-95 duration-200"
-                            style={{
-                              left: msg.sender === "me" ? "auto" : "0",
-                              right: msg.sender === "me" ? "0" : "auto",
-                            }}
-                          >
-                            <div className="bg-[#1a1a1a]/95 backdrop-blur-md text-white rounded-xl shadow-2xl p-1.5 flex gap-1 items-center border border-white/20">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleCopy(msg.text);
-                                }}
-                                className="flex flex-col items-center gap-1 p-2 hover:bg-white/20 rounded-lg min-w-[40px]"
-                              >
-                                <span className="text-[11px]">复制</span>
-                              </button>
-
-                              <div className="w-[1px] h-4 bg-white/20"></div>
-
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  startEdit(i, msg.text);
-                                }}
-                                className="flex flex-col items-center gap-1 p-2 hover:bg-white/20 rounded-lg min-w-[40px]"
-                              >
-                                <span className="text-[11px]">改写</span>
-                              </button>
-
-                              <div className="w-[1px] h-4 bg-white/20"></div>
-
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteWithConfirm(i);
-                                }}
-                                className="flex flex-col items-center gap-1 p-2 hover:bg-red-500/50 rounded-lg min-w-[40px] text-red-300 hover:text-white"
-                              >
-                                <span className="text-[11px]">删除</span>
-                              </button>
+                        {/* 2. 气泡内容 / 编辑框 */}
+                        <div
+                          className={`flex flex-col ${
+                            msg.sender === "me" ? "items-end" : "items-start"
+                          } max-w-[72%] relative`}
+                        >
+                          {/* 编辑模式判断 */}
+                          {editIndex === i ? (
+                            <div className="flex flex-col gap-2 w-64 animate-in zoom-in-95">
+                              <textarea
+                                value={editContent}
+                                onChange={(e) => setEditContent(e.target.value)}
+                                className="w-full p-2 text-sm border border-gray-300 rounded-xl outline-none focus:border-black transition-colors resize-none h-24 bg-white/90"
+                              />
+                              <div className="flex gap-2 justify-end">
+                                <button
+                                  onClick={() => setEditIndex(null)}
+                                  className="px-3 py-1 text-xs bg-gray-200 rounded-full text-gray-600"
+                                >
+                                  取消
+                                </button>
+                                <button
+                                  onClick={() => saveEdit(i)}
+                                  className="px-3 py-1 text-xs bg-black text-white rounded-full"
+                                >
+                                  保存
+                                </button>
+                              </div>
                             </div>
-                            {/* 点击遮罩层关闭菜单 */}
+                          ) : (
+                            // 正常显示模式：绑定长按事件
                             <div
-                              className="fixed inset-0 z-[-1]"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setActiveMenuIndex(null);
+                              className={
+                                isMultiSelectMode ? "pointer-events-none" : ""
+                              }
+                              onContextMenu={
+                                !isMultiSelectMode
+                                  ? (e) => handleContextMenu(e, i)
+                                  : undefined
+                              }
+                              onTouchStart={
+                                !isMultiSelectMode
+                                  ? () => handleTouchStart(i)
+                                  : undefined
+                              }
+                              onTouchEnd={
+                                !isMultiSelectMode ? handleTouchEnd : undefined
+                              }
+                              onMouseDown={
+                                !isMultiSelectMode
+                                  ? () => handleTouchStart(i)
+                                  : undefined
+                              }
+                              onMouseUp={
+                                !isMultiSelectMode ? handleTouchEnd : undefined
+                              }
+                            >
+                              {stickerUrl ? (
+                                <div className="w-32 rounded-xl overflow-hidden shadow-sm border border-gray-100">
+                                  <img
+                                    src={stickerUrl}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              ) : (
+                                <div
+                                  className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap select-text ${
+                                    msg.sender === "me"
+                                      ? "bg-[#2C2C2C] text-white rounded-tr-none"
+                                      : "bg-white border border-gray-100 text-gray-800 rounded-tl-none"
+                                  }`}
+                                >
+                                  {msg.isForward ? (
+                                    <div className="text-left max-w-[240px] pl-3 border-l-2 border-white/30 my-1">
+                                      <div className="flex items-center gap-2 mb-1 opacity-70">
+                                        <Share size={10} />
+                                        <span className="text-[10px] font-bold uppercase tracking-wider">
+                                          {msg.forwardData.type === "post"
+                                            ? "帖子"
+                                            : "评论"}
+                                        </span>
+                                      </div>
+
+                                      {msg.forwardData.type === "post" ? (
+                                        <>
+                                          <div className="font-bold text-xs text-white mb-0.5 line-clamp-1">
+                                            {msg.forwardData.title}
+                                          </div>
+                                          <div className="text-[10px] text-white/60 mb-1">
+                                            @{msg.forwardData.author}
+                                          </div>
+                                          <div className="text-xs text-white/80 line-clamp-3 leading-relaxed font-light">
+                                            {msg.forwardData.content}
+                                          </div>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <div className="text-[10px] text-white/60 mb-0.5">
+                                            源自: {msg.forwardData.parentTitle}
+                                          </div>
+                                          <div className="text-[10px] text-white/80 mb-1 font-bold">
+                                            @{msg.forwardData.author}
+                                          </div>
+                                          <div className="text-xs text-white/80 line-clamp-3 leading-relaxed font-light">
+                                            {msg.forwardData.content}
+                                          </div>
+                                        </>
+                                      )}
+                                    </div>
+                                  ) : msg.isVoice ? (
+                                    <div className="flex items-center gap-2 min-w-[120px]">
+                                      <span className="opacity-90 italic">
+                                        {msg.text.replace("[语音消息] ", "")}
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    msg.text
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* --- 长按弹出的菜单 (Overlay) --- */}
+                          {!isMultiSelectMode && activeMenuIndex === i && (
+                            <div
+                              className="absolute top-full mt-2 z-50 flex flex-col items-center animate-in fade-in zoom-in-95 duration-200"
+                              style={{
+                                left: msg.sender === "me" ? "auto" : "0",
+                                right: msg.sender === "me" ? "0" : "auto",
                               }}
-                            ></div>
-                          </div>
+                            >
+                              <div className="bg-[#1a1a1a]/95 backdrop-blur-md text-white rounded-xl shadow-2xl p-1.5 flex gap-1 items-center border border-white/20">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleCopy(msg.text);
+                                  }}
+                                  className="flex flex-col items-center gap-1 p-2 hover:bg-white/20 rounded-lg min-w-[40px]"
+                                >
+                                  <span className="text-[11px]">复制</span>
+                                </button>
+
+                                <div className="w-[1px] h-4 bg-white/20"></div>
+
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    startEdit(i, msg.text);
+                                  }}
+                                  className="flex flex-col items-center gap-1 p-2 hover:bg-white/20 rounded-lg min-w-[40px]"
+                                >
+                                  <span className="text-[11px]">改写</span>
+                                </button>
+
+                                <div className="w-[1px] h-4 bg-white/20"></div>
+
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsMultiSelectMode(true);
+                                    setSelectedMsgs(new Set([i])); // 选中当前这条
+                                    setActiveMenuIndex(null);
+                                  }}
+                                  className="flex flex-col items-center gap-1 p-2 hover:bg-white/20 rounded-lg min-w-[40px]"
+                                >
+                                  <span className="text-[11px]">多选</span>
+                                </button>
+
+                                <div className="w-[1px] h-4 bg-white/20"></div>
+
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteWithConfirm(i);
+                                  }}
+                                  className="flex flex-col items-center gap-1 p-2 hover:bg-red-500/50 rounded-lg min-w-[40px] text-red-300 hover:text-white"
+                                >
+                                  <span className="text-[11px]">删除</span>
+                                </button>
+                              </div>
+                              {/* 点击遮罩层关闭菜单 */}
+                              <div
+                                className="fixed inset-0 z-[-1]"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveMenuIndex(null);
+                                }}
+                              ></div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* 3. (恢复位置) 状态按钮：在气泡旁边 */}
+                        {msg.sender === "char" && msg.status && (
+                          <button
+                            onClick={() =>
+                              setExpandedChatStatusIndex(
+                                expandedChatStatusIndex === i ? null : i
+                              )
+                            }
+                            className={`self-center p-1.5 rounded-full transition-all ${
+                              expandedChatStatusIndex === i
+                                ? "bg-[#7A2A3A] text-white shadow-md transform scale-110"
+                                : "text-gray-300 hover:text-[#7A2A3A] hover:bg-gray-100"
+                            }`}
+                          >
+                            <Activity size={12} />
+                          </button>
                         )}
                       </div>
 
-                      {/* 3. (恢复位置) 状态按钮：在气泡旁边 */}
-                      {msg.sender === "char" && msg.status && (
-                        <button
-                          onClick={() =>
-                            setExpandedChatStatusIndex(
-                              expandedChatStatusIndex === i ? null : i
-                            )
-                          }
-                          className={`self-center p-1.5 rounded-full transition-all ${
-                            expandedChatStatusIndex === i
-                              ? "bg-[#7A2A3A] text-white shadow-md transform scale-110"
-                              : "text-gray-300 hover:text-[#7A2A3A] hover:bg-gray-100"
+                      {/* --- 第二行：底部信息栏 (仅时间 + 重说) --- */}
+                      {!isMultiSelectMode && (
+                        <div
+                          className={`flex gap-3 mt-1 items-center opacity-0 group-hover:opacity-100 transition-opacity ${
+                            msg.sender === "me"
+                              ? "mr-12 flex-row-reverse"
+                              : "ml-12 pl-1 flex-row"
                           }`}
                         >
-                          <Activity size={12} />
-                        </button>
+                          <span className="text-[9px] text-gray-300 font-mono">
+                            {msg.time}
+                          </span>
+
+                          {/* 这里彻底移除了删除按钮，只保留重说 */}
+                          {msg.sender === "char" && (
+                            <button
+                              onClick={() => setRegenerateTarget(i)}
+                              className="text-gray-300 hover:text-black transition-colors p-1"
+                              title="重生成"
+                            >
+                              <RotateCcw size={11} />
+                            </button>
+                          )}
+                        </div>
                       )}
-                    </div>
 
-                    {/* --- 第二行：底部信息栏 (仅时间 + 重说) --- */}
-                    <div
-                      className={`flex gap-3 mt-1 items-center opacity-0 group-hover:opacity-100 transition-opacity ${
-                        msg.sender === "me"
-                          ? "mr-12 flex-row-reverse"
-                          : "ml-12 pl-1 flex-row"
-                      }`}
-                    >
-                      <span className="text-[9px] text-gray-300 font-mono">
-                        {msg.time}
-                      </span>
-
-                      {/* 这里彻底移除了删除按钮，只保留重说 */}
-                      {msg.sender === "char" && (
-                        <button
-                          onClick={() => setRegenerateTarget(i)}
-                          className="text-gray-300 hover:text-black transition-colors p-1"
-                          title="重生成"
-                        >
-                          <RotateCcw size={11} />
-                        </button>
-                      )}
-                    </div>
-
-                    {/* --- 第三行：状态栏展开卡片 (Status Card) --- */}
-                    {expandedChatStatusIndex === i && msg.status && (
-                      <div className="ml-12 mt-1 w-64 glass-card p-3 rounded-xl animate-in slide-in-from-top-2 border border-gray-200/50 relative z-10">
-                        <div className="space-y-2">
-                          <div className="flex items-start gap-2">
-                            <Shirt
-                              size={10}
-                              className="mt-0.5 text-gray-400 shrink-0"
-                            />
-                            <span className="text-[10px] text-gray-600 leading-tight">
-                              {msg.status.outfit}
-                            </span>
-                          </div>
-                          <div className="flex items-start gap-2">
-                            <Eye
-                              size={10}
-                              className="mt-0.5 text-gray-400 shrink-0"
-                            />
-                            <span className="text-[10px] text-gray-600 leading-tight">
-                              {msg.status.action}
-                            </span>
-                          </div>
-                          <div className="flex items-start gap-2">
-                            <Heart
-                              size={10}
-                              className="mt-0.5 text-blue-400 shrink-0"
-                            />
-                            <span className="text-[10px] text-blue-800 font-serif italic leading-tight">
-                              "{msg.status.thought}"
-                            </span>
-                          </div>
-                          <div className="flex items-start gap-2">
-                            <Ghost
-                              size={10}
-                              className="mt-0.5 text-red-400 shrink-0"
-                            />
-                            <span className="text-[10px] text-red-800 font-serif italic leading-tight">
-                              "{msg.status.desire}"
-                            </span>
+                      {/* --- 第三行：状态栏展开卡片 (Status Card) --- */}
+                      {expandedChatStatusIndex === i && msg.status && (
+                        <div className="ml-12 mt-1 w-64 glass-card p-3 rounded-xl animate-in slide-in-from-top-2 border border-gray-200/50 relative z-10">
+                          <div className="space-y-2">
+                            <div className="flex items-start gap-2">
+                              <Shirt
+                                size={10}
+                                className="mt-0.5 text-gray-400 shrink-0"
+                              />
+                              <span className="text-[10px] text-gray-600 leading-tight">
+                                {msg.status.outfit}
+                              </span>
+                            </div>
+                            <div className="flex items-start gap-2">
+                              <Eye
+                                size={10}
+                                className="mt-0.5 text-gray-400 shrink-0"
+                              />
+                              <span className="text-[10px] text-gray-600 leading-tight">
+                                {msg.status.action}
+                              </span>
+                            </div>
+                            <div className="flex items-start gap-2">
+                              <Heart
+                                size={10}
+                                className="mt-0.5 text-blue-400 shrink-0"
+                              />
+                              <span className="text-[10px] text-blue-800 font-serif italic leading-tight">
+                                "{msg.status.thought}"
+                              </span>
+                            </div>
+                            <div className="flex items-start gap-2">
+                              <Ghost
+                                size={10}
+                                className="mt-0.5 text-red-400 shrink-0"
+                              />
+                              <span className="text-[10px] text-red-800 font-serif italic leading-tight">
+                                "{msg.status.desire}"
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                      )}
+                    </div>
+                  );
+                })}
                 {(loading.chat || isTyping) && (
                   <div className="flex gap-2 items-center ml-12 pl-2">
                     <div
@@ -5200,99 +5627,125 @@ ${recentHistory}
 
               {/* --- 底部输入栏 (V2: 按钮常驻 + 响应式布局) --- */}
               <div className="p-3 glass-panel border-t border-white/50 shrink-0">
-                <div className="relative flex items-center gap-1.5 md:gap-2">
-                  {loading.chat ? (
+                {isMultiSelectMode ? (
+                  /* 多选操作栏 */
+                  <div className="flex items-center justify-between px-2 animate-in slide-in-from-bottom-2">
                     <button
-                      onClick={stopGeneration}
-                      className="w-full py-2.5 bg-red-50 text-red-500 rounded-full text-xs font-bold flex items-center justify-center gap-2 animate-pulse"
+                      onClick={() => {
+                        setIsMultiSelectMode(false);
+                        setSelectedMsgs(new Set());
+                      }}
+                      className="px-6 py-2 bg-gray-200 text-gray-700 rounded-full text-xs font-bold"
                     >
-                      <XCircle size={14} /> 取消生成
+                      取消
                     </button>
-                  ) : (
-                    <>
-                      {/* 左侧功能区：表情 + 语音 */}
-                      <div className="flex gap-1 shrink-0">
-                        <button
-                          onClick={() =>
-                            setShowUserStickerPanel(!showUserStickerPanel)
-                          }
-                          className={`p-2 md:p-2.5 rounded-full transition-colors ${
-                            showUserStickerPanel
-                              ? "bg-gray-200 text-black"
-                              : "text-gray-500 hover:bg-gray-100"
-                          }`}
-                        >
-                          <Smile size={20} strokeWidth={1.5} />
-                        </button>
+                    <span className="text-xs font-bold text-gray-500">
+                      已选 {selectedMsgs.size} 条
+                    </span>
+                    <button
+                      onClick={handleBatchDelete}
+                      disabled={selectedMsgs.size === 0}
+                      className="px-6 py-2 bg-red-500 text-white rounded-full text-xs font-bold disabled:opacity-50 flex items-center gap-2"
+                    >
+                      <Trash2 size={14} />
+                      删除
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative flex items-center gap-1.5 md:gap-2">
+                    {loading.chat ? (
+                      <button
+                        onClick={stopGeneration}
+                        className="w-full py-2.5 bg-red-50 text-red-500 rounded-full text-xs font-bold flex items-center justify-center gap-2 animate-pulse"
+                      >
+                        <X size={14} /> 取消生成
+                      </button>
+                    ) : (
+                      <>
+                        {/* 左侧功能区：表情 + 语音 */}
+                        <div className="flex gap-1 shrink-0">
+                          <button
+                            onClick={() =>
+                              setShowUserStickerPanel(!showUserStickerPanel)
+                            }
+                            className={`p-2 md:p-2.5 rounded-full transition-colors ${
+                              showUserStickerPanel
+                                ? "bg-gray-200 text-black"
+                                : "text-gray-500 hover:bg-gray-100"
+                            }`}
+                          >
+                            <Smile size={20} strokeWidth={1.5} />
+                          </button>
 
-                        <button
-                          onClick={() => setIsVoiceMode(!isVoiceMode)}
-                          className={`p-2 md:p-2.5 rounded-full transition-colors ${
-                            isVoiceMode
-                              ? "bg-[#7A2A3A] text-white shadow-md"
-                              : "text-gray-500 hover:bg-gray-100"
-                          }`}
-                        >
-                          <Mic size={20} strokeWidth={1.5} />
-                        </button>
-                      </div>
+                          <button
+                            onClick={() => setIsVoiceMode(!isVoiceMode)}
+                            className={`p-2 md:p-2.5 rounded-full transition-colors ${
+                              isVoiceMode
+                                ? "bg-[#7A2A3A] text-white shadow-md"
+                                : "text-gray-500 hover:bg-gray-100"
+                            }`}
+                          >
+                            <Mic size={20} strokeWidth={1.5} />
+                          </button>
+                        </div>
 
-                      {/* 中间输入框：自动伸缩 (min-w-0 是防溢出的关键) */}
-                      <input
-                        id="chat-input"
-                        autoComplete="off"
-                        type="text"
-                        value={chatInput}
-                        onChange={(e) => setChatInput(e.target.value)}
-                        onKeyPress={(e) =>
-                          e.key === "Enter" &&
-                          chatInput.trim() &&
-                          handleUserSend(
-                            chatInput,
-                            isVoiceMode ? "voice" : "text"
-                          )
-                        }
-                        placeholder={isVoiceMode ? "语音..." : "发消息..."}
-                        className={`flex-grow min-w-0 border rounded-full py-2.5 px-3 md:px-4 text-sm focus:outline-none transition-all font-sans shadow-inner ${
-                          isVoiceMode
-                            ? "bg-[#7A2A3A]/10 border-[#7A2A3A]/30 text-[#7A2A3A] placeholder:text-[#7A2A3A]/50"
-                            : "bg-white/60 border-gray-200 text-gray-800 focus:border-gray-400"
-                        }`}
-                      />
-
-                      {/* 右侧功能区：发送 + 触发回复 */}
-                      <div className="flex gap-1 shrink-0">
-                        {/* 发送按钮：常驻，无内容时置灰 */}
-                        <button
-                          onClick={() =>
+                        {/* 中间输入框：自动伸缩 (min-w-0 是防溢出的关键) */}
+                        <input
+                          id="chat-input"
+                          autoComplete="off"
+                          type="text"
+                          value={chatInput}
+                          onChange={(e) => setChatInput(e.target.value)}
+                          onKeyPress={(e) =>
+                            e.key === "Enter" &&
+                            chatInput.trim() &&
                             handleUserSend(
                               chatInput,
                               isVoiceMode ? "voice" : "text"
                             )
                           }
-                          disabled={!chatInput.trim()}
-                          className={`p-2 md:p-2.5 rounded-full transition-colors shadow-sm ${
-                            chatInput.trim()
-                              ? "bg-white text-gray-900 border border-gray-200 hover:bg-gray-50"
-                              : "bg-transparent text-gray-300 border border-transparent cursor-not-allowed"
+                          placeholder={isVoiceMode ? "语音..." : "发消息..."}
+                          className={`flex-grow min-w-0 border rounded-full py-2.5 px-3 md:px-4 text-sm focus:outline-none transition-all font-sans shadow-inner ${
+                            isVoiceMode
+                              ? "bg-[#7A2A3A]/10 border-[#7A2A3A]/30 text-[#7A2A3A] placeholder:text-[#7A2A3A]/50"
+                              : "bg-white/60 border-gray-200 text-gray-800 focus:border-gray-400"
                           }`}
-                          title="发送 (不触发回复)"
-                        >
-                          <Send size={18} strokeWidth={1.5} />
-                        </button>
+                        />
 
-                        {/* 触发回复按钮：高亮突出 */}
-                        <button
-                          onClick={() => triggerAIResponse()}
-                          className="p-2 md:p-2.5 bg-[#2C2C2C] text-white rounded-full hover:bg-black transition-all shadow-md hover:shadow-lg active:scale-95"
-                          title="让对方回复"
-                        >
-                          <MessageSquare size={18} strokeWidth={1.5} />
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
+                        {/* 右侧功能区：发送 + 触发回复 */}
+                        <div className="flex gap-1 shrink-0">
+                          {/* 发送按钮：常驻，无内容时置灰 */}
+                          <button
+                            onClick={() =>
+                              handleUserSend(
+                                chatInput,
+                                isVoiceMode ? "voice" : "text"
+                              )
+                            }
+                            disabled={!chatInput.trim()}
+                            className={`p-2 md:p-2.5 rounded-full transition-colors shadow-sm ${
+                              chatInput.trim()
+                                ? "bg-white text-gray-900 border border-gray-200 hover:bg-gray-50"
+                                : "bg-transparent text-gray-300 border border-transparent cursor-not-allowed"
+                            }`}
+                            title="发送 (不触发回复)"
+                          >
+                            <Send size={18} strokeWidth={1.5} />
+                          </button>
+
+                          {/* 触发回复按钮：高亮突出 */}
+                          <button
+                            onClick={() => triggerAIResponse()}
+                            className="p-2 md:p-2.5 bg-[#2C2C2C] text-white rounded-full hover:bg-black transition-all shadow-md hover:shadow-lg active:scale-95"
+                            title="让对方回复"
+                          >
+                            <MessageSquare size={18} strokeWidth={1.5} />
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </AppWindow>
@@ -5324,7 +5777,7 @@ ${recentHistory}
                 setLongMemory={setLongMemory}
                 triggerSummary={generateSummary}
                 isSummarizing={isSummarizing}
-                // 聊天设置参数 (样式和逻辑都在 SettingsPanel 里了)
+                // 聊天设置
                 chatStyle={chatStyle}
                 setChatStyle={setChatStyle}
                 interactionMode={interactionMode}
@@ -5338,6 +5791,9 @@ ${recentHistory}
                 handleStickerUpload={handleStickerUpload}
                 // 指令参数
                 prompts={prompts}
+                // 导入导出
+                onExportChat={exportChatData}
+                onImportChat={importChatData}
               />
             </div>
           </AppWindow>
@@ -6516,8 +6972,12 @@ ${recentHistory}
                     disabled={loading.music}
                     className="mx-auto mt-6 px-6 py-3 bg-[#2C2C2C] text-white rounded-full text-xs uppercase tracking-widest hover:bg-black flex items-center gap-2 shadow-lg hover:shadow-xl transition-all"
                   >
-                    <SkipForward size={12} />
-                    切歌 / Next
+                    {loading.music ? (
+                      <RefreshCw size={12} className="animate-spin" />
+                    ) : (
+                      <SkipForward size={12} />
+                    )}
+                    {loading.music ? "生成中..." : "切歌 / Next"}
                   </button>
                 </div>
               ) : (
