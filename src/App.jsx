@@ -77,6 +77,9 @@ import {
   Eye,
   Sparkle,
   Check, // Bot Icon for Char Reply
+  Circle, // [新增]
+  Sparkles, // [新增]
+  Calendar,
 } from "lucide-react";
 
 /* --- STYLES --- */
@@ -1086,6 +1089,34 @@ CRITICAL INSTRUCTIONS:
 4. **CHRONOLOGICAL**: Write a flat, chronological description of the events.
 5. **EXTREME BREVITY**: Do NOT transcribe the conversation. Record mainly **Important Facts**, **Decisions**, or **Status Changes**.
 6. **Language**: Simplified Chinese (zh-CN).`,
+
+tracker_update: `Analyze the chat history. Extract **PERMANENT** facts or **MAJOR** plans.
+Context: {{HISTORY}}
+Pending Events: {{PENDING_EVENTS}}
+Existing Facts: {{USER_FACTS}}
+
+### RULES:
+1. **Trigger Condition**: ONLY output if there is a NEW, PERMANENT attribute (Job, Habit, Phobia) or a CONCRETE PLAN (Date, Promise).
+2. **Length Limit**: The 'content' MUST be extremely concise, **under 10 Chinese characters**. Use keywords or short phrases.
+   - Good: "不吃香菜", "周五去看电影", "对花生过敏"
+   - Bad: "She mentioned that she really doesn't like eating cilantro recently."
+3. **Format**:
+   - 'content': < 12 Chinese characters.
+   - 'comment': 1st person thought (Short).
+4. **Silence**: If nothing important happened, return empty arrays.
+
+### JSON OUTPUT:
+{
+  "newFacts": [
+    { "content": "短语概括(10字内)", "comment": "Inner thought" }
+  ],
+  "newEvents": [
+    { "content": "事件名称(10字内)", "type": "pending", "comment": "Inner thought" }
+  ],
+  "completedEventIds": [
+    { "id": "event_id", "comment": "Thought on completion" }
+  ]
+}`,
 };
 
 const STYLE_PROMPTS = {
@@ -1302,6 +1333,95 @@ const CollapsibleThought = ({ text, label = "查看心声" }) => {
           </p>
         </div>
       )}
+    </div>
+  );
+};
+
+const MinimalCard = ({ item, type = "fact", onDelete, onEdit }) => {
+  const isCompleted = type === "completed";
+  const isFact = type === "fact";
+  const isPending = type === "pending";
+
+  const baseClasses = `
+    group relative w-full p-4 rounded-xl border transition-all duration-300 ease-out mb-3
+    ${
+      isCompleted
+        ? "bg-gray-50/50 border-gray-100 opacity-60 hover:opacity-100 grayscale"
+        : "bg-white border-gray-100 hover:border-gray-300 hover:shadow-lg hover:-translate-y-1"
+    }
+  `;
+
+  return (
+    <div className={baseClasses}>
+      {/* 左侧装饰条 */}
+      {isFact && (
+        <div className="absolute left-0 top-4 bottom-4 w-1 bg-[#D4C5A9] rounded-r-full opacity-80"></div>
+      )}
+      {isPending && (
+        <div className="absolute left-0 top-4 bottom-4 w-1 bg-black/80 rounded-r-full opacity-80"></div>
+      )}
+
+      <div className="flex justify-between items-start mb-2 pl-2">
+        <h4
+          className={`text-xs font-bold tracking-wide leading-relaxed pr-4 ${
+            isCompleted
+              ? "text-gray-500 line-through decoration-gray-300"
+              : "text-gray-800"
+          }`}
+        >
+          {item.content}
+        </h4>
+
+        <div className="shrink-0 text-gray-300 group-hover:text-gray-400 transition-colors flex gap-1">
+           {/* [新增] 编辑按钮 */}
+           <button 
+             onClick={() => onEdit && onEdit(item.id, item.content)}
+             className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-black"
+           >
+             <Edit2 size={12} />
+           </button>
+           
+          {isPending && <Circle size={14} strokeWidth={1.5} />}
+          {isCompleted && <CheckCircle2 size={14} className="text-gray-400" />}
+          {isFact && <Sparkles size={14} className="text-[#D4C5A9]" />}
+        </div>
+      </div>
+
+      <div
+        className={`relative mt-2 p-2 rounded-lg text-[10px] leading-relaxed flex gap-2 ${
+          isCompleted ? "bg-transparent pl-0" : "bg-gray-50"
+        }`}
+      >
+        <Quote
+          size={10}
+          className={`shrink-0 mt-0.5 ${
+            isCompleted ? "text-gray-300" : "text-gray-400"
+          }`}
+        />
+        <p
+          className={`font-serif italic ${
+            isCompleted ? "text-gray-400" : "text-gray-600"
+          }`}
+        >
+          {item.comment}
+        </p>
+      </div>
+
+      <div className="flex justify-between items-center mt-3 pl-2 h-4">
+        <span className="text-[9px] text-gray-300 font-medium tracking-widest uppercase flex items-center gap-1 group-hover:text-gray-400 transition-colors">
+          <Calendar size={10} /> {item.time}
+        </span>
+
+        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0 duration-300">
+          <button
+            onClick={() => onDelete && onDelete(item.id)}
+            className="p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+            title="删除"
+          >
+            <Trash2 size={10} />
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
@@ -2092,7 +2212,7 @@ const CreationAssistantModal = ({
   );
 };
 
-const StatusPanel = ({ statusHistory, onClose }) => (
+const StatusPanel = ({ statusHistory, onClose, onDelete }) => (
   <div className="flex flex-col h-full">
     <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4 shrink-0">
       <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2 text-gray-800">
@@ -2106,14 +2226,32 @@ const StatusPanel = ({ statusHistory, onClose }) => (
       {statusHistory.length === 0 && (
         <p className="text-center text-gray-400 text-xs py-10">暂无状态记录</p>
       )}
-      {[...statusHistory].reverse().map((entry, i) => (
-        <div
-          key={i}
-          className="glass-card p-4 rounded-xl animate-in slide-in-from-bottom-2 relative"
-        >
-          <span className="absolute top-3 right-3 text-[9px] font-mono text-gray-400">
-            {entry.time}
-          </span>
+      {[...statusHistory].reverse().map((entry, i) => {
+        // [新增] 计算原始索引：因为列表倒序了，所以要反算回原始数组的索引
+        const originalIndex = statusHistory.length - 1 - i;
+        
+        return (
+          <div
+            key={i}
+            // [修改] 必须加上 'group' 类名，否则里面的 group-hover 不生效
+            className="glass-card p-4 rounded-xl animate-in slide-in-from-bottom-2 relative group"
+          >
+            <div className="absolute top-3 right-3 flex items-center gap-2">
+              <span className="text-[9px] font-mono text-gray-400">
+                {entry.time}
+              </span>
+              <button
+                // [修改] 确保这里调用的是传入的 onDelete，并使用计算好的 originalIndex
+                onClick={() => {
+                  if (window.confirm("确定删除这条状态记录？")) {
+                    onDelete(originalIndex);
+                  }
+                }}
+                className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-300 hover:text-red-400"
+              >
+                <Trash2 size={12} />
+              </button>
+            </div>
           <div className="grid grid-cols-1 gap-4">
             <div>
               <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-gray-400 mb-1">
@@ -2149,7 +2287,8 @@ const StatusPanel = ({ statusHistory, onClose }) => (
             </div>
           </div>
         </div>
-      ))}
+      );
+      })}
     </div>
   </div>
 );
@@ -2206,6 +2345,17 @@ const App = () => {
   const [browserHistory, setBrowserHistory] = useStickyState(
     [],
     "echoes_browser"
+  );
+
+  // 追踪器相关状态
+  const [userFacts, setUserFacts] = useStickyState([], "echoes_user_facts");
+  const [sharedEvents, setSharedEvents] = useStickyState(
+    [],
+    "echoes_shared_events"
+  );
+  const [trackerConfig, setTrackerConfig] = useStickyState(
+    { facts: true, events: true },
+    "echoes_tracker_config"
   );
 
   // Settings
@@ -2373,114 +2523,142 @@ const App = () => {
   const [userStickers, setUserStickers] = useStickyState(
     [
       {
+        id: "us1", // 新增 ID
         url: "https://github.com/user-attachments/assets/f426b3f8-f4c3-4337-8dc8-ec1a0fa38bf8",
         desc: "一只用力踩着地面、生气地目视前方的小熊，好像在说“我现在很不爽！”",
       },
       {
+        id: "us2", // 新增 ID
         url: "https://github.com/user-attachments/assets/6f87cffb-8514-4add-a390-5ec98f7b5e43",
         desc: "一只蹦蹦跳跳、欢天喜地的小熊，好像在说“我现在很期待！”",
       },
       {
+        id: "us3",
         url: "https://github.com/user-attachments/assets/92ea2814-ad8f-4ef5-9811-720b19583817",
         desc: "两只粉色外套的小熊拿着小心心坐在一起，好像在说“好幸福——”",
       },
       {
+        id: "us4",
         url: "https://github.com/user-attachments/assets/4a532ae5-5342-4fcc-bf36-d530fd0a5c2e",
         desc: "一边抚摸着小狗，一边说“好乖喔好乖喔”",
       },
       {
+        id: "us5",
         url: "https://github.com/user-attachments/assets/aa55eef9-c185-43ec-bf52-53e057433612",
         desc: "一只委屈流泪又有点凶巴巴的小熊，好像在说“我有点喜欢你才找你玩，你讲话干嘛凶我。”",
       },
       {
+        id: "us6",
         url: "https://github.com/user-attachments/assets/a4937632-5207-4b54-96eb-abcc5a62a546",
         desc: "一只吃醋不开心的小熊，好像在说“我吃醋了！”",
       },
       {
+        id: "us7",
         url: "https://github.com/user-attachments/assets/f95fea40-fce4-49c1-ab9d-0a3d7be39e28",
         desc: "一只害羞脸红的小熊，好像在说“我现在很害羞”",
       },
       {
+        id: "us8",
         url: "https://github.com/user-attachments/assets/aba25131-8554-450f-90a6-83be6b10de11",
         desc: "一个可以用于表示亲近的表情包，两个彼此散发着爱意的小人牵着手，中间有一颗爱心",
       },
       {
+        id: "us9",
         url: "https://github.com/user-attachments/assets/d40024fb-694b-40a1-a7d8-c27dc93bcd26",
         desc: "一个幽默又命苦的打工人上班表情包，好像在说“当牛做马中......”",
       },
       {
+        id: "us10",
         url: "https://github.com/user-attachments/assets/4144d85e-d454-4311-83ac-c808dfddfffd",
         desc: "一只面色阴沉、又有点像撒娇的小熊表情包，好像在说“我要向你施压”",
       },
       {
+        id: "us11",
         url: "https://github.com/user-attachments/assets/85deebec-c573-4a10-a65f-eb0d32197093",
         desc: "一只用梯子向上爬的企鹅表情包，好像在说“无名小卒积极向上中！”",
       },
       {
+        id: "us12",
         url: "https://github.com/user-attachments/assets/c13c2fc7-6773-46bd-ad3f-087ae3ef19ff",
         desc: "一只低头表达感谢的粉色小熊表情包，好像在说“谢谢！”",
       },
       {
+        id: "us13",
         url: "https://github.com/user-attachments/assets/4724d9d0-22f7-4d27-939c-882a195457bf",
         desc: "一只可爱的粉色小熊的表情包，好像在说“OK！”",
       },
       {
+        id: "us14",
         url: "https://github.com/user-attachments/assets/50baa92c-9e2e-4424-b674-4c255450c17a",
         desc: "一个抽象搞笑的、人躺在床上的准备睡觉的表情包，好像在说“晚安，我是工资的奴隶我先睡了”",
       },
       {
+        id: "us15",
         url: "https://github.com/user-attachments/assets/5ad86b7a-fc6f-4e1c-8572-66dfdf0ae538",
         desc: "一只厚脸皮、无所畏惧、又有轻微调情意味的小熊表情包，好像在说“你骂我？你不怕我是抖M吗？”",
       },
       {
+        id: "us16",
         url: "https://github.com/user-attachments/assets/f5e1ae53-07d5-4149-9c3d-517a3c2cc19d",
         desc: "一个幽默可爱、可以用于调情的表情包，用直白的邀请函写着“上线了，泡我^^！”",
       },
       {
+        id: "us17",
         url: "https://github.com/user-attachments/assets/28ec4ac5-cf9a-4610-b286-fb75732266e9",
         desc: "一只正在大哭流泪的小仓鼠，看起来特别委屈可怜",
       },
       {
+        id: "us18",
         url: "https://github.com/user-attachments/assets/34506d5b-3420-48a9-a083-afc7f683cc4f",
         desc: "一只可爱但表情凶狠的小白猫，放狠话说“别以为我是小猫我就不能弄你”，好像在奶声奶气地威胁人",
       },
       {
+        id: "us19",
         url: "https://github.com/user-attachments/assets/52501a5a-a98b-46dc-90b5-dde1dbe248c2",
         desc: "一只戴着头巾的小熊，配文感叹“今天和蛋挞酥皮一样脆弱”，形容自己一碰就碎的心理状态",
       },
       {
+        id: "us20",
         url: "https://github.com/user-attachments/assets/860b750d-9f33-49c6-8f4c-922777874660",
         desc: "一张粉色的复古Word文档截图，写着霸道又可怕的告白“和我交往吧，要是不答应就死定了”，一种威胁式的求爱",
       },
       {
+        id: "us21",
         url: "https://github.com/user-attachments/assets/15f3aed6-8031-426e-84bd-d25ab65e5270",
         desc: "一只表情厌世、看透红尘的小狗，配文“狗逼人生”",
       },
       {
+        id: "us22",
         url: "https://github.com/user-attachments/assets/33d7078d-1da7-4811-8cae-984189e663bc",
         desc: "一只小熊的表情包，配着地狱笑话般的文字“幸福就像巧克力，而我是一条狗”，在那自嘲无福消受幸福",
       },
       {
+        id: "us23",
         url: "https://github.com/user-attachments/assets/0d273ca6-8bff-41ed-912c-07a0b51259e1",
         desc: "一张模糊且充满压迫感的大脸特写，冷漠地质问“笑脸给多了？”，暗示对方蹬鼻子上脸，自己要发火了",
       },
       {
+        id: "us24",
         url: "https://github.com/user-attachments/assets/57fb6a60-a481-444e-9866-a26e3f01e51f",
         desc: "一个跪地抱头、痛苦的3D小白人，配文“我真的没时间陪你闹了”，表达出对某人无理取闹的疲惫和绝望",
       },
       {
+        id: "us25",
         url: "https://github.com/user-attachments/assets/0e3963a8-5b8e-41bc-8da9-af367526ee05",
         desc: "一个长着真人脸的黄豆表情比着大拇指，配了一句谐音梗“这大厦避风了”（这大傻逼疯了）",
       },
       {
+        id: "us26",
         url: "https://github.com/user-attachments/assets/b8cec8bb-57c4-4f61-9b78-d186573c7e39",
         desc: "一只头顶光环升入天堂的小熊，配文“思考了很久还是决定出国啦——天国”，用一种可爱、荒谬又黑色幽默的方式表达“不想活了/想去死”的消极情绪",
       },
       {
+        id: "us27",
         url: "https://github.com/user-attachments/assets/1ff0555f-d12d-47da-a8cc-0a42e1b0b545",
         desc: "一只面带微笑、看起来人畜无害的小白兔，配文却是凶狠的“我真的会假装玩SM把你往死里打”，用最可爱的脸说最狠毒的话，威胁感拉满",
       },
       {
+        id: "us28",
         url: "https://github.com/user-attachments/assets/91c936aa-ac14-49be-b75c-d2c6e68b6ee7",
         desc: "两位表情严肃的警察注视着前方，头顶问号质问“又开始了是吗？”，用来制止对方发癫或做奇怪的事情",
       },
@@ -2654,6 +2832,137 @@ const App = () => {
     setGeneratedPreview(null);
     setCreationInput("");
     showToast("success", `角色「${finalName}」已加载`);
+  };
+
+  const generateTrackerUpdate = async () => {
+    if (!persona || (!trackerConfig.facts && !trackerConfig.events)) return;
+
+    // 获取最近的聊天记录 (例如最近 8 条)
+    const recentHistory = getContextString(8);
+    // 获取当前的未完成事件
+    const pendingEvents = sharedEvents.filter((e) => e.type === "pending");
+    const pendingEventsStr = JSON.stringify(
+      pendingEvents.map((e) => ({ id: e.id, content: e.content }))
+    );
+    const userFactsStr = JSON.stringify(userFacts.map((f) => f.content));
+
+    const prompt = prompts.tracker_update
+      .replaceAll("{{HISTORY}}", recentHistory)
+      .replaceAll("{{PENDING_EVENTS}}", pendingEventsStr)
+      .replaceAll("{{USER_FACTS}}", userFactsStr)
+      .replaceAll("{{USER_NAME}}", userName || "User")
+      .replaceAll("{{NAME}}", persona.name);
+
+    try {
+      // 静默运行，不阻断 UI
+      const data = await generateContent(
+        { prompt, systemInstruction: prompts.system },
+        apiConfig,
+        null // 静默模式
+      );
+
+      if (data) {
+        let hasUpdates = false;
+
+        // 1. 处理新事实
+        if (trackerConfig.facts && data.newFacts && data.newFacts.length > 0) {
+          const newFactEntries = data.newFacts.map((f) => ({
+            id: `fact_${Date.now()}_${Math.random()}`,
+            content: f.content,
+            comment: f.comment,
+            time: formatDate(getCurrentTimeObj()),
+          }));
+          setUserFacts((prev) => [...newFactEntries, ...prev]);
+          hasUpdates = true;
+        }
+
+        // 2. 处理新事件
+        if (
+          trackerConfig.events &&
+          data.newEvents &&
+          data.newEvents.length > 0
+        ) {
+          const newEventEntries = data.newEvents.map((e) => ({
+            id: `evt_${Date.now()}_${Math.random()}`,
+            content: e.content,
+            type: e.type || "pending",
+            comment: e.comment,
+            time: formatDate(getCurrentTimeObj()),
+          }));
+          setSharedEvents((prev) => [...newEventEntries, ...prev]);
+          hasUpdates = true;
+        }
+
+        // 3. 更新已完成事件
+        if (
+          trackerConfig.events &&
+          data.completedEventIds &&
+          data.completedEventIds.length > 0
+        ) {
+          setSharedEvents((prev) =>
+            prev.map((evt) => {
+              const completionInfo = data.completedEventIds.find(
+                (c) => c.id === evt.id
+              );
+              if (completionInfo) {
+                hasUpdates = true;
+                return {
+                  ...evt,
+                  type: "completed",
+                  comment: completionInfo.comment || evt.comment, // 更新为完成后的感想
+                  completedTime: formatDate(getCurrentTimeObj()),
+                };
+              }
+              return evt;
+            })
+          );
+        }
+      }
+    } catch (e) {
+      console.error("Tracker Update Failed", e);
+    }
+  };
+
+  // --- TRACKER HANDLERS ---
+  
+  // 删除条目
+  const handleDeleteTrackerItem = (type, id) => {
+    if (!window.confirm("确定删除这条记录吗？")) return;
+    if (type === "fact") {
+      setUserFacts((prev) => prev.filter((i) => i.id !== id));
+    } else {
+      setSharedEvents((prev) => prev.filter((i) => i.id !== id));
+    }
+  };
+
+  // 编辑条目 (这里使用简单的 prompt，你也可以复用编辑 Modal)
+  const handleEditTrackerItem = (type, id, oldContent) => {
+    const newContent = window.prompt("编辑内容:", oldContent);
+    if (newContent && newContent.trim() !== "") {
+      if (type === "fact") {
+        setUserFacts((prev) =>
+          prev.map((i) => (i.id === id ? { ...i, content: newContent } : i))
+        );
+      } else {
+        setSharedEvents((prev) =>
+          prev.map((i) => (i.id === id ? { ...i, content: newContent } : i))
+        );
+      }
+      showToast("success", "已更新");
+    }
+  };
+
+  // 切换配置开关
+  const toggleTrackerConfig = (key) => {
+    setTrackerConfig((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  // 删除状态记录函数
+  const handleDeleteStatus = (index) => {
+    const newHistory = [...statusHistory];
+    newHistory.splice(index, 1);
+    setStatusHistory(newHistory);
+    showToast("success", "状态记录已删除");
   };
 
   // Effects
@@ -3273,6 +3582,9 @@ const App = () => {
       "echoes_forum_data",
       "echoes_forum_settings",
       "echoes_interaction_mode",
+      "echoes_user_facts",
+      "echoes_shared_events",
+      "echoes_tracker_config",
     ];
     keysToRemove.forEach((k) => localStorage.removeItem(k));
 
@@ -3296,6 +3608,9 @@ const App = () => {
       smurfNick: "不是小号",
       charNick: "匿名用户",
     });
+    setUserFacts([]);
+    setSharedEvents([]);
+    setTrackerConfig({ facts: true, events: true });
 
     // Lock
     setIsLocked(true);
@@ -3305,6 +3620,7 @@ const App = () => {
 
   const handleUserSend = (content, type = "text", sticker = null) => {
     let displayText = "";
+    const stickerId = sticker?.id;
 
     if (type === "voice") {
       displayText = `[语音消息] ${content}`;
@@ -3319,8 +3635,9 @@ const App = () => {
       sender: "me",
       text: displayText,
       isVoice: type === "voice",
-      stickerId: sticker ? sticker.id : null,
-      stickerSource: sticker ? "user" : null,
+      stickerId: stickerId, 
+      sticker: stickerId ? null : sticker, 
+      stickerSource: sticker ? "user" : null, 
       time: formatTime(getCurrentTimeObj()),
     };
 
@@ -3368,7 +3685,9 @@ const App = () => {
         }
 
         if (m.sticker) {
-          content += ` [发送了表情包: ${m.sticker.desc}]`;
+          if (!content || !content.trim()) {
+            content = `[发送了表情包: ${m.sticker.desc}]`;
+          }
         }
 
         // 关键：如果是转发卡片，把转发内容也加进历史文本，让AI能看到之前的上下文
@@ -3400,14 +3719,15 @@ const App = () => {
     const stickerInst = getStickerInstruction(charStickers);
 
     let styleInst = stylePrompts[chatStyle];
-    if (newHistory.length > 0) {
-      styleInst += `\n\n[FORMATTING OVERRIDE]: You have switched to a NEW writing style (${chatStyle}). IGNORE the formatting patterns of previous messages in history. You must strictly adhere to the new style defined above immediately.`;
+    const lastCharMsg = [...newHistory].reverse().find(m => m.sender === 'char');
+    if (lastCharMsg && lastCharMsg.style && lastCharMsg.style !== chatStyle) {
+       styleInst += `\n\n[FORMATTING OVERRIDE]: You have switched to a NEW writing style (${chatStyle}). IGNORE the formatting patterns of previous messages in history. You must strictly adhere to the new style defined above immediately.`;
     }
     if (hint) styleInst += `\n[Special Instruction]: ${hint}`;
 
     // --- 动态构建转发上下文 ---
     const rawForwardContext = overrideContext || forwardContext;
-    // 只有当有内容时，才加上标签前缀；否则替换为空字符串，对模型完全不可见
+
     const finalForwardSection = rawForwardContext
       ? `\n**Forwarded Content Context**: ${rawForwardContext}`
       : "";
@@ -3489,7 +3809,8 @@ const App = () => {
               sender: "char",
               text: actualText,
               time: formatTime(getCurrentTimeObj()),
-              // 将状态挂载到最后一条文本消息上
+              style: chatStyle, 
+              
               status:
                 index === responseData.messages.length - 1
                   ? responseData.status
@@ -3523,6 +3844,16 @@ const App = () => {
             // 延迟 5 秒执行，让子弹飞一会儿，避免和消息提示同时弹出
             setTimeout(() => generateChatEventPost(true), 5000);
           }
+
+          // 触发信息追踪更新
+          setTimeout(() => {
+            const totalMessages = newHistory.length + newMsgs.length;
+            if (totalMessages % 6 === 0) {
+               console.log(`[Echoes] 达到触发阈值 (总消息 ${totalMessages})，正在更新用户档案...`);
+               generateTrackerUpdate();
+            }
+          }, 3000);
+  
 
           // 自动总结记忆检查
           setTimeout(() => {
@@ -3624,6 +3955,22 @@ const App = () => {
       showToast("success", "已批量删除");
     }
   };
+
+  const factsList = trackerConfig.facts
+      ? userFacts.map((f) => `- [User Fact]: ${f.content} (Note: ${f.comment})`).join("\n")
+      : "";
+    
+    const eventsList = trackerConfig.events
+      ? sharedEvents.map((e) => `- [${e.type === 'pending' ? 'Unfinished Promise' : 'Shared Memory'}]: ${e.content} (${e.type === 'completed' ? 'Completed' : 'Pending'}) - Note: ${e.comment}`).join("\n")
+      : "";
+
+    const trackerContext = `
+[DYNAMIC USER PROFILE]:
+${factsList || "None"}
+
+[SHARED HISTORY & EVENTS]:
+${eventsList || "None"}
+`;
 
   // Smart Watch State
   const [smartWatchLocations, setSmartWatchLocations] = useStickyState(
@@ -3898,7 +4245,7 @@ ${recentHistory}
       .replaceAll("{{NAME}}", persona.name)
       .replaceAll("{{CHAR_DESCRIPTION}}", cleanCharDesc)
       .replaceAll("{{USER_NAME}}", currentUserName)
-      .replaceAll("{{USER_PERSONA}}", userPersona)
+      .replaceAll("{{USER_PERSONA}}", userPersona + "\n" + trackerContext)
       .replaceAll("{{CUSTOM_RULES}}", customRules)
       .replaceAll("{{WORLD_INFO}}", cleanWorldInfo);
 
@@ -4972,6 +5319,75 @@ ${recentHistory}
                   </>
                 )}
                 {/* --- 结束 --- */}
+
+                <div className="px-1 text-left mt-8">
+                  <div className="flex justify-between items-center mb-3 border-b border-gray-200/50 pb-2">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-xs font-bold uppercase text-gray-700">
+                        共同经历 & 约定
+                      </h3>
+                      <span className="bg-black text-white text-[9px] px-1.5 py-0.5 rounded-md font-mono">
+                        {sharedEvents.filter(e => e.type === 'pending').length} PENDING
+                      </span>
+                    </div>
+                    {/* 开关 */}
+                    <button
+                      onClick={() => toggleTrackerConfig("events")}
+                      className={`w-8 h-4 rounded-full relative transition-colors ${
+                        trackerConfig.events ? "bg-black" : "bg-gray-300"
+                      }`}
+                    >
+                      <div
+                        className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${
+                          trackerConfig.events ? "left-4.5" : "left-0.5"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* 列表内容 */}
+                  {trackerConfig.events ? (
+                    <div className="space-y-2">
+                      {sharedEvents.length === 0 && (
+                        <div className="text-center py-6 border border-dashed border-gray-300 rounded-xl">
+                          <p className="text-[10px] text-gray-400">
+                            暂无记录<br/>随着聊天进行，AI将自动记录承诺和事件
+                          </p>
+                        </div>
+                      )}
+                      
+                      {/* 先渲染 Pending */}
+                      {sharedEvents
+                        .filter((e) => e.type === "pending")
+                        .map((evt) => (
+                          <MinimalCard
+                            key={evt.id}
+                            item={evt}
+                            type="pending"
+                            onDelete={(id) => handleDeleteTrackerItem("event", id)}
+                            onEdit={(id, content) => handleEditTrackerItem("event", id, content)}
+                          />
+                        ))}
+                        
+                      {/* 后渲染 Completed */}
+                      {sharedEvents
+                        .filter((e) => e.type === "completed")
+                        .map((evt) => (
+                          <MinimalCard
+                            key={evt.id}
+                            item={evt}
+                            type="completed"
+                            onDelete={(id) => handleDeleteTrackerItem("event", id)}
+                            onEdit={(id, content) => handleEditTrackerItem("event", id, content)}
+                          />
+                        ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 bg-gray-50 rounded-xl">
+                       <p className="text-[10px] text-gray-400">功能已关闭</p>
+                    </div>
+                  )}
+                </div>
               </div>
             ) : (
               <div className="h-full flex items-center justify-center text-gray-300">
@@ -5073,6 +5489,54 @@ ${recentHistory}
                     className="w-full h-20 p-3 bg-white/50 border border-gray-200 rounded-xl text-xs font-medium focus:border-black focus:outline-none resize-none transition-colors"
                   />
                 </div>
+              </div>
+              <div>
+                <div className="flex justify-between items-center mb-3 px-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xs font-bold uppercase text-gray-700">
+                      他眼中的我 (已收录信息)
+                    </h3>
+                    <Sparkles size={12} className="text-[#D4C5A9]" />
+                  </div>
+                  {/* 开关 */}
+                  <button
+                    onClick={() => toggleTrackerConfig("facts")}
+                    className={`w-8 h-4 rounded-full relative transition-colors ${
+                      trackerConfig.facts ? "bg-[#D4C5A9]" : "bg-gray-300"
+                    }`}
+                  >
+                    <div
+                      className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${
+                        trackerConfig.facts ? "left-4.5" : "left-0.5"
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {trackerConfig.facts ? (
+                  <div className="space-y-2">
+                    {userFacts.length === 0 && (
+                       <div className="text-center py-6 border border-dashed border-gray-300 rounded-xl bg-white/30">
+                          <p className="text-[10px] text-gray-400">
+                            暂无信息<br/>AI会自动记录你的喜好和习惯
+                          </p>
+                        </div>
+                    )}
+                    {userFacts.map((fact) => (
+                      <MinimalCard
+                        key={fact.id}
+                        item={fact}
+                        type="fact"
+                        onDelete={(id) => handleDeleteTrackerItem("fact", id)}
+                        onEdit={(id, content) => handleEditTrackerItem("fact", id, content)}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                   <div className="text-center py-4 bg-gray-50 rounded-xl">
+                       <p className="text-[10px] text-gray-400">功能已关闭</p>
+                    </div>
+                )}
               </div>
             </div>
           </AppWindow>
@@ -5210,6 +5674,7 @@ ${recentHistory}
                 <StatusPanel
                   statusHistory={statusHistory}
                   onClose={() => setShowStatusPanel(false)}
+                  onDelete={handleDeleteStatus}
                 />
               </div>
             )}
@@ -5411,69 +5876,87 @@ ${recentHistory}
                                 !isMultiSelectMode ? handleTouchEnd : undefined
                               }
                             >
-                              {stickerUrl ? (
-                                <div className="w-32 rounded-xl overflow-hidden shadow-sm border border-gray-100">
-                                  <img
-                                    src={stickerUrl}
-                                    className="w-full h-full object-cover"
-                                  />
-                                </div>
-                              ) : (
-                                <div
-                                  className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap select-text ${
-                                    msg.sender === "me"
-                                      ? "bg-[#2C2C2C] text-white rounded-tr-none"
-                                      : "bg-white border border-gray-100 text-gray-800 rounded-tl-none"
-                                  }`}
-                                >
-                                  {msg.isForward ? (
-                                    <div className="text-left max-w-[240px] pl-3 border-l-2 border-white/30 my-1">
-                                      <div className="flex items-center gap-2 mb-1 opacity-70">
-                                        <Share size={10} />
-                                        <span className="text-[10px] font-bold uppercase tracking-wider">
-                                          {msg.forwardData.type === "post"
-                                            ? "帖子"
-                                            : "评论"}
-                                        </span>
-                                      </div>
+                             {/* --- 修复后的渲染逻辑 --- */}
+                  {(() => {
+                    // 1. 尝试直接获取 (旧数据或兜底数据)
+                    let stickerUrl = msg.sticker?.url;
+                    
+                    // 2. 如果没有 URL 但有 ID，去库里找 (新数据)
+                    if (!stickerUrl && msg.stickerId) {
+                      // 先找角色库
+                      let found = charStickers.find(s => s.id === msg.stickerId);
+                      // 再找用户库
+                      if (!found) found = userStickers.find(s => s.id === msg.stickerId);
+                      
+                      if (found) stickerUrl = found.url;
+                    }
 
-                                      {msg.forwardData.type === "post" ? (
-                                        <>
-                                          <div className="font-bold text-xs text-white mb-0.5 line-clamp-1">
-                                            {msg.forwardData.title}
-                                          </div>
-                                          <div className="text-[10px] text-white/60 mb-1">
-                                            @{msg.forwardData.author}
-                                          </div>
-                                          <div className="text-xs text-white/80 line-clamp-3 leading-relaxed font-light">
-                                            {msg.forwardData.content}
-                                          </div>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <div className="text-[10px] text-white/60 mb-0.5">
-                                            源自: {msg.forwardData.parentTitle}
-                                          </div>
-                                          <div className="text-[10px] text-white/80 mb-1 font-bold">
-                                            @{msg.forwardData.author}
-                                          </div>
-                                          <div className="text-xs text-white/80 line-clamp-3 leading-relaxed font-light">
-                                            {msg.forwardData.content}
-                                          </div>
-                                        </>
-                                      )}
-                                    </div>
-                                  ) : msg.isVoice ? (
-                                    <div className="flex items-center gap-2 min-w-[120px]">
-                                      <span className="opacity-90 italic">
-                                        {msg.text.replace("[语音消息] ", "")}
-                                      </span>
-                                    </div>
-                                  ) : (
-                                    msg.text
-                                  )}
-                                </div>
+                    // 3. 渲染
+                    if (stickerUrl) {
+                      return (
+                        <div className="w-32 rounded-xl overflow-hidden shadow-sm border border-gray-100">
+                          <img src={stickerUrl} className="w-full h-auto" />
+                        </div>
+                      );
+                    } else {
+                      // 4. 文本气泡 (Fallback)
+                      return (
+                        <div
+                          className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap select-text ${
+                            msg.sender === "me"
+                              ? "bg-[#2C2C2C] text-white rounded-tr-none"
+                              : "bg-white border border-gray-100 text-gray-800 rounded-tl-none"
+                          }`}
+                        >
+                          {/* ...这里原本显示文本的逻辑保持不变... */}
+                          {msg.isForward ? (
+                            <div className="text-left max-w-[240px] pl-3 border-l-2 border-white/30 my-1">
+                              {/* ...转发卡片逻辑保持不变... */}
+                              <div className="flex items-center gap-2 mb-1 opacity-70">
+                                <Share size={10} />
+                                <span className="text-[10px] font-bold uppercase tracking-wider">
+                                  {msg.forwardData.type === "post" ? "帖子" : "评论"}
+                                </span>
+                              </div>
+                              {msg.forwardData.type === "post" ? (
+                                <>
+                                  <div className="font-bold text-xs text-white mb-0.5 line-clamp-1">
+                                    {msg.forwardData.title}
+                                  </div>
+                                  <div className="text-[10px] text-white/60 mb-1">
+                                    @{msg.forwardData.author}
+                                  </div>
+                                  <div className="text-xs text-white/80 line-clamp-3 leading-relaxed font-light">
+                                    {msg.forwardData.content}
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="text-[10px] text-white/60 mb-0.5">
+                                    源自: {msg.forwardData.parentTitle}
+                                  </div>
+                                  <div className="text-[10px] text-white/80 mb-1 font-bold">
+                                    @{msg.forwardData.author}
+                                  </div>
+                                  <div className="text-xs text-white/80 line-clamp-3 leading-relaxed font-light">
+                                    {msg.forwardData.content}
+                                  </div>
+                                </>
                               )}
+                            </div>
+                          ) : msg.isVoice ? (
+                            <div className="flex items-center gap-2 min-w-[120px]">
+                              <span className="opacity-90 italic">
+                                {msg.text.replace("[语音消息] ", "")}
+                              </span>
+                            </div>
+                          ) : (
+                            msg.text
+                          )}
+                        </div>
+                      );
+                    }
+                  })()}
                             </div>
                           )}
 
