@@ -25,6 +25,7 @@ import {
   History,
   Upload,
   FileJson,
+  Download,
   Camera,
   Image as ImageIcon,
   Edit2,
@@ -1351,7 +1352,19 @@ const StickerEditorModal = ({ sticker, onSave, onDelete, onClose }) => {
   );
 };
 
-/* --- SettingsPanel Component (完全分离版) --- */
+const toggleFullScreen = () => {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch((e) => {
+      console.log(e);
+    });
+  } else {
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    }
+  }
+};
+
+/* --- SettingsPanel Component --- */
 const SettingsPanel = ({
   // --- 连接配置参数 ---
   apiConfig,
@@ -1392,9 +1405,15 @@ const SettingsPanel = ({
   prompts,
   setPrompts,
 
+  // 接收全屏参数
+  isFullscreen,
+  toggleFullScreen,
+
   // --- 数据备份参数 ---
   onExportChat,
   onImportChat,
+
+  simpleMode = false,
 }) => (
   <div className="flex flex-col h-full">
     <div className="space-y-10 overflow-y-auto custom-scrollbar flex-grow px-1 pb-10">
@@ -1529,300 +1548,344 @@ const SettingsPanel = ({
         </div>
       </section>
 
-      {/* ---------------------------------------------------------
+      {!simpleMode && (
+        <>
+          {/* ---------------------------------------------------------
           上下文记忆
          --------------------------------------------------------- */}
-      <section>
-        <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4 border-b border-gray-200/50 pb-2">
-          上下文
-        </h3>
-        <div className="glass-card p-4 rounded-xl flex items-center justify-between">
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">
-              上下文记忆 (轮数)
-            </label>
-            <p className="text-[10px] text-gray-400">
-              按对话轮次计算，同一人连续发送的多条消息仅计为 1 轮。
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              min="2"
-              max="50"
-              value={contextLimit}
-              onChange={(e) => {
-                const val = parseInt(e.target.value);
-                if (!isNaN(val)) setContextLimit(val);
-              }}
-              className="w-16 p-2 bg-white border border-gray-200 rounded-lg text-center text-xs font-mono outline-none focus:border-black"
-            />
-            <span className="text-[10px] text-gray-400">轮</span>
-          </div>
-        </div>
-      </section>
+          <section>
+            <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4 border-b border-gray-200/50 pb-2">
+              上下文
+            </h3>
+            <div className="glass-card p-4 rounded-xl flex items-center justify-between">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">
+                  上下文记忆 (轮数)
+                </label>
+                <p className="text-[10px] text-gray-400">
+                  按对话轮次计算，同一人连续发送的多条消息仅计为 1 轮。
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="2"
+                  max="50"
+                  value={contextLimit}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    if (!isNaN(val)) setContextLimit(val);
+                  }}
+                  className="w-16 p-2 bg-white border border-gray-200 rounded-lg text-center text-xs font-mono outline-none focus:border-black"
+                />
+                <span className="text-[10px] text-gray-400">轮</span>
+              </div>
+            </div>
+          </section>
 
-      {/* ---------------------------------------------------------
+          {/* ---------------------------------------------------------
           长记忆配置
          --------------------------------------------------------- */}
-      <section>
-        <div className="flex justify-between items-center mb-4 border-b border-gray-200/50 pb-2">
-          <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
-            长记忆
-          </h3>
-          {/* 开关放在标题行 */}
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] text-gray-400">
-              {memoryConfig.enabled ? "已开启" : "已关闭"}
-            </span>
-            <button
-              onClick={() =>
-                setMemoryConfig((p) => ({ ...p, enabled: !p.enabled }))
-              }
-              className={`w-8 h-4 rounded-full relative transition-colors ${
-                memoryConfig.enabled ? "bg-green-500" : "bg-gray-300"
-              }`}
-            >
-              <div
-                className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${
-                  memoryConfig.enabled ? "left-4.5" : "left-0.5"
-                }`}
-              />
-            </button>
-          </div>
-        </div>
-
-        <div className="glass-card p-4 rounded-xl space-y-4">
-          {/* 阈值 */}
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-gray-600">
-              自动总结阈值
-            </label>
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                min="5"
-                max="100"
-                value={memoryConfig.threshold}
-                onChange={(e) =>
-                  setMemoryConfig((p) => ({
-                    ...p,
-                    threshold: parseInt(e.target.value) || 10,
-                  }))
-                }
-                className="w-16 p-2 bg-white border border-gray-200 rounded-lg text-center text-xs font-mono outline-none focus:border-black"
-              />
-              <span className="text-[10px] text-gray-400">轮对话</span>
-            </div>
-          </div>
-
-          {/* 记忆文本与手动按钮 */}
-          <div>
-            <div className="flex justify-between items-end mb-2">
-              <label className="text-[10px] uppercase font-bold text-gray-400">
-                记忆详情 (Prompt)
-              </label>
-              <button
-                onClick={triggerSummary}
-                disabled={isSummarizing || !memoryConfig.enabled}
-                className="flex items-center gap-1 text-[10px] text-blue-600 hover:underline disabled:opacity-50 disabled:no-underline disabled:text-gray-400 cursor-pointer"
-              >
-                {isSummarizing ? (
-                  <RefreshCw size={10} className="animate-spin" />
-                ) : (
-                  <FileText size={10} />
-                )}
-                手动总结
-              </button>
-            </div>
-            <textarea
-              value={longMemory}
-              onChange={(e) => setLongMemory(e.target.value)}
-              className="w-full h-32 p-3 bg-white/50 border border-gray-200 rounded-xl text-xs leading-relaxed resize-none focus:border-black outline-none custom-scrollbar transition-colors focus:bg-white"
-              placeholder="AI 将自动在此处积累对你的长期记忆..."
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* ---------------------------------------------------------
-          SECTION 3: 聊天设置 (独立区块)
-         --------------------------------------------------------- */}
-      {chatStyle && (
-        <section>
-          <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4 border-b border-gray-200/50 pb-2">
-            聊天设置
-          </h3>
-          <div className="glass-card p-4 rounded-xl space-y-4">
-            {/* 风格 */}
-            <div>
-              <label className="block text-[10px] font-bold uppercase text-gray-500 mb-2">
-                风格 (Style)
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  {
-                    id: "dialogue",
-                    label: "短信",
-                    desc: "拟真聊天体验",
-                  },
-                  {
-                    id: "novel",
-                    label: "小说",
-                    desc: "大段文字描写",
-                  },
-                  {
-                    id: "brackets",
-                    label: "剧本",
-                    desc: "括号动作描写",
-                  },
-                ].map((style) => (
-                  <button
-                    key={style.id}
-                    onClick={() => setChatStyle(style.id)}
-                    className={`flex flex-col items-center justify-center py-2 rounded-lg transition-all border ${
-                      chatStyle === style.id
-                        ? "bg-black text-white border-black shadow-md"
-                        : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <span className="text-xs font-bold">{style.label}</span>
-                    <span
-                      className={`text-[8px] mt-0.5 ${
-                        chatStyle === style.id
-                          ? "text-gray-300"
-                          : "text-gray-400"
-                      }`}
-                    >
-                      {style.desc}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* 交互模式 */}
-            <div>
-              <label className="block text-[10px] font-bold uppercase text-gray-500 mb-2">
-                交互模式 (Mode)
-              </label>
-              <div className="flex gap-2">
+          <section>
+            <div className="flex justify-between items-center mb-4 border-b border-gray-200/50 pb-2">
+              <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                长记忆
+              </h3>
+              {/* 开关放在标题行 */}
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-gray-400">
+                  {memoryConfig.enabled ? "已开启" : "已关闭"}
+                </span>
                 <button
-                  onClick={() => setInteractionMode("online")}
-                  className={`flex-1 py-2 text-xs rounded-lg transition-colors flex items-center justify-center gap-1 ${
-                    interactionMode === "online"
-                      ? "bg-black text-white shadow-md"
-                      : "bg-white/50 text-gray-500 hover:bg-white"
-                  }`}
-                >
-                  <Smartphone size={12} /> 线上 (Phone)
-                </button>
-                <button
-                  onClick={() => setInteractionMode("offline")}
-                  className={`flex-1 py-2 text-xs rounded-lg transition-colors flex items-center justify-center gap-1 ${
-                    interactionMode === "offline"
-                      ? "bg-black text-white shadow-md"
-                      : "bg-white/50 text-gray-500 hover:bg-white"
-                  }`}
-                >
-                  <MapPin size={12} /> 现实 (Reality)
-                </button>
-              </div>
-            </div>
-
-            {/* 表情包管理 */}
-            <div>
-              <div className="flex justify-between items-center mb-3">
-                <label className="text-[10px] font-bold uppercase text-gray-500">
-                  角色表情包库
-                </label>
-                <button
-                  onClick={() => setStickersEnabled(!stickersEnabled)}
+                  onClick={() =>
+                    setMemoryConfig((p) => ({ ...p, enabled: !p.enabled }))
+                  }
                   className={`w-8 h-4 rounded-full relative transition-colors ${
-                    stickersEnabled ? "bg-[#7A2A3A]" : "bg-gray-300"
+                    memoryConfig.enabled ? "bg-green-500" : "bg-gray-300"
                   }`}
                 >
                   <div
                     className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${
-                      stickersEnabled ? "left-4.5" : "left-0.5"
+                      memoryConfig.enabled ? "left-4.5" : "left-0.5"
                     }`}
                   />
                 </button>
               </div>
-              {stickersEnabled && (
-                <div className="grid grid-cols-4 gap-2">
-                  {stickers.map((s) => (
-                    <div
-                      key={s.id}
-                      className="aspect-square bg-gray-100 rounded-lg overflow-hidden relative group cursor-pointer border border-transparent hover:border-[#7A2A3A]"
-                      onClick={() =>
-                        setEditingSticker({ ...s, source: "char" })
-                      } // 点击触发编辑，标记为角色来源
+            </div>
+
+            <div className="glass-card p-4 rounded-xl space-y-4">
+              {/* 阈值 */}
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-gray-600">
+                  自动总结阈值
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="5"
+                    max="100"
+                    value={memoryConfig.threshold}
+                    onChange={(e) =>
+                      setMemoryConfig((p) => ({
+                        ...p,
+                        threshold: parseInt(e.target.value) || 10,
+                      }))
+                    }
+                    className="w-16 p-2 bg-white border border-gray-200 rounded-lg text-center text-xs font-mono outline-none focus:border-black"
+                  />
+                  <span className="text-[10px] text-gray-400">轮对话</span>
+                </div>
+              </div>
+
+              {/* 记忆文本与手动按钮 */}
+              <div>
+                <div className="flex justify-between items-end mb-2">
+                  <label className="text-[10px] uppercase font-bold text-gray-400">
+                    记忆详情 (Prompt)
+                  </label>
+                  <button
+                    onClick={triggerSummary}
+                    disabled={isSummarizing || !memoryConfig.enabled}
+                    className="flex items-center gap-1 text-[10px] text-blue-600 hover:underline disabled:opacity-50 disabled:no-underline disabled:text-gray-400 cursor-pointer"
+                  >
+                    {isSummarizing ? (
+                      <RefreshCw size={10} className="animate-spin" />
+                    ) : (
+                      <FileText size={10} />
+                    )}
+                    手动总结
+                  </button>
+                </div>
+                <textarea
+                  value={longMemory}
+                  onChange={(e) => setLongMemory(e.target.value)}
+                  className="w-full h-32 p-3 bg-white/50 border border-gray-200 rounded-xl text-xs leading-relaxed resize-none focus:border-black outline-none custom-scrollbar transition-colors focus:bg-white"
+                  placeholder="AI 将自动在此处积累对你的长期记忆..."
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* ---------------------------------------------------------
+          SECTION 3: 聊天设置 (独立区块)
+         --------------------------------------------------------- */}
+          {chatStyle && (
+            <section>
+              <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4 border-b border-gray-200/50 pb-2">
+                聊天设置
+              </h3>
+              <div className="glass-card p-4 rounded-xl space-y-4">
+                {/* 风格 */}
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-gray-500 mb-2">
+                    风格 (Style)
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      {
+                        id: "dialogue",
+                        label: "短信",
+                        desc: "拟真聊天体验",
+                      },
+                      {
+                        id: "novel",
+                        label: "小说",
+                        desc: "大段文字描写",
+                      },
+                      {
+                        id: "brackets",
+                        label: "剧本",
+                        desc: "括号动作描写",
+                      },
+                    ].map((style) => (
+                      <button
+                        key={style.id}
+                        onClick={() => setChatStyle(style.id)}
+                        className={`flex flex-col items-center justify-center py-2 rounded-lg transition-all border ${
+                          chatStyle === style.id
+                            ? "bg-black text-white border-black shadow-md"
+                            : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"
+                        }`}
+                      >
+                        <span className="text-xs font-bold">{style.label}</span>
+                        <span
+                          className={`text-[8px] mt-0.5 ${
+                            chatStyle === style.id
+                              ? "text-gray-300"
+                              : "text-gray-400"
+                          }`}
+                        >
+                          {style.desc}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 交互模式 */}
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-gray-500 mb-2">
+                    交互模式 (Mode)
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setInteractionMode("online")}
+                      className={`flex-1 py-2 text-xs rounded-lg transition-colors flex items-center justify-center gap-1 ${
+                        interactionMode === "online"
+                          ? "bg-black text-white shadow-md"
+                          : "bg-white/50 text-gray-500 hover:bg-white"
+                      }`}
                     >
-                      <img src={s.url} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                        <Edit2
-                          size={12}
-                          className="text-white opacity-0 group-hover:opacity-100 drop-shadow-md"
+                      <Smartphone size={12} /> 线上 (Phone)
+                    </button>
+                    <button
+                      onClick={() => setInteractionMode("offline")}
+                      className={`flex-1 py-2 text-xs rounded-lg transition-colors flex items-center justify-center gap-1 ${
+                        interactionMode === "offline"
+                          ? "bg-black text-white shadow-md"
+                          : "bg-white/50 text-gray-500 hover:bg-white"
+                      }`}
+                    >
+                      <MapPin size={12} /> 现实 (Reality)
+                    </button>
+                  </div>
+                </div>
+
+                {/* 表情包管理 */}
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <label className="text-[10px] font-bold uppercase text-gray-500">
+                      角色表情包库
+                    </label>
+                    <button
+                      onClick={() => setStickersEnabled(!stickersEnabled)}
+                      className={`w-8 h-4 rounded-full relative transition-colors ${
+                        stickersEnabled ? "bg-[#7A2A3A]" : "bg-gray-300"
+                      }`}
+                    >
+                      <div
+                        className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${
+                          stickersEnabled ? "left-4.5" : "left-0.5"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                  {stickersEnabled && (
+                    <div className="grid grid-cols-4 gap-2">
+                      {stickers.map((s) => (
+                        <div
+                          key={s.id}
+                          className="aspect-square bg-gray-100 rounded-lg overflow-hidden relative group cursor-pointer border border-transparent hover:border-[#7A2A3A]"
+                          onClick={() =>
+                            setEditingSticker({ ...s, source: "char" })
+                          } // 点击触发编辑，标记为角色来源
+                        >
+                          <img
+                            src={s.url}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                            <Edit2
+                              size={12}
+                              className="text-white opacity-0 group-hover:opacity-100 drop-shadow-md"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                      <div
+                        className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-[#7A2A3A] hover:bg-white/50 transition-colors"
+                        onClick={() => stickerInputRef.current.click()}
+                      >
+                        <Plus size={16} className="text-gray-400" />
+                        <input
+                          type="file"
+                          ref={stickerInputRef}
+                          className="hidden"
+                          onChange={(e) => handleStickerUpload(e, "char")} // 传入类型
                         />
                       </div>
                     </div>
-                  ))}
-                  <div
-                    className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-[#7A2A3A] hover:bg-white/50 transition-colors"
-                    onClick={() => stickerInputRef.current.click()}
-                  >
-                    <Plus size={16} className="text-gray-400" />
-                    <input
-                      type="file"
-                      ref={stickerInputRef}
-                      className="hidden"
-                      onChange={(e) => handleStickerUpload(e, "char")} // 传入类型
-                    />
-                  </div>
+                  )}
                 </div>
-              )}
+              </div>
+            </section>
+          )}
+
+          <section className="mb-6">
+            {/* 标题行现在只显示标题，不放开关 */}
+            <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4 border-b border-gray-200/50 pb-2">
+              显示设置
+            </h3>
+
+            {/* 具体条目卡片 */}
+            <div className="glass-card p-4 rounded-xl">
+              {/* 使用 Flex 布局实现左右对齐 */}
+              <div className="flex items-center justify-between">
+                {/* 左侧：文字说明 */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                    沉浸模式（隐藏系统栏）
+                  </label>
+                  <p className="text-[10px] text-gray-400">
+                    隐藏浏览器顶部的状态栏和地址栏。
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-gray-400">
+                    {isFullscreen ? "已开启" : "已关闭"}
+                  </span>
+                  <button
+                    onClick={toggleFullScreen}
+                    className={`w-8 h-4 rounded-full relative transition-colors ${
+                      isFullscreen ? "bg-green-500" : "bg-gray-300"
+                    }`}
+                  >
+                    <div
+                      className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${
+                        isFullscreen ? "left-4.5" : "left-0.5"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </section>
-      )}
+          </section>
 
-      <section>
-        <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4 border-b border-gray-200/50 pb-2">
-          数据管理
-        </h3>
-        <div className="glass-card p-4 rounded-xl space-y-3">
-          <p className="text-[9px] text-gray-400 mb-2">
-            将聊天记录导出为文件保存，或从文件恢复。
-            <br />
-            (建议定期备份，以免浏览器缓存丢失)
-          </p>
-          <div className="flex gap-3">
-            {/* 导出按钮 */}
-            <button
-              onClick={onExportChat}
-              className="flex-1 py-3 bg-black text-white rounded-xl text-xs font-bold hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 shadow-md"
-            >
-              <Save size={14} />
-              导出备份
-            </button>
+          <section>
+            <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4 border-b border-gray-200/50 pb-2">
+              数据管理
+            </h3>
+            <div className="glass-card p-4 rounded-xl space-y-3">
+              <p className="text-[9px] text-gray-400 mb-2">
+                将聊天记录导出为文件保存，或从文件恢复。
+              </p>
+              <div className="flex gap-3">
+                {/* 导出按钮 */}
+                <button
+                  onClick={onExportChat}
+                  className="flex-1 py-3 bg-black text-white rounded-xl text-xs font-bold hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 shadow-md"
+                >
+                  <Download size={14} />
+                  导出备份
+                </button>
 
-            {/* 导入按钮 (关联隐藏的 input) */}
-            <label className="flex-1 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl text-xs font-bold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm">
-              <Upload size={14} />
-              导入恢复
-              <input
-                type="file"
-                accept=".json"
-                className="hidden"
-                onChange={onImportChat}
-              />
-            </label>
-          </div>
-        </div>
-      </section>
+                {/* 导入按钮 (关联隐藏的 input) */}
+                <label className="flex-1 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl text-xs font-bold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+                  <Upload size={14} />
+                  导入恢复
+                  <input
+                    type="file"
+                    accept=".json"
+                    className="hidden"
+                    onChange={onImportChat}
+                  />
+                </label>
+              </div>
+            </div>
+          </section>
 
-      {/*<section>
+          {/*<section>
         <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4 border-b border-gray-200/50 pb-2">
           指令
         </h3>
@@ -1847,6 +1910,8 @@ const SettingsPanel = ({
             </div>
           ))}
       </section>*/}
+        </>
+      )}
     </div>
   </div>
 );
@@ -2439,6 +2504,39 @@ const App = () => {
   const [showUserStickerPanel, setShowUserStickerPanel] = useState(false); // 用户表情面板开关
   const [isUserStickerEditMode, setIsUserStickerEditMode] = useState(false); // 用户表情包编辑模式开关
   const [isVoiceMode, setIsVoiceMode] = useState(false); // 语音模式开关
+
+  // [新增] 全屏状态控制
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullScreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement
+        .requestFullscreen()
+        .then(() => {
+          setIsFullscreen(true);
+        })
+        .catch((e) => {
+          console.log(e);
+          showToast("error", "全屏模式被浏览器拒绝");
+        });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().then(() => {
+          setIsFullscreen(false);
+        });
+      }
+    }
+  };
+
+  // 监听原生全屏变化（比如用户按ESC退出），同步按钮状态
+  useEffect(() => {
+    const handleFsChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFsChange);
+    return () =>
+      document.removeEventListener("fullscreenchange", handleFsChange);
+  }, []);
 
   const [replyIdentity, setReplyIdentity] = useState("me");
 
@@ -4376,23 +4474,32 @@ ${recentHistory}
         )}
 
         {showLockSettings && (
-          <div className="absolute inset-0 z-50 bg-white/60 backdrop-blur-xl flex flex-col p-6 animate-in fade-in">
-            <SettingsPanel
-              apiConfig={apiConfig}
-              setApiConfig={setApiConfig}
-              connectionStatus={connectionStatus}
-              isFetchingModels={isFetchingModels}
-              fetchModels={fetchModelsList}
-              availableModels={availableModels}
-              testConnection={testConnection}
-              close={() => setActiveApp(false)}
-              memoryConfig={memoryConfig}
-              setMemoryConfig={setMemoryConfig}
-              longMemory={longMemory}
-              setLongMemory={setLongMemory}
-              triggerSummary={generateSummary}
-              isSummarizing={isSummarizing}
-            />
+          <div className="absolute inset-0 z-50 bg-[#F2F2F7]/90 backdrop-blur-xl flex flex-col animate-in fade-in slide-in-from-bottom-5">
+            <div className="h-16 px-6 flex items-center justify-between shrink-0 bg-white/50 border-b border-gray-200/50 shadow-sm">
+              <button
+                onClick={() => setShowLockSettings(false)}
+                className="flex items-center text-gray-600 hover:text-black transition-colors px-2 py-1 -ml-2 rounded-lg hover:bg-white/50 active:scale-95"
+              >
+                <ChevronLeft size={22} strokeWidth={1.5} />
+                <span className="text-sm font-medium ml-0.5">返回</span>
+              </button>
+              <span className="text-sm font-bold text-gray-800">连接配置</span>
+              <div className="w-20"></div>
+            </div>
+
+            <div className="flex-grow overflow-hidden p-6 pt-4">
+              <SettingsPanel
+                simpleMode={true}
+                apiConfig={apiConfig}
+                setApiConfig={setApiConfig}
+                connectionStatus={connectionStatus}
+                isFetchingModels={isFetchingModels}
+                fetchModels={fetchModelsList}
+                availableModels={availableModels}
+                testConnection={testConnection}
+                close={() => setShowLockSettings(false)}
+              />
+            </div>
           </div>
         )}
 
@@ -5791,6 +5898,9 @@ ${recentHistory}
                 handleStickerUpload={handleStickerUpload}
                 // 指令参数
                 prompts={prompts}
+                // 传递全屏参数
+                isFullscreen={isFullscreen}
+                toggleFullScreen={toggleFullScreen}
                 // 导入导出
                 onExportChat={exportChatData}
                 onImportChat={importChatData}
