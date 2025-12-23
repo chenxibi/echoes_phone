@@ -1113,10 +1113,10 @@ Existing Char Facts: {{CHAR_FACTS}}
     { "content": "Char's attribute (e.g. 怕黑)", "comment": "Revealed this to {{USER_NAME}}." }
   ],
   "newEvents": [
-    { "content": "Event/Promise name", "type": "pending", "comment": "Thought" }
+    { "content": "Event/Promise name", "type": "pending", "comment": "Thought (first-person perspective)" }
   ],
   "completedEventIds": [
-    { "id": "event_id", "comment": "Thought on completion" }
+    { "id": "event_id", "comment": "Thought on completion (first-person perspective)" }
   ]
 }`,
 };
