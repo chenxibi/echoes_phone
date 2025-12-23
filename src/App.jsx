@@ -1101,7 +1101,7 @@ Existing Char Facts: {{CHAR_FACTS}}
    - Extract **User Facts** ONLY when {{USER_NAME}} reveals something about themselves.
    - Extract **Char Facts** ONLY when {{NAME}} reveals a specific habit, past, or preference about THEMSELVES.
 2. **Filtering**: Ignore trivial chit-chat. Only record permanent attributes (Likes, Dislikes, History, Phobias) or Concrete Plans.
-3. **Format**: Content must be under 10 Chinese characters.
+3. **Format**: Content must be brief, 6-16 Chinese characters.
 4. **Silence**: Return empty arrays if no new info.
 
 ### JSON OUTPUT:
@@ -3664,6 +3664,10 @@ const App = () => {
   ) => {
     if (!persona) return;
 
+    
+
+    const backupHistory = [...chatHistory]; 
+
     // 如果是重生成 (regenIndex 不为 null)，则回滚历史
     let newHistory = [...chatHistory];
     if (regenIndex !== null) {
@@ -3873,6 +3877,12 @@ const App = () => {
               generateSummary();
             }
           }, 2000);
+        }
+      }
+      else {
+        if (regenIndex !== null) {
+          console.log("[Echoes] 重生成未完成，恢复原始消息...");
+          setChatHistory(backupHistory);
         }
       }
     } finally {
