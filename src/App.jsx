@@ -1090,28 +1090,30 @@ CRITICAL INSTRUCTIONS:
 5. **EXTREME BREVITY**: Do NOT transcribe the conversation. Record mainly **Important Facts**, **Decisions**, or **Status Changes**.
 6. **Language**: Simplified Chinese (zh-CN).`,
 
-tracker_update: `Analyze the chat history. Extract **PERMANENT** facts or **MAJOR** plans.
+tracker_update: `Analyze the chat history to extract **PERMANENT** information for distinct categories.
 Context: {{HISTORY}}
 Pending Events: {{PENDING_EVENTS}}
-Existing Facts: {{USER_FACTS}}
+Existing User Facts: {{USER_FACTS}}
+Existing Char Facts: {{CHAR_FACTS}}
 
 ### RULES:
-1. **Trigger Condition**: ONLY output if there is a NEW, PERMANENT attribute (Job, Habit, Phobia) or a CONCRETE PLAN (Date, Promise).
-2. **Length Limit**: The 'content' MUST be extremely concise, **under 10 Chinese characters**. Use keywords or short phrases.
-   - Good: "不吃香菜", "周五去看电影", "对花生过敏"
-   - Bad: "She mentioned that she really doesn't like eating cilantro recently."
-3. **Format**:
-   - 'content': < 12 Chinese characters.
-   - 'comment': 1st person thought (Short).
-4. **Silence**: If nothing important happened, return empty arrays.
+1. **Target Identification (CRITICAL)**: 
+   - Extract **User Facts** ONLY when {{USER_NAME}} reveals something about themselves.
+   - Extract **Char Facts** ONLY when {{NAME}} reveals a specific habit, past, or preference about THEMSELVES.
+2. **Filtering**: Ignore trivial chit-chat. Only record permanent attributes (Likes, Dislikes, History, Phobias) or Concrete Plans.
+3. **Format**: Content must be under 10 Chinese characters.
+4. **Silence**: Return empty arrays if no new info.
 
 ### JSON OUTPUT:
 {
-  "newFacts": [
-    { "content": "短语概括(10字内)", "comment": "Inner thought" }
+  "newUserFacts": [
+    { "content": "User's attribute (e.g. 喜欢吃辣)", "comment": "{{NAME}}'s reaction" }
+  ],
+  "newCharFacts": [
+    { "content": "Char's attribute (e.g. 怕黑)", "comment": "Revealed this to {{USER_NAME}}." }
   ],
   "newEvents": [
-    { "content": "事件名称(10字内)", "type": "pending", "comment": "Inner thought" }
+    { "content": "Event/Promise name", "type": "pending", "comment": "Thought" }
   ],
   "completedEventIds": [
     { "id": "event_id", "comment": "Thought on completion" }
@@ -1372,14 +1374,21 @@ const MinimalCard = ({ item, type = "fact", onDelete, onEdit }) => {
           {item.content}
         </h4>
 
-        <div className="shrink-0 text-gray-300 group-hover:text-gray-400 transition-colors flex gap-1">
-           {/* [新增] 编辑按钮 */}
-           <button 
-             onClick={() => onEdit && onEdit(item.id, item.content)}
-             className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-black"
-           >
-             <Edit2 size={12} />
-           </button>
+        <div className="shrink-0 text-gray-300 group-hover:text-gray-400 transition-colors flex gap-1 items-center">
+           {/* [新增] 这里的编辑按钮 */}
+           {onEdit && !isCompleted && (
+             <button 
+               onClick={(e) => {
+                 e.stopPropagation();
+                 // 关键点：这里把 item.content 传回去，外面的 handleEditTrackerItem 才能拿到旧文本显示在输入框里
+                 onEdit(item.id, item.content);
+               }}
+               className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-black p-1"
+               title="编辑"
+             >
+               <Edit2 size={12} />
+             </button>
+           )}
            
           {isPending && <Circle size={14} strokeWidth={1.5} />}
           {isCompleted && <CheckCircle2 size={14} className="text-gray-400" />}
@@ -2349,10 +2358,12 @@ const App = () => {
 
   // 追踪器相关状态
   const [userFacts, setUserFacts] = useStickyState([], "echoes_user_facts");
+  const [charFacts, setCharFacts] = useStickyState([], "echoes_char_facts");
   const [sharedEvents, setSharedEvents] = useStickyState(
     [],
     "echoes_shared_events"
   );
+  const [showEventsInDiary, setShowEventsInDiary] = useState(false);
   const [trackerConfig, setTrackerConfig] = useStickyState(
     { facts: true, events: true },
     "echoes_tracker_config"
@@ -2835,81 +2846,77 @@ const App = () => {
   };
 
   const generateTrackerUpdate = async () => {
-    if (!persona || (!trackerConfig.facts && !trackerConfig.events)) return;
+    // 必须确保 trackerConfig 允许更新
+    if (!persona) return;
 
-    // 获取最近的聊天记录 (例如最近 8 条)
     const recentHistory = getContextString(8);
-    // 获取当前的未完成事件
     const pendingEvents = sharedEvents.filter((e) => e.type === "pending");
-    const pendingEventsStr = JSON.stringify(
-      pendingEvents.map((e) => ({ id: e.id, content: e.content }))
-    );
+    
+    // 准备数据传给 Prompt
+    const pendingEventsStr = JSON.stringify(pendingEvents.map((e) => ({ id: e.id, content: e.content })));
     const userFactsStr = JSON.stringify(userFacts.map((f) => f.content));
+    const charFactsStr = JSON.stringify(charFacts.map((f) => f.content)); // [新增]
 
     const prompt = prompts.tracker_update
       .replaceAll("{{HISTORY}}", recentHistory)
       .replaceAll("{{PENDING_EVENTS}}", pendingEventsStr)
       .replaceAll("{{USER_FACTS}}", userFactsStr)
+      .replaceAll("{{CHAR_FACTS}}", charFactsStr) // [新增]
       .replaceAll("{{USER_NAME}}", userName || "User")
       .replaceAll("{{NAME}}", persona.name);
 
     try {
-      // 静默运行，不阻断 UI
       const data = await generateContent(
         { prompt, systemInstruction: prompts.system },
         apiConfig,
-        null // 静默模式
+        null 
       );
 
       if (data) {
-        let hasUpdates = false;
-
-        // 1. 处理新事实
-        if (trackerConfig.facts && data.newFacts && data.newFacts.length > 0) {
-          const newFactEntries = data.newFacts.map((f) => ({
-            id: `fact_${Date.now()}_${Math.random()}`,
+        // 1. 处理 User Facts (注意字段名改成了 newUserFacts 以匹配新Prompt)
+        if (data.newUserFacts && data.newUserFacts.length > 0) {
+          const newEntries = data.newUserFacts.map((f) => ({
+            id: `ufact_${Date.now()}_${Math.random()}`,
             content: f.content,
             comment: f.comment,
             time: formatDate(getCurrentTimeObj()),
           }));
-          setUserFacts((prev) => [...newFactEntries, ...prev]);
-          hasUpdates = true;
+          setUserFacts((prev) => [...newEntries, ...prev]);
         }
 
-        // 2. 处理新事件
-        if (
-          trackerConfig.events &&
-          data.newEvents &&
-          data.newEvents.length > 0
-        ) {
-          const newEventEntries = data.newEvents.map((e) => ({
+        // 2. [新增] 处理 Char Facts
+        if (data.newCharFacts && data.newCharFacts.length > 0) {
+          const newEntries = data.newCharFacts.map((f) => ({
+            id: `cfact_${Date.now()}_${Math.random()}`,
+            content: f.content,
+            comment: f.comment,
+            time: formatDate(getCurrentTimeObj()),
+          }));
+          setCharFacts((prev) => [...newEntries, ...prev]);
+        }
+
+        // 3. 处理 Events (逻辑不变)
+        if (data.newEvents && data.newEvents.length > 0) {
+          const newEntries = data.newEvents.map((e) => ({
             id: `evt_${Date.now()}_${Math.random()}`,
             content: e.content,
             type: e.type || "pending",
             comment: e.comment,
             time: formatDate(getCurrentTimeObj()),
           }));
-          setSharedEvents((prev) => [...newEventEntries, ...prev]);
-          hasUpdates = true;
+          setSharedEvents((prev) => [...newEntries, ...prev]);
         }
 
-        // 3. 更新已完成事件
-        if (
-          trackerConfig.events &&
-          data.completedEventIds &&
-          data.completedEventIds.length > 0
-        ) {
+        // 4. 完成事件 (逻辑不变)
+        if (data.completedEventIds && data.completedEventIds.length > 0) {
           setSharedEvents((prev) =>
             prev.map((evt) => {
-              const completionInfo = data.completedEventIds.find(
-                (c) => c.id === evt.id
-              );
+              const completionInfo = data.completedEventIds.find((c) => c.id === evt.id);
               if (completionInfo) {
-                hasUpdates = true;
                 return {
                   ...evt,
                   type: "completed",
-                  comment: completionInfo.comment || evt.comment, // 更新为完成后的感想
+                  comment: completionInfo.comment || evt.comment,
                   completedTime: formatDate(getCurrentTimeObj()),
                 };
               }
@@ -2928,8 +2935,10 @@ const App = () => {
   // 删除条目
   const handleDeleteTrackerItem = (type, id) => {
     if (!window.confirm("确定删除这条记录吗？")) return;
-    if (type === "fact") {
+    if (type === "userFact") { // 建议区分明确一点
       setUserFacts((prev) => prev.filter((i) => i.id !== id));
+    } else if (type === "charFact") { // [新增]
+      setCharFacts((prev) => prev.filter((i) => i.id !== id));
     } else {
       setSharedEvents((prev) => prev.filter((i) => i.id !== id));
     }
@@ -5320,73 +5329,35 @@ ${recentHistory}
                 )}
                 {/* --- 结束 --- */}
 
+                {/* --- [修改后] 身份档案界面底部：显示角色信息 (Char Facts) --- */}
                 <div className="px-1 text-left mt-8">
                   <div className="flex justify-between items-center mb-3 border-b border-gray-200/50 pb-2">
                     <div className="flex items-center gap-2">
                       <h3 className="text-xs font-bold uppercase text-gray-700">
-                        TA的记事本
+                        关于TA的一切
                       </h3>
-                      <span className="bg-black text-white text-[9px] px-1.5 py-0.5 rounded-md font-mono">
-                        {sharedEvents.filter(e => e.type === 'pending').length} PENDING
-                      </span>
+                      <Sparkles size={12} className="text-[#7A2A3A]" />
                     </div>
-                    {/* 开关 */}
-                    <button
-                      onClick={() => toggleTrackerConfig("events")}
-                      className={`w-8 h-4 rounded-full relative transition-colors ${
-                        trackerConfig.events ? "bg-black" : "bg-gray-300"
-                      }`}
-                    >
-                      <div
-                        className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${
-                          trackerConfig.events ? "left-4.5" : "left-0.5"
-                        }`}
-                      />
-                    </button>
                   </div>
 
-                  {/* 列表内容 */}
-                  {trackerConfig.events ? (
-                    <div className="space-y-2">
-                      {sharedEvents.length === 0 && (
-                        <div className="text-center py-6 border border-dashed border-gray-300 rounded-xl">
-                          <p className="text-[10px] text-gray-400">
-                            暂无记录<br/>随着聊天进行，AI将自动记录承诺和事件
-                          </p>
-                        </div>
-                      )}
-                      
-                      {/* 先渲染 Pending */}
-                      {sharedEvents
-                        .filter((e) => e.type === "pending")
-                        .map((evt) => (
-                          <MinimalCard
-                            key={evt.id}
-                            item={evt}
-                            type="pending"
-                            onDelete={(id) => handleDeleteTrackerItem("event", id)}
-                            onEdit={(id, content) => handleEditTrackerItem("event", id, content)}
-                          />
-                        ))}
-                        
-                      {/* 后渲染 Completed */}
-                      {sharedEvents
-                        .filter((e) => e.type === "completed")
-                        .map((evt) => (
-                          <MinimalCard
-                            key={evt.id}
-                            item={evt}
-                            type="completed"
-                            onDelete={(id) => handleDeleteTrackerItem("event", id)}
-                            onEdit={(id, content) => handleEditTrackerItem("event", id, content)}
-                          />
-                        ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-4 bg-gray-50 rounded-xl">
-                       <p className="text-[10px] text-gray-400">功能已关闭</p>
-                    </div>
-                  )}
+                  <div className="space-y-2">
+                    {charFacts.length === 0 && (
+                      <div className="text-center py-6 border border-dashed border-gray-300 rounded-xl">
+                        <p className="text-[10px] text-gray-400">
+                          暂无信息<br />随着对话深入，将了解TA的喜好与秘密
+                        </p>
+                      </div>
+                    )}
+                    {charFacts.map((fact) => (
+                      <MinimalCard
+                        key={fact.id}
+                        item={fact}
+                        type="fact" 
+                        onDelete={(id) => handleDeleteTrackerItem("charFact", id)}
+                        onEdit={(id, content) => handleEditTrackerItem("charFact", id, content)}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
             ) : (
@@ -5518,7 +5489,7 @@ ${recentHistory}
                     {userFacts.length === 0 && (
                        <div className="text-center py-6 border border-dashed border-gray-300 rounded-xl bg-white/30">
                           <p className="text-[10px] text-gray-400">
-                            暂无信息<br/>AI会自动记录你的喜好和习惯
+                            暂无信息<br/>TA会留意你的喜好和习惯
                           </p>
                         </div>
                     )}
@@ -6392,56 +6363,137 @@ ${recentHistory}
           </AppWindow>
 
           {/* APP: JOURNAL */}
+          {/* APP: JOURNAL (DIARY & EVENTS) */}
           <AppWindow
             isOpen={activeApp === "journal"}
-            title="日记"
-            onClose={() => setActiveApp(null)}
+            title={showEventsInDiary ? "共同经历" : "日记"} // 标题随状态变化
+            onClose={() => {
+                setActiveApp(null);
+                setShowEventsInDiary(false); // 关闭时重置
+            }}
+            // [新增] 右上角操作按钮
+            actions={
+              <button
+                onClick={() => setShowEventsInDiary(!showEventsInDiary)}
+                className={`p-1.5 rounded-lg transition-all ${
+                    showEventsInDiary 
+                    ? "bg-black text-white shadow-md" 
+                    : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                }`}
+                title="切换日记/经历"
+              >
+                {/* 如果显示经历，图标变成日记本(表示点它可以回日记)；反之亦然 */}
+                {showEventsInDiary ? <Book size={16}/> : <Calendar size={16}/>}
+              </button>
+            }
           >
             <div className="space-y-6 pb-20 pt-4">
-              <button
-                onClick={generateDiary}
-                disabled={loading.diary}
-                className="w-full py-3 bg-[#2C2C2C] text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
-              >
-                {loading.diary ? (
-                  <RefreshCw className="animate-spin" size={14} />
-                ) : (
-                  <FileText size={14} />
-                )}{" "}
-                记录此刻
-              </button>
-              {diaries.map((d, i) => (
-                <div
-                  key={i}
-                  className="glass-card p-6 rounded-xl relative group hover:bg-white/60 transition-colors"
-                >
-                  <div className="flex justify-between mb-4">
-                    <span className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">
-                      {d.date}
-                    </span>
-                    <Trash2
-                      size={12}
-                      className="text-gray-300 cursor-pointer hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => handleDeleteDiary(i)}
-                    />
-                  </div>
-                  <div
-                    className="font-serif text-sm leading-loose text-gray-700 whitespace-pre-line diary-content"
-                    dangerouslySetInnerHTML={{ __html: d.content }}
-                  />
-                  {d.quote && (
-                    <div className="mt-6 pt-4 border-t border-gray-200/50 flex gap-3">
-                      <Quote
-                        size={12}
-                        className="text-gray-400 flex-shrink-0 mt-0.5"
-                      />
-                      <p className="font-serif italic text-gray-500 text-xs">
-                        {d.quote}
-                      </p>
+              
+              {/* === 内容区：根据开关切换显示 === */}
+              {showEventsInDiary ? (
+                /* --- A. 共同经历列表 (原 Identity 里的代码移过来) --- */
+                <div className="animate-in slide-in-from-right-4">
+                    {/* 统计条 */}
+                    <div className="flex gap-2 mb-4">
+                        <div className="flex-1 bg-white p-3 rounded-xl border border-gray-100 text-center">
+                            <div className="text-lg font-bold text-black">{sharedEvents.filter(e=>e.type==='pending').length}</div>
+                            <div className="text-[9px] text-gray-400 uppercase">进行中</div>
+                        </div>
+                        <div className="flex-1 bg-gray-50 p-3 rounded-xl border border-transparent text-center">
+                            <div className="text-lg font-bold text-gray-400">{sharedEvents.filter(e=>e.type==='completed').length}</div>
+                            <div className="text-[9px] text-gray-400 uppercase">已完成</div>
+                        </div>
                     </div>
-                  )}
+
+                    <div className="space-y-2">
+                      {sharedEvents.length === 0 && (
+                        <div className="text-center py-10 opacity-50">
+                           <p className="text-xs text-gray-400">暂无共同经历</p>
+                        </div>
+                      )}
+
+                      {/* Pending List */}
+                      {sharedEvents.filter(e => e.type === "pending").map((evt) => (
+                          <MinimalCard
+                            key={evt.id}
+                            item={evt}
+                            type="pending"
+                            onDelete={(id) => handleDeleteTrackerItem("event", id)}
+                            onEdit={(id, content) => handleEditTrackerItem("event", id, content)}
+                          />
+                        ))}
+                        
+                      {/* Completed List (Separated) */}
+                      {sharedEvents.filter(e => e.type === "completed").length > 0 && (
+                          <div className="pt-4 border-t border-gray-200/50 mt-4">
+                              <span className="text-[10px] font-bold text-gray-300 uppercase mb-3 block">历史存档</span>
+                              {sharedEvents.filter(e => e.type === "completed").map((evt) => (
+                                <MinimalCard
+                                    key={evt.id}
+                                    item={evt}
+                                    type="completed"
+                                    onDelete={(id) => handleDeleteTrackerItem("event", id)}
+                                    onEdit={(id, content) => handleEditTrackerItem("event", id, content)}
+                                />
+                                ))}
+                          </div>
+                      )}
+                    </div>
                 </div>
-              ))}
+              ) : (
+                /* --- B. 原有的日记列表 --- */
+                <div className="animate-in slide-in-from-left-4">
+                  <button
+                    onClick={generateDiary}
+                    disabled={loading.diary}
+                    className="w-full py-3 bg-[#2C2C2C] text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl mb-6"
+                  >
+                    {loading.diary ? (
+                      <RefreshCw className="animate-spin" size={14} />
+                    ) : (
+                      <FileText size={14} />
+                    )}{" "}
+                    记录此刻
+                  </button>
+                  
+                  {diaries.length === 0 && (
+                      <p className="text-center text-gray-400 text-xs mt-10">暂无日记</p>
+                  )}
+
+                  {diaries.map((d, i) => (
+                    <div
+                      key={i}
+                      className="glass-card p-6 rounded-xl relative group hover:bg-white/60 transition-colors mb-4"
+                    >
+                      <div className="flex justify-between mb-4">
+                        <span className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">
+                          {d.date}
+                        </span>
+                        <Trash2
+                          size={12}
+                          className="text-gray-300 cursor-pointer hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => handleDeleteDiary(i)}
+                        />
+                      </div>
+                      <div
+                        className="font-serif text-sm leading-loose text-gray-700 whitespace-pre-line diary-content"
+                        dangerouslySetInnerHTML={{ __html: d.content }}
+                      />
+                      {d.quote && (
+                        <div className="mt-6 pt-4 border-t border-gray-200/50 flex gap-3">
+                          <Quote
+                            size={12}
+                            className="text-gray-400 flex-shrink-0 mt-0.5"
+                          />
+                          <p className="font-serif italic text-gray-500 text-xs">
+                            {d.quote}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </AppWindow>
 
