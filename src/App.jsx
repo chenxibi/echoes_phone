@@ -20,6 +20,7 @@ import {
   Disc3,
   Book,
   MessageCircle,
+  ChevronRight,
   SlidersHorizontal,
   User,
   History,
@@ -1524,6 +1525,8 @@ const SettingsPanel = ({
   setInteractionMode,
   stickersEnabled,
   setStickersEnabled,
+  getGroups, 
+  toggleStickerGroup,
   stickers,
   setStickers,
   stickerInputRef,
@@ -1541,6 +1544,10 @@ const SettingsPanel = ({
   // --- 数据备份参数 ---
   onExportChat,
   onImportChat,
+
+  addStickerGroup,
+  deleteStickerGroup,
+  renameStickerGroup,
 
   simpleMode = false,
 }) => (
@@ -1880,7 +1887,7 @@ const SettingsPanel = ({
                   </div>
                 </div>
 
-                {/* 表情包管理 */}
+                {/* 表情包管理 (Inside SettingsPanel) */}
                 <div>
                   <div className="flex justify-between items-center mb-3">
                     <label className="text-[10px] font-bold uppercase text-gray-500">
@@ -1892,47 +1899,40 @@ const SettingsPanel = ({
                         stickersEnabled ? "bg-[#7A2A3A]" : "bg-gray-300"
                       }`}
                     >
-                      <div
-                        className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${
-                          stickersEnabled ? "left-4.5" : "left-0.5"
-                        }`}
-                      />
+                      <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${stickersEnabled ? "left-4.5" : "left-0.5"}`} />
                     </button>
                   </div>
+                  
                   {stickersEnabled && (
-                    <div className="grid grid-cols-4 gap-2">
-                      {stickers.map((s) => (
-                        <div
-                          key={s.id}
-                          className="aspect-square bg-gray-100 rounded-lg overflow-hidden relative group cursor-pointer border border-transparent hover:border-[#7A2A3A]"
-                          onClick={() =>
-                            setEditingSticker({ ...s, source: "char" })
-                          } // 点击触发编辑，标记为角色来源
+                    <div className="space-y-4">
+                        {/* [替换后] 使用 StickerGroup 组件 */}
+                  {getGroups(stickers).map((group) => (
+                    <StickerGroup
+                      key={group}
+                      group={group}
+                      stickers={stickers}
+                      toggleStickerGroup={toggleStickerGroup}
+                      setEditingSticker={setEditingSticker}
+                      deleteStickerGroup={deleteStickerGroup}
+                      renameStickerGroup={renameStickerGroup}
+                      handleStickerUpload={handleStickerUpload}
+                    />
+                  ))}
+
+                        {/* 上传区域 */}
+                        <div 
+                            className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-[#7A2A3A] hover:bg-white/50 transition-colors h-24 w-full"
+                            onClick={() => stickerInputRef.current.click()}
                         >
-                          <img
-                            src={s.url}
-                            className="w-full h-full object-cover"
-                          />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                            <Edit2
-                              size={12}
-                              className="text-white opacity-0 group-hover:opacity-100 drop-shadow-md"
+                            <Plus size={16} className="text-gray-400" />
+                            <span className="text-[9px] text-gray-400 mt-1">上传新表情 (默认进入自定义组)</span>
+                            <input
+                                type="file"
+                                ref={stickerInputRef}
+                                className="hidden"
+                                onChange={(e) => handleStickerUpload(e, "char")} 
                             />
-                          </div>
                         </div>
-                      ))}
-                      <div
-                        className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-[#7A2A3A] hover:bg-white/50 transition-colors"
-                        onClick={() => stickerInputRef.current.click()}
-                      >
-                        <Plus size={16} className="text-gray-400" />
-                        <input
-                          type="file"
-                          ref={stickerInputRef}
-                          className="hidden"
-                          onChange={(e) => handleStickerUpload(e, "char")} // 传入类型
-                        />
-                      </div>
                     </div>
                   )}
                 </div>
@@ -2831,7 +2831,11 @@ const App = () => {
     setInputKey(finalDescription);
 
     // 5. 设置世界书 (如果有)
-    setWorldBook(cleaned.worldBook);
+    const groupedWorldBook = (cleaned.worldBook || []).map(entry => ({
+      ...entry,
+      group: finalName // 使用角色名作为分组
+    }));
+    setWorldBook(groupedWorldBook);
 
     // 6. 重置生成器 UI
     setShowCreationAssistant(false);
@@ -3000,6 +3004,22 @@ const App = () => {
     }
   }, [chatHistory, activeApp, loading.chat, isTyping]);
 
+  // --- [新增] 数据结构迁移：自动给旧数据加上分组 ---
+  useEffect(() => {
+    // 1. 迁移表情包
+    setCharStickers(prev => prev.map(s => ({
+      ...s,
+      group: s.group || "小狗小狗",
+      enabled: s.enabled !== undefined ? s.enabled : true
+    })));
+
+    // 2. 迁移世界书
+    setWorldBook(prev => prev.map(w => ({
+      ...w,
+      group: w.group || "未分组"
+    })));
+  }, []); // 只在组件挂载时执行一次
+
   // --- FIXED MESSAGE QUEUE LOGIC ---
   // Effect 1: Trigger typing state when there are messages
   useEffect(() => {
@@ -3027,6 +3047,8 @@ const App = () => {
       setIsTyping(false);
     }
   }, [isTyping, messageQueue]);
+
+
 
   // Helpers
   const showToast = (type, message) =>
@@ -3079,8 +3101,11 @@ const App = () => {
       .map((e) => `[${e.name}]: ${e.content}`)
       .join("\n\n");
   const getStickerInstruction = (list = charStickers) => {
-    // 接收参数
-    if (!stickersEnabled || list.length === 0) return "";
+    if (!stickersEnabled) return "";
+    
+    const activeList = list.filter(s => s.enabled !== false);
+    
+    if (activeList.length === 0) return "";
     const listStr = list.map((s) => `ID: ${s.id}, Desc: ${s.desc}`).join("\n");
     return `\n[STICKER SYSTEM]\nAvailable Stickers:\n${listStr}[Usage Frequency Rules]
     1. **Frequency constraint**: Use a sticker ONLY when the emotion is strong or the context specifically demands it. 
@@ -3160,6 +3185,71 @@ const App = () => {
     }
   };
 
+  // 1. 获取所有唯一的分组名
+  const getGroups = (list) => {
+    const groups = new Set(list.map(i => i.group || "自定义表情"));
+    return Array.from(groups);
+  };
+
+  // 2. 移动世界书条目到新分组
+  const moveWorldBookEntry = (id, newGroup) => {
+    // 特殊逻辑：如果用户选了 "新建分组..." (NEW_GROUP_TRIGGER)
+    if (newGroup === "NEW_GROUP_TRIGGER") {
+        const name = window.prompt("请输入新分组名称:");
+        if (!name) return; // 用户取消
+        newGroup = name;
+    }
+
+    setWorldBook(prev => prev.map(entry => 
+      entry.id === id ? { ...entry, group: newGroup } : entry
+    ));
+  };
+
+  const addStickerGroup = () => {
+    const name = window.prompt("请输入新表情包库名称:");
+    if (!name || name.trim() === "") return;
+    
+    // 检查是否已存在
+    const exists = charStickers.some(s => s.group === name);
+    if (exists) {
+      showToast("error", "该分组已存在");
+      return;
+    }
+
+    setCharStickers(prev => [
+      ...prev, 
+      // 添加一个占位符，确保分组能显示出来
+      { id: `placeholder_${Date.now()}`, group: name, url: "", isPlaceholder: true, enabled: true }
+    ]);
+  };
+
+  // [新增] 删除表情包库
+  const deleteStickerGroup = (groupName) => {
+    if (window.confirm(`确定删除库 "${groupName}" 及其中所有表情包吗？`)) {
+      setCharStickers(prev => prev.filter(s => s.group !== groupName));
+    }
+  };
+
+  // [新增] 重命名表情包库
+  const renameStickerGroup = (oldName) => {
+    const newName = window.prompt("重命名表情包库:", oldName);
+    if (!newName || newName.trim() === "" || newName === oldName) return;
+
+    setCharStickers(prev => prev.map(s => 
+      s.group === oldName ? { ...s, group: newName } : s
+    ));
+  };
+
+
+  // [修改] 切换分组开关 (逻辑保持不变)
+  const toggleStickerGroup = (groupName, isEnabled) => {
+    setCharStickers(prev => prev.map(s => 
+      (s.group || "自定义表情") === groupName ? { ...s, enabled: isEnabled } : s
+    ));
+  };
+
+  
+
   const handleWorldBookUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -3184,6 +3274,7 @@ const App = () => {
           }
 
           const baseTime = Date.now(); // 提取时间戳到循环外
+          const defaultGroupName = file.name.replace('.json', '') || `导入-${new Date().toLocaleDateString()}`;
 
           const formattedEntries = newEntries
             .map((entry, index) => {
@@ -3200,22 +3291,20 @@ const App = () => {
                 entry.disable !== undefined
                   ? !entry.disable
                   : entry.enabled !== false;
-
+                  
               return {
                 id: entry.uid || entry.id || baseTime + index + Math.random(),
                 name: name,
                 content: entry.content || "",
                 enabled: isEnabled,
+                group: entry.group || defaultGroupName
               };
             })
             .filter((e) => e.content);
 
           if (formattedEntries.length > 0) {
             setWorldBook((prev) => [...prev, ...formattedEntries]);
-            showToast(
-              "success",
-              `成功导入 ${formattedEntries.length} 条世界书`
-            );
+            showToast("success", `已导入 ${formattedEntries.length} 条至 "${defaultGroupName}"`);
           } else {
             showToast("error", "未找到有效的世界书词条");
           }
@@ -3226,6 +3315,7 @@ const App = () => {
       };
       reader.readAsText(file);
     }
+    event.target.value = "";
   };
 
   const handleAvatarUpload = async (event, setter) => {
@@ -3242,35 +3332,49 @@ const App = () => {
     }
   };
 
-  const handleStickerUpload = async (event, type = "char") => {
+  // [修正] 务必确保参数里有 targetGroup = null
+  const handleStickerUpload = async (event, type = "char", targetGroup = null) => {
     const file = event.target.files[0];
     if (file) {
-      // 弹出输入框获取描述
+      // 1. 获取描述
       const desc = window.prompt(
-        "请输入这张表情包的描述 (AI将根据描述决定何时发送):",
+        "请输入表情包的描述 (AI将根据描述决定何时发送):",
         "开心"
       );
-      if (!desc) return; // 如果取消则不上传
+      if (!desc) {
+        event.target.value = ""; // 如果取消，也要重置 input
+        return; 
+      }
 
       try {
+        // 2. 压缩图片
         const compressedBase64 = await compressImage(file);
+
+        // 3. [关键修改] 确定分组：如果有传入 targetGroup 就用它，否则用默认值
+        const finalGroup = targetGroup || "自定义表情";
+
         const newSticker = {
           id: `s${Date.now()}`,
           url: compressedBase64,
           desc: desc,
+          group: finalGroup, // [使用确定的分组]
+          enabled: true,
         };
 
+        // 4. 保存数据
         if (type === "char") {
           setCharStickers((prev) => [...prev, newSticker]);
         } else {
           setUserStickers((prev) => [...prev, newSticker]);
         }
+        
         showToast("success", "表情包添加成功");
       } catch (err) {
-        showToast("error", "表情包处理失败");
+        console.error("表情包上传失败详情:", err);
+        showToast("error", "表情包处理失败: " + (err.message || "未知错误"));
       }
     }
-    // 重置 input value 允许重复上传同一文件
+    // 5. 重置 input value 允许重复上传同一文件
     event.target.value = "";
   };
 
@@ -5522,108 +5626,42 @@ ${recentHistory}
             </div>
           </AppWindow>
 
+          {/* APP: WORLDBOOK (Grouped) */}
           <AppWindow
             isOpen={activeApp === "worldbook"}
             title="世界书"
             onClose={() => setActiveApp(null)}
           >
             <div className="space-y-6 pt-4 pb-20">
-              {/* --- 1. 操作区域 (移到了最上方) --- */}
+              {/* 操作栏 */}
               <div className="grid grid-cols-2 gap-3">
-                {/* 导入按钮 */}
                 <label className="py-3 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-black transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm">
                   <Upload size={14} />
-                  导入JSON&nbsp;
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept=".json"
-                    onChange={handleWorldBookUpload}
-                  />
+                  导入JSON
+                  <input type="file" className="hidden" accept=".json" onChange={handleWorldBookUpload} />
                 </label>
-
-                {/* 添加按钮 */}
                 <button
-                  onClick={() =>
-                    setWorldBook([
-                      {
-                        id: Date.now(),
-                        name: "新词条",
-                        content: "",
-                        enabled: true,
-                      },
-                      ...worldBook, // 新词条加在最前面，方便编辑
-                    ])
-                  }
+                  onClick={() => {
+                     const name = window.prompt("请输入新分组名称 (将创建一个空条目):");
+                     if(name) {
+                        setWorldBook([{ id: Date.now(), name: "新条目", content: "", group: name, enabled: true }, ...worldBook]);
+                     }
+                  }}
                   className="py-3 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-black transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm"
                 >
                   <Plus size={14} />
-                  新建词条&nbsp;&nbsp;
+                  新建分组
                 </button>
               </div>
-
-              {/* --- 2. 列表区域 (移到了下方) --- */}
-              <div className="space-y-3">
-                {worldBook.length === 0 && (
-                  <div className="text-center text-gray-400 text-xs py-8">
-                    暂无世界书设定
-                  </div>
-                )}
-
-                {worldBook.map((entry, idx) => (
-                  <div
-                    key={entry.id || idx}
-                    className="glass-card p-3 rounded-lg flex flex-col gap-2 animate-in slide-in-from-bottom-2"
-                  >
-                    <div className="flex justify-between items-center">
-                      <input
-                        className="text-xs font-bold bg-transparent border-none outline-none text-gray-700 w-full"
-                        value={entry.name}
-                        placeholder="词条名称"
-                        onChange={(e) => {
-                          const newWB = [...worldBook];
-                          newWB[idx].name = e.target.value;
-                          setWorldBook(newWB);
-                        }}
-                      />
-                      <div className="flex gap-2 shrink-0">
-                        <button
-                          onClick={() => toggleWorldBookEntry(entry.id)}
-                          className={
-                            entry.enabled ? "text-[#7A2A3A]" : "text-gray-300"
-                          }
-                          title={entry.enabled ? "已启用" : "已禁用"}
-                        >
-                          {entry.enabled ? (
-                            <ToggleRight size={18} />
-                          ) : (
-                            <ToggleLeft size={18} />
-                          )}
-                        </button>
-                        <Trash2
-                          size={14}
-                          className="text-gray-300 hover:text-red-500 cursor-pointer mt-0.5"
-                          onClick={() =>
-                            setWorldBook((prev) =>
-                              prev.filter((_, i) => i !== idx)
-                            )
-                          }
-                        />
-                      </div>
-                    </div>
-                    <textarea
-                      className="w-full text-[10px] text-gray-500 bg-white/40 p-2 rounded-md resize-none h-20 outline-none border border-transparent focus:bg-white focus:border-gray-200 transition-colors font-mono"
-                      value={entry.content}
-                      placeholder="输入词条详细描述..."
-                      onChange={(e) => {
-                        const newWB = [...worldBook];
-                        newWB[idx].content = e.target.value;
-                        setWorldBook(newWB);
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
+              {getGroups(worldBook).map((group) => (
+                <WorldBookGroup
+                  key={group}
+                  group={group}
+                  worldBook={worldBook}
+                  setWorldBook={setWorldBook}
+                  moveWorldBookEntry={moveWorldBookEntry}
+                />
+              ))}
             </div>
           </AppWindow>
 
@@ -6355,6 +6393,8 @@ ${recentHistory}
                 setInteractionMode={setInteractionMode}
                 stickersEnabled={stickersEnabled}
                 setStickersEnabled={setStickersEnabled}
+                getGroups={getGroups}
+                toggleStickerGroup={toggleStickerGroup}
                 stickers={charStickers}
                 setStickers={setCharStickers}
                 setEditingSticker={setEditingSticker}
@@ -6368,6 +6408,9 @@ ${recentHistory}
                 // 导入导出
                 onExportChat={exportChatData}
                 onImportChat={importChatData}
+                addStickerGroup={addStickerGroup}
+                deleteStickerGroup={deleteStickerGroup}
+                renameStickerGroup={renameStickerGroup}
               />
             </div>
           </AppWindow>
@@ -7820,3 +7863,318 @@ const AppWindow = ({ isOpen, title, children, onClose, isChat, actions }) => {
 };
 
 export default App;
+
+// 世界书分组组件 (按钮已移至顶部)
+const WorldBookGroup = ({ group, worldBook, setWorldBook, moveWorldBookEntry }) => {
+  const [isExpanded, setIsExpanded] = React.useState(false); // 默认折叠
+  const groupEntries = worldBook.filter((w) => w.group === group);
+
+  return (
+    <div className="bg-white/50 border border-gray-100 rounded-xl overflow-hidden mb-4 transition-all duration-300">
+      {/* 分组标题栏 (点击切换折叠) */}
+      <div
+        className="bg-gray-100/50 p-3 flex justify-between items-center border-b border-gray-100 cursor-pointer hover:bg-gray-100"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <div className="flex items-center gap-2">
+          <div
+            className={`transition-transform duration-300 ${
+              isExpanded ? "rotate-180" : "rotate-0"
+            }`}
+          >
+            <ChevronDown size={14} className="text-gray-500" />
+          </div>
+          <h3 className="text-xs font-bold text-gray-700">{group}</h3>
+          <span className="text-[9px] bg-gray-200 text-gray-500 px-1.5 rounded-md">
+            {groupEntries.length}
+          </span>
+        </div>
+
+        <div
+          className="flex items-center gap-2"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* 删除整个分组 */}
+          <button
+            onClick={() => {
+              if (window.confirm(`确定删除分组 "${group}" 下的所有条目吗？`)) {
+                setWorldBook((prev) => prev.filter((w) => w.group !== group));
+              }
+            }}
+            className="text-gray-400 hover:text-red-500 p-1"
+          >
+            <Trash2 size={12} />
+          </button>
+        </div>
+      </div>
+
+      {/* 展开后的内容区域 */}
+      {isExpanded && (
+        <div className="p-2 space-y-2 animate-in slide-in-from-top-2 duration-200">
+          {/* [已移动] 添加条目按钮现在在最上面 */}
+          <button
+            onClick={() =>
+              setWorldBook((prev) => [
+                {
+                  id: Date.now(),
+                  name: "新条目",
+                  content: "",
+                  group: group,
+                  enabled: true,
+                },
+                ...prev, // 新条目加在最前面
+              ])
+            }
+            className="w-full py-2 text-[10px] text-gray-400 border border-dashed border-gray-200 rounded-lg hover:bg-white hover:text-[#7A2A3A] transition-colors mb-2"
+          >
+            + 添加条目到此分组
+          </button>
+
+          {/* 条目列表 */}
+          {groupEntries.map((entry) => (
+            <WorldBookEntryItem
+              key={entry.id}
+              entry={entry}
+              worldBook={worldBook}
+              setWorldBook={setWorldBook}
+              moveWorldBookEntry={moveWorldBookEntry}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const WorldBookEntryItem = ({
+  entry,
+  worldBook,
+  setWorldBook,
+  moveWorldBookEntry,
+}) => {
+  const [showContent, setShowContent] = React.useState(false);
+
+  // 获取所有分组名用于下拉菜单
+  const allGroups = Array.from(new Set(worldBook.map((i) => i.group || "未分组")));
+
+  return (
+    <div className="glass-card p-3 rounded-lg flex flex-col gap-2">
+      <div className="flex justify-between items-center">
+        {/* 1. 点击名字展开/折叠内容 */}
+        <div
+          className="flex items-center gap-2 flex-1 cursor-pointer"
+          onClick={() => setShowContent(!showContent)}
+        >
+          <div
+            className={`transition-transform duration-200 ${
+              showContent ? "rotate-90" : "rotate-0"
+            }`}
+          >
+            {/* 确保 ChevronRight 已在顶部 import */}
+            <ChevronRight size={12} className="text-gray-400" />
+          </div>
+          <input
+            className="text-xs font-bold bg-transparent border-none outline-none text-gray-700 w-full cursor-text"
+            value={entry.name}
+            onClick={(e) => e.stopPropagation()}
+            onChange={(e) => {
+              const newWB = [...worldBook];
+              const idx = newWB.findIndex((w) => w.id === entry.id);
+              if (idx !== -1) {
+                newWB[idx] = { ...newWB[idx], name: e.target.value };
+                setWorldBook(newWB);
+              }
+            }}
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* 2. 移动分组下拉框 */}
+          <div className="relative group/move">
+            <button className="text-gray-300 hover:text-blue-500">
+              <Share size={12} className="rotate-90" />
+            </button>
+            <select
+              className="absolute inset-0 opacity-0 cursor-pointer"
+              value={entry.group}
+              onChange={(e) => moveWorldBookEntry(entry.id, e.target.value)}
+            >
+              {allGroups.map((g) => (
+                <option key={g} value={g}>
+                  {g}
+                </option>
+              ))}
+              <option value="未分组">移至未分组</option>
+              <option value="NEW_GROUP_TRIGGER">新建分组...</option>
+            </select>
+          </div>
+
+          {/* 3. 启用/禁用开关 */}
+          <button
+            onClick={() => {
+              const newWB = [...worldBook];
+              const idx = newWB.findIndex((w) => w.id === entry.id);
+              if (idx !== -1) {
+                newWB[idx] = { ...newWB[idx], enabled: !newWB[idx].enabled };
+                setWorldBook(newWB);
+              }
+            }}
+            className={entry.enabled ? "text-[#7A2A3A]" : "text-gray-300"}
+          >
+            {entry.enabled ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
+          </button>
+
+          {/* 4. 删除按钮 */}
+          <Trash2
+            size={12}
+            className="text-gray-300 hover:text-red-500 cursor-pointer"
+            onClick={() =>
+              setWorldBook((prev) => prev.filter((w) => w.id !== entry.id))
+            }
+          />
+        </div>
+      </div>
+
+      {/* 5. 展开的内容区域 */}
+      {showContent && (
+        <textarea
+          className="w-full text-[10px] text-gray-500 bg-white/40 p-2 rounded-md resize-none h-24 outline-none animate-in fade-in"
+          value={entry.content}
+          onChange={(e) => {
+            const newWB = [...worldBook];
+            const idx = newWB.findIndex((w) => w.id === entry.id);
+            if (idx !== -1) {
+              newWB[idx] = { ...newWB[idx], content: e.target.value };
+              setWorldBook(newWB);
+            }
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+// ==========================================
+// [修改后] 表情包分组组件 (功能增强 + 视觉优化)
+// ==========================================
+const StickerGroup = ({ 
+  group, 
+  stickers, 
+  toggleStickerGroup, 
+  setEditingSticker, 
+  deleteStickerGroup, 
+  renameStickerGroup,
+  handleStickerUpload
+}) => {
+  const [isExpanded, setIsExpanded] = React.useState(false); // 默认折叠
+  
+  // 过滤出当前组的表情，并排除掉占位符(isPlaceholder)
+  const groupStickers = stickers.filter(s => s.group === group);
+  const visibleStickers = groupStickers.filter(s => !s.isPlaceholder);
+  
+  const isGroupEnabled = groupStickers.every(s => s.enabled !== false);
+
+  return (
+    <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 transition-all mb-3">
+      {/* 标题头 */}
+      <div className="flex justify-between items-center h-6">
+        {/* 左侧：折叠 + 标题 */}
+        <div 
+          className="flex items-center gap-2 cursor-pointer h-full" 
+          onClick={() => setIsExpanded(!isExpanded)}
+        >
+          <div className={`transition-transform duration-300 text-gray-400 ${isExpanded ? 'rotate-180' : 'rotate-0'}`}>
+             <ChevronDown size={14} />
+          </div>
+          <h4 className="text-xs font-bold text-gray-700 select-none">{group}</h4>
+          <span className="text-[9px] text-gray-400">({visibleStickers.length})</span>
+        </div>
+        
+        {/* 右侧：操作按钮组 */}
+        <div className="flex items-center gap-2">
+            {/* 改名 */}
+            <button 
+                onClick={() => renameStickerGroup(group)}
+                className="text-gray-300 hover:text-blue-500 p-1 transition-colors"
+                title="重命名库"
+            >
+                <Edit2 size={12} />
+            </button>
+            
+            {/* 删除 */}
+            <button 
+                onClick={() => deleteStickerGroup(group)}
+                className="text-gray-300 hover:text-red-500 p-1 transition-colors"
+                title="删除库"
+            >
+                <Trash2 size={12} />
+            </button>
+
+            {/* 分割线 */}
+            <div className="w-px h-3 bg-gray-200 mx-1"></div>
+
+            {/* 开关 */}
+            <div 
+                className="flex items-center gap-1 cursor-pointer" 
+                onClick={(e) => {
+                    e.stopPropagation();
+                    toggleStickerGroup(group, !isGroupEnabled);
+                }}
+            >
+                {isGroupEnabled ? (
+                    <ToggleRight size={18} className="text-[#7A2A3A] drop-shadow-sm"/>
+                ) : (
+                    <ToggleLeft size={18} className="text-gray-300"/>
+                )}
+            </div>
+        </div>
+      </div>
+      
+      {/* 表情网格 (折叠区域) */}
+      {isExpanded && (
+        <div className={`pt-3 mt-2 border-t border-gray-200/50 transition-all animate-in slide-in-from-top-1 ${isGroupEnabled ? 'opacity-100' : 'opacity-40 grayscale pointer-events-none'}`}>
+            
+            {visibleStickers.length === 0 && (
+                <div className="text-center py-4 text-[10px] text-gray-400 italic">
+                    暂无表情，请上传
+                </div>
+            )}
+
+            <div className="grid grid-cols-4 gap-3">
+                {visibleStickers.map((s) => (
+                    <div
+                        key={s.id}
+                        className="aspect-square bg-white rounded-xl overflow-hidden relative group cursor-pointer border border-gray-100"
+                        onClick={() => setEditingSticker({ ...s, source: "char" })}
+                    >
+                        <img src={s.url} className="w-full h-full object-cover" />
+                        
+                        {/* 选中/禁用遮罩 */}
+                        {!s.enabled && <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px]" />}
+                    </div>
+                ))}
+                
+                {/* [修改] 组内上传按钮 - 对应当前分组 */}
+                <label className="
+                    aspect-square border border-dashed border-gray-300 rounded-xl 
+                    flex flex-col items-center justify-center cursor-pointer 
+                    text-gray-400 hover:text-[#7A2A3A] hover:border-[#7A2A3A] hover:bg-white
+                    transition-all duration-300 relative
+                ">
+                    <Plus size={16} />
+                    <input 
+                        type="file" 
+                        className="hidden" 
+                        accept="image/*"
+                        // 关键点：调用 handleStickerUpload 时，传入当前的 group 名字
+                        onChange={(e) => handleStickerUpload(e, "char", group)} 
+                        // 点击时清空，确保能连续上传同一张图
+                        onClick={(e) => (e.target.value = null)}
+                    />
+                </label>
+            </div>
+        </div>
+      )}
+    </div>
+  );
+};
