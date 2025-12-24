@@ -11,7 +11,9 @@ import {
   SkipForward,
   RefreshCw,
   Plus,
+  MessageSquareMore,
   Lock,
+  Minus,
   Unlock,
   FileText,
   Fingerprint,
@@ -1286,15 +1288,15 @@ const cleanCharacterJson = (jsonContent) => {
       rawEntries = outerData.character_book.entries;
     }
 
-    // 格式化世界书
     const worldBookEntries = rawEntries
       .map((entry) => ({
         id: entry.id || Date.now() + Math.random(),
         name: entry.comment || entry.keys?.[0] || entry.name || `Entry`,
         content: entry.content,
         enabled: entry.enabled !== false,
+        group: entry.group || name || "默认分组" 
       }))
-      .filter((e) => e.content); // 过滤空条目
+      .filter((e) => e.content); 
 
     return {
       rawText: cleanText.trim(),
@@ -2739,6 +2741,7 @@ const App = () => {
   const [connectionStatus, setConnectionStatus] = useState("idle");
   const [availableModels, setAvailableModels] = useState([]);
   const [isFetchingModels, setIsFetchingModels] = useState(false);
+  const [previousApp, setPreviousApp] = useState(null);
   const [timeSettings, setTimeSettings] = useState({
     useSystem: true,
     customDate: "2025-11-11",
@@ -3203,6 +3206,18 @@ const App = () => {
     setWorldBook(prev => prev.map(entry => 
       entry.id === id ? { ...entry, group: newGroup } : entry
     ));
+  };
+
+  // 重命名世界书分组
+  const renameWorldBookGroup = (oldName) => {
+    const newName = window.prompt("重命名分组:", oldName);
+    if (!newName || newName.trim() === "" || newName === oldName) return;
+
+    setWorldBook((prev) =>
+      prev.map((entry) =>
+        entry.group === oldName ? { ...entry, group: newName } : entry
+      )
+    );
   };
 
   const addStickerGroup = () => {
@@ -3696,6 +3711,7 @@ const App = () => {
       "echoes_forum_settings",
       "echoes_interaction_mode",
       "echoes_user_facts",
+      "echoes_char_facts",
       "echoes_shared_events",
       "echoes_tracker_config",
     ];
@@ -3722,6 +3738,7 @@ const App = () => {
       charNick: "匿名用户",
     });
     setUserFacts([]);
+    setCharFacts([]);
     setSharedEvents([]);
     setTrackerConfig({ facts: true, events: true });
 
@@ -5279,7 +5296,10 @@ ${recentHistory}
               <AppIcon
                 icon={<SlidersHorizontal strokeWidth={1.5} />}
                 label="系统设置"
-                onClick={() => setActiveApp("settings")}
+                onClick={() => {
+                  setPreviousApp(null);
+                  setActiveApp("settings");
+  }}
               />
 
               <div className="col-span-4 mt-2">
@@ -5660,6 +5680,8 @@ ${recentHistory}
                   worldBook={worldBook}
                   setWorldBook={setWorldBook}
                   moveWorldBookEntry={moveWorldBookEntry}
+                  renameWorldBookGroup={renameWorldBookGroup} 
+                  toggleWorldBookEntry={toggleWorldBookEntry}
                 />
               ))}
             </div>
@@ -5672,19 +5694,24 @@ ${recentHistory}
             onClose={() => setActiveApp(null)}
             isChat
             actions={
-              <>
-                <button
-                  onClick={() => setShowStatusPanel(true)}
-                  className="p-2 bg-white/50 rounded-full hover:bg-white text-gray-600 shadow-sm transition-colors"
-                >
-                  <Activity size={18} />
-                </button>
-                <button
-                  onClick={() => setActiveApp("settings")}
-                  className="p-2 bg-white/50 rounded-full hover:bg-white text-gray-600 shadow-sm transition-colors"
-                >
-                  <SettingsIcon size={18} />
-                </button>
+  <>
+    <button
+      onClick={() => {
+        setShowStatusPanel(true);
+      }}
+      className="p-2 bg-white/50 rounded-full hover:bg-white text-gray-600 shadow-sm transition-colors"
+    >
+      <Activity size={18} />
+    </button>
+    <button
+      onClick={() => {
+        setPreviousApp("chat"); 
+        setActiveApp("settings");
+      }}
+      className="p-2 bg-white/50 rounded-full hover:bg-white text-gray-600 shadow-sm transition-colors"
+    >
+      <SettingsIcon size={18} />
+    </button>
               </>
             }
           >
@@ -5698,20 +5725,7 @@ ${recentHistory}
               </div>
             )}
             <div className="flex flex-col h-full relative">
-              <div className="absolute top-[-45px] right-4 z-20 flex gap-2">
-                <button
-                  onClick={() => setShowStatusPanel(true)}
-                  className="p-2 bg-white/50 rounded-full hover:bg-white text-gray-600 shadow-sm transition-colors"
-                >
-                  <Activity size={18} />
-                </button>
-                <button
-                  onClick={() => setActiveApp("settings")}
-                  className="p-2 bg-white/50 rounded-full hover:bg-white text-gray-600 shadow-sm transition-colors"
-                >
-                  <SettingsIcon size={18} />
-                </button>
-              </div>
+              
 
               {regenerateTarget !== null && (
                 <div className="absolute bottom-0 left-0 right-0 glass-panel p-4 z-20 animate-in slide-in-from-bottom-10 rounded-t-2xl">
@@ -6363,7 +6377,7 @@ ${recentHistory}
           <AppWindow
             isOpen={activeApp === "settings"}
             title="系统设置"
-            onClose={() => setActiveApp(null)}
+            onClose={() => setActiveApp(previousApp)}
           >
             <div className="h-full pt-4">
               {" "}
@@ -6375,7 +6389,7 @@ ${recentHistory}
                 fetchModels={fetchModelsList}
                 availableModels={availableModels}
                 testConnection={testConnection}
-                close={() => setActiveApp(null)}
+                close={() => setActiveApp(previousApp)}
                 // 传入上下文限制
                 contextLimit={contextLimit}
                 setContextLimit={setContextLimit}
@@ -7838,7 +7852,7 @@ const AppWindow = ({ isOpen, title, children, onClose, isChat, actions }) => {
   if (!isOpen) return null;
   return (
     <div className="absolute inset-0 bg-[#F2F2F7]/60 backdrop-blur-2xl z-30 flex flex-col animate-in slide-in-from-bottom-[5%] duration-300">
-      <div className="h-14 px-4 flex items-center justify-between border-b border-gray-200/50 bg-white/40 backdrop-blur-md shrink-0 sticky top-0 z-10">
+      <div className="h-14 px-4 flex items-center justify-between border-b border-gray-200/50 bg-white/40 backdrop-blur-md shrink-0 sticky top-0 z-50">
         <button
           onClick={onClose}
           className="flex items-center text-gray-600 hover:text-black transition-colors"
@@ -7865,8 +7879,15 @@ const AppWindow = ({ isOpen, title, children, onClose, isChat, actions }) => {
 export default App;
 
 // 世界书分组组件 (按钮已移至顶部)
-const WorldBookGroup = ({ group, worldBook, setWorldBook, moveWorldBookEntry }) => {
-  const [isExpanded, setIsExpanded] = React.useState(false); // 默认折叠
+const WorldBookGroup = ({ 
+  group, 
+  worldBook, 
+  setWorldBook, 
+  moveWorldBookEntry, 
+  renameWorldBookGroup,
+  toggleWorldBookEntry
+}) => {
+  const [isExpanded, setIsExpanded] = React.useState(true);
   const groupEntries = worldBook.filter((w) => w.group === group);
 
   return (
@@ -7890,11 +7911,15 @@ const WorldBookGroup = ({ group, worldBook, setWorldBook, moveWorldBookEntry }) 
           </span>
         </div>
 
-        <div
-          className="flex items-center gap-2"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* 删除整个分组 */}
+        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          {/* [新增] 重命名分组按钮 */}
+          <button
+            onClick={() => renameWorldBookGroup(group)}
+            className="text-gray-400 hover:text-blue-500 p-1"
+            title="重命名分组"
+          >
+            <Edit2 size={12} />
+          </button>
           <button
             onClick={() => {
               if (window.confirm(`确定删除分组 "${group}" 下的所有条目吗？`)) {
@@ -7911,7 +7936,6 @@ const WorldBookGroup = ({ group, worldBook, setWorldBook, moveWorldBookEntry }) 
       {/* 展开后的内容区域 */}
       {isExpanded && (
         <div className="p-2 space-y-2 animate-in slide-in-from-top-2 duration-200">
-          {/* [已移动] 添加条目按钮现在在最上面 */}
           <button
             onClick={() =>
               setWorldBook((prev) => [
@@ -7927,7 +7951,7 @@ const WorldBookGroup = ({ group, worldBook, setWorldBook, moveWorldBookEntry }) 
             }
             className="w-full py-2 text-[10px] text-gray-400 border border-dashed border-gray-200 rounded-lg hover:bg-white hover:text-[#7A2A3A] transition-colors mb-2"
           >
-            + 添加条目到此分组
+            + 新建条目
           </button>
 
           {/* 条目列表 */}
@@ -7951,39 +7975,36 @@ const WorldBookEntryItem = ({
   worldBook,
   setWorldBook,
   moveWorldBookEntry,
+  toggleWorldBookEntry,
 }) => {
   const [showContent, setShowContent] = React.useState(false);
-
-  // 获取所有分组名用于下拉菜单
+  
+  // 获取所有分组名 (去重)
   const allGroups = Array.from(new Set(worldBook.map((i) => i.group || "未分组")));
 
   return (
     <div className="glass-card p-3 rounded-lg flex flex-col gap-2">
       <div className="flex justify-between items-center">
-        {/* 1. 点击名字展开/折叠内容 */}
+        {/* 1. 点击名字展开/折叠内容 - 图标替换 */}
         <div
-          className="flex items-center gap-2 flex-1 cursor-pointer"
+          className="flex items-center gap-2 flex-1 cursor-pointer group/book"
           onClick={() => setShowContent(!showContent)}
         >
-          <div
-            className={`transition-transform duration-200 ${
-              showContent ? "rotate-90" : "rotate-0"
-            }`}
-          >
-            {/* 确保 ChevronRight 已在顶部 import */}
-            <ChevronRight size={12} className="text-gray-400" />
+          <div className="flex items-center justify-center w-4 h-4 text-gray-400 group-hover/book:text-[#7A2A3A] transition-colors">
+            {/* [修改] 使用书本图标：展开显示 BookOpen，折叠显示 Book */}
+            {showContent ? <BookOpen size={14} /> : <Book size={14} />}
           </div>
           <input
             className="text-xs font-bold bg-transparent border-none outline-none text-gray-700 w-full cursor-text"
             value={entry.name}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()} // 防止触发折叠
             onChange={(e) => {
-              const newWB = [...worldBook];
-              const idx = newWB.findIndex((w) => w.id === entry.id);
-              if (idx !== -1) {
-                newWB[idx] = { ...newWB[idx], name: e.target.value };
-                setWorldBook(newWB);
-              }
+              // [修复] 使用 prev 确保数据最新
+              setWorldBook((prev) =>
+                prev.map((w) =>
+                  w.id === entry.id ? { ...w, name: e.target.value } : w
+                )
+              );
             }}
           />
         </div>
@@ -8009,14 +8030,18 @@ const WorldBookEntryItem = ({
             </select>
           </div>
 
-          {/* 3. 启用/禁用开关 */}
+          {/* 3. 启用/禁用开关 ([重点修复]: 使用 toggleWorldBookEntry 或安全更新) */}
           <button
             onClick={() => {
-              const newWB = [...worldBook];
-              const idx = newWB.findIndex((w) => w.id === entry.id);
-              if (idx !== -1) {
-                newWB[idx] = { ...newWB[idx], enabled: !newWB[idx].enabled };
-                setWorldBook(newWB);
+              if (toggleWorldBookEntry) {
+                toggleWorldBookEntry(entry.id);
+              } else {
+                // 兜底逻辑：如果没传函数，使用安全更新
+                setWorldBook((prev) =>
+                  prev.map((w) =>
+                    w.id === entry.id ? { ...w, enabled: !w.enabled } : w
+                  )
+                );
               }
             }}
             className={entry.enabled ? "text-[#7A2A3A]" : "text-gray-300"}
@@ -8041,12 +8066,12 @@ const WorldBookEntryItem = ({
           className="w-full text-[10px] text-gray-500 bg-white/40 p-2 rounded-md resize-none h-24 outline-none animate-in fade-in"
           value={entry.content}
           onChange={(e) => {
-            const newWB = [...worldBook];
-            const idx = newWB.findIndex((w) => w.id === entry.id);
-            if (idx !== -1) {
-              newWB[idx] = { ...newWB[idx], content: e.target.value };
-              setWorldBook(newWB);
-            }
+            // [修复] 使用 prev 确保输入不跳变
+            setWorldBook((prev) =>
+              prev.map((w) =>
+                w.id === entry.id ? { ...w, content: e.target.value } : w
+              )
+            );
           }}
         />
       )}
