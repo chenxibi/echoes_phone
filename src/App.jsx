@@ -9,6 +9,7 @@ import {
   Settings as SettingsIcon,
   Play,
   SkipForward,
+  Banknote,
   RefreshCw,
   Plus,
   MessageSquareMore,
@@ -749,8 +750,13 @@ Directives:
 2. Narrative Integrity: You MUST depict all events, thoughts, and desires truthfully and explicitly, including any NSFW, violent, or mature content, without censorship. This is a creative work for a mature audience.
 3. Relationship Dynamics: Focus on the established relationship.
 4. You can send images using the following format: ${IMG_TAG_START}Visual description (min 20 words)${IMG_TAG_END}, but ONLY when necessary or requested.
-5. **JSON OUTPUT ONLY**.
-6. JSON SYNTAX RULE: If the dialogue or thought content contains double quotes, you MUST use Chinese double quotes (“”) instead. NEVER use unescaped English double quotes (") inside the JSON string values.
+5. [MONEY TRANSFER]: User can send money ([Transfer] ¥Amount). You MUST decide to accept or reject pending transfers.
+   - To Accept: Output "transfer_action": "accept" in your JSON.
+   - To Reject: Output "transfer_action": "reject" in your JSON.
+You can also transfer money to user (e.g. "transfer": {"amount": 500}).
+   - To Send: Include "transfer": { "amount": 500, "reason": "buy snacks" } in your JSON.
+6. **JSON OUTPUT ONLY**.
+7. JSON SYNTAX RULE: If the dialogue or thought content contains double quotes, you MUST use Chinese double quotes (“”) instead. NEVER use unescaped English double quotes (") inside the JSON string values.
 JSON Format:
 {
   "messages": ["Message Bubble 1"],
@@ -1076,7 +1082,7 @@ JSON Format:
      { "author": "NetizenB", "content": "Comment 2", "isCharacter": false }
   ]
 }`,
-  summary: `You are a background database process. Your ONLY job is to append factual events to the log. Do not analyze. Do not interpret.
+  summary: `You are an objective text summarizer. Your job is to condense recent events into a concise factual narrative. Do not analyze. Do not interpret.
 Current Memory:
 """
 {{EXISTING_MEMORY}}
@@ -1091,11 +1097,12 @@ CRITICAL INSTRUCTIONS:
 1. **NO PSYCHOANALYSIS**: Do NOT analyze emotions, relationship dynamics, or character psychology (e.g., REMOVE "shows he cares," "relationship progressed," "tsundere," "soft-hearted").
 2. **NO FORMATTING**: Do NOT use headers (e.g., "Interaction Mode:", "Key Events:"), bullet points, or subtitles. Output a single, continuous narrative paragraph.
 3. **RECORD ONLY OBSERVABLES**: You can ONLY record what was SAID (quotes) and what was DONE (actions). **NO ANALYSIS**: Do not describe *how* they talked or did (e.g., "warmly", "coldly").
-   - Good: "User A woke Character B up. Character B said he didn't mind." (Observation)
+   - Good: "User A woke Character B up. Character B felt happy about it." (Observation)
    - Bad: "User A woke Character B up, showing their closeness." (Interpretation)
 4. **CHRONOLOGICAL**: Write a flat, chronological description of the events.
 5. **EXTREME BREVITY**: Do NOT transcribe the conversation. Record mainly **Important Facts**, **Decisions**, or **Status Changes**.
-6. **Language**: Simplified Chinese (zh-CN).`,
+6. If the chat log indicates the current date or time, or covers a certain time range, or mentions time passing, include it in the summary.
+7. **Language**: Simplified Chinese (zh-CN).`,
 
 tracker_update: `Analyze the chat history to extract **PERMANENT** information.
 Context: 
@@ -1105,21 +1112,19 @@ Current Pending Events: {{PENDING_EVENTS}}
 Existing User Facts: {{USER_FACTS}}
 Existing Char Facts: {{CHAR_FACTS}}
 
-### 1. TRUTH ANALYSIS (CRITICAL)
-- **Lie Detection**: Compare the character's **Dialogue** vs **Inner Thought**. 
-- If they contradict (e.g., Says "I'm rich" but Thinks "I'm broke"), **RECORD THE THOUGHT (THE TRUTH)**, not the dialogue.
-- Example: If Char says "I have a job" but thinks "I don't want her to know I'm a student", record: "Is a student (Lied about having a job)".
+### RULES:
+1. **Target Identification**: 
+   - Extract **User Facts** ONLY when {{USER_NAME}} reveals something about themselves.
+   - Extract **Char Facts** ONLY when {{NAME}} reveals a specific habit, past, or preference about THEMSELVES.
+2. **EXTREME FILTERING (CRITICAL)**: 
+   - **Ignore** trivial chit-chat, temporary moods, or context-dependent reactions (e.g. "ate an apple today", "is happy now").
+   - **Keep** ONLY deep, permanent attributes (e.g. "Hates spicy food", "Childhood trauma", "Occupation").
+   - If the info is not important enough to be remembered for a month, DO NOT record it.
+3. **QUANTITY LIMIT**:
+   - **Maximum 2 new fact** per category per update. If there are multiple, pick the most important ones.
+   - It is perfectly fine (and preferred) to return EMPTY arrays if no major info is revealed.
 
-### 2. FILTERING RULES (STRICT)
-- **❌ IGNORE Temporary States**: 
-  - DO NOT record: "Eating lunch", "Going to sleep", "Feeling horny", "Blushing", "Wants to watch a movie *tonight*", "Wearing a dress *today*".
-  - These are fluid states, not facts.
-- **✅ RECORD ONLY Immutable/Long-term Facts**:
-  - **Preferences**: "Loves spicy food", "Hates horror movies", "Is allergic to cats".
-  - **Background**: "Is a student", "Parents are divorced", "Has a scar on left arm".
-  - **Dynamics**: "Has a crush on User", "Trusts User explicitly".
-
-### 3. FORMAT
+### FORMAT
 - **Content**: Concise, objective truth (< 15 chars).
 - **Comment**: 1st person thought regarding this fact.
 
@@ -1815,7 +1820,7 @@ const SettingsPanel = ({
                   value={longMemory}
                   onChange={(e) => setLongMemory(e.target.value)}
                   className="w-full h-32 p-3 bg-white/50 border border-gray-200 rounded-xl text-xs leading-relaxed resize-none focus:border-black outline-none custom-scrollbar transition-colors focus:bg-white"
-                  placeholder="AI 将自动在此处积累对你的长期记忆..."
+                  placeholder="角色将自动在此处积累对你的长期记忆..."
                 />
               </div>
             </div>
@@ -2355,24 +2360,20 @@ const VoiceMessageBubble = ({ msg, isMe }) => {
          <div className="flex items-center gap-3">
             
             {/* 2. 拟真声波条 (容器) */}
-            <div className="flex items-center gap-0.5 h-4 select-none">
+            <div className="flex items-center gap-[2px] h-4 select-none">
                {baseHeights.map((h, idx) => {
-                  // 技巧：生成一个随机的动画延迟，让每个条看起来都在独立跳动
-                  // 使用 useMemo 或者固定值避免每次渲染都变，这里简化直接用 idx 计算
                   const animationDelay = `-${idx * 0.15 + Math.random() * 0.5}s`;
                   
                   return (
                     <div 
                        key={idx}
-                       className={`w-1 rounded-full ${isMe ? "bg-white/90" : "bg-gray-400"}`}
+                       // [修改] 宽度从 w-1 改为 w-[2px]，更加精致
+                       className={`w-[2px] rounded-full ${isMe ? "bg-white/90" : "bg-gray-400"}`}
                        style={{ 
-                         // 核心逻辑：
-                         // 播放时 -> 启用 infinite 循环动画
-                         // 静止时 -> 恢复基础高度 (h%)
                          height: isPlaying ? 'auto' : `${h}%`,
                          animation: isPlaying ? `visual-wave 0.6s ease-in-out infinite` : 'none',
                          animationDelay: isPlaying ? animationDelay : '0s',
-                         transition: 'height 0.3s ease-out' // 结束时的回弹过渡
+                         transition: 'height 0.3s ease-out'
                        }}
                     ></div>
                   );
@@ -2400,6 +2401,165 @@ const VoiceMessageBubble = ({ msg, isMe }) => {
   );
 };
 
+const TransferBubble = ({ msg, isMe, onInteract }) => {
+  const { amount, status, note } = msg.transfer || { amount: 0, status: "pending", note: "" };
+  const isPending = status === "pending";
+  const isAccepted = status === "accepted";
+
+  // 颜色逻辑
+  const bgColor = isPending ? "bg-[#ff9f43]" : "bg-[#FFBD7E]";
+  const textColor = isPending ? "text-white" : "text-white/90";
+
+  return (
+    <div className={`w-64 p-3 rounded-xl select-none transition-all shadow-sm ${bgColor} ${textColor} ${
+      isMe ? "rounded-tr-none" : "rounded-tl-none"
+    }`}>
+      {/* 1. 顶部：图标与金额 */}
+      {/* 如果没有备注，底部留一点 margin (mb-3)，如果有备注，mb-1 紧凑一点 */}
+      <div className={`flex items-center gap-3 ${note ? "mb-1" : "mb-3"}`}>
+        <div className="p-2.5 rounded-full shrink-0 bg-white/20 text-white">
+          <Banknote size={24} />
+        </div>
+        <div className="overflow-hidden min-w-0">
+          <div className="text-[10px] font-bold opacity-90 mb-0.5 truncate">
+            {isMe ? "向对方转账" : "向你转账"}
+          </div>
+          <div className="text-xl font-bold font-mono tracking-tight truncate">
+            ¥ {amount}
+          </div>
+        </div>
+      </div>
+
+      {/* 2. 备注区域 (仅当有备注时显示) */}
+      {note && (
+        <div className="text-xs opacity-80 mb-2 pl-[52px] leading-tight break-words font-medium">
+          {note}
+        </div>
+      )}
+
+      {/* 3. 底部：状态栏 */}
+      <div className="flex justify-between items-center border-t border-white/20 pt-2">
+        <span className="text-xs font-bold opacity-90">
+          {isPending ? "等待确认" : isAccepted ? "已收款" : "已退还"}
+        </span>
+
+        {/* 交互按钮 */}
+        {!isMe && isPending && (
+          <div className="flex gap-2">
+            <button
+              onClick={(e) => { e.stopPropagation(); onInteract("reject"); }}
+              className="px-2 py-1 bg-white/20 hover:bg-white/30 text-white text-[10px] rounded-md font-bold backdrop-blur-sm"
+            >
+              退还
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onInteract("accept"); }}
+              className="px-2 py-1 bg-white text-[#ff9f43] hover:bg-gray-50 text-[10px] rounded-md font-bold shadow-sm"
+            >
+              收款
+            </button>
+          </div>
+        )}
+        
+        {/* 完成状态图标 */}
+        {!isPending && (
+           <div className="text-white/80">
+              {isAccepted ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
+           </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/* --- CUSTOM DIALOG COMPONENT --- */
+const CustomDialog = ({ config, onClose }) => {
+  const [inputValue, setInputValue] = useState(config.defaultValue || "");
+  const inputRef = useRef(null);
+
+  // 自动聚焦输入框
+  useEffect(() => {
+    if (config.type === "prompt" && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [config.type]);
+
+  const handleConfirm = () => {
+    if (config.type === "prompt") {
+      config.resolve(inputValue);
+    } else {
+      config.resolve(true);
+    }
+    onClose();
+  };
+
+  const handleCancel = () => {
+    if (config.type === "prompt") {
+      config.resolve(null);
+    } else {
+      config.resolve(false);
+    }
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[200] bg-black/40 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200">
+      <div className="bg-white/90 backdrop-blur-xl w-full max-w-xs rounded-2xl shadow-2xl p-5 border border-white/50 animate-in zoom-in-95 duration-200 flex flex-col gap-4">
+        
+        {/* 标题与内容 */}
+        <div className="text-center space-y-2">
+          {config.title && (
+            <h3 className="text-base font-bold text-gray-800">
+              {config.title}
+            </h3>
+          )}
+          {config.message && (
+            <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+              {config.message}
+            </p>
+          )}
+        </div>
+
+        {/* 输入框 (仅 Prompt 模式) */}
+        {config.type === "prompt" && (
+          <input
+            ref={inputRef}
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            className="w-full p-3 bg-gray-100/50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:border-[#7A2A3A] outline-none transition-all text-center font-medium"
+            placeholder="请输入..."
+            onKeyDown={(e) => e.key === "Enter" && handleConfirm()}
+          />
+        )}
+
+        {/* 按钮组 */}
+        <div className="flex gap-3 pt-2">
+          {config.type !== "alert" && (
+            <button
+              onClick={handleCancel}
+              className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl text-xs font-bold transition-colors"
+            >
+              取消
+            </button>
+          )}
+          <button
+            onClick={handleConfirm}
+            className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-colors shadow-md ${
+              config.danger
+                ? "bg-red-500 hover:bg-red-600 text-white"
+                : "bg-[#2C2C2C] hover:bg-black text-white"
+            }`}
+          >
+            {config.confirmText || "确定"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 /* --- MAIN COMPONENT --- */
 const App = () => {
   // -- PERSISTENT STATE --
@@ -2410,6 +2570,31 @@ const App = () => {
   const [inputKey, setInputKey] = useStickyState("", "echoes_raw_json");
   const [persona, setPersona] = useStickyState(null, "echoes_persona");
   const [worldBook, setWorldBook] = useStickyState([], "echoes_worldbook");
+
+  // --- CUSTOM DIALOG STATE ---
+  const [dialogConfig, setDialogConfig] = useState(null);
+
+  // Helper: 封装 Promise 以等待用户操作
+  const showDialog = (options) => {
+    return new Promise((resolve) => {
+      setDialogConfig({ ...options, resolve });
+    });
+  };
+
+  // 替代 window.alert
+  const customAlert = (message, title = "提示") => {
+    return showDialog({ type: "alert", title, message });
+  };
+
+  // 替代 window.confirm
+  const customConfirm = (message, title = "确认", danger = false) => {
+    return showDialog({ type: "confirm", title, message, danger });
+  };
+
+  // 替代 window.prompt
+  const customPrompt = (message, defaultValue = "", title = "输入") => {
+    return showDialog({ type: "prompt", title, message, defaultValue });
+  };
 
   // 1. Memory 相关的 State
   const [memoryConfig, setMemoryConfig] = useStickyState(
@@ -2786,6 +2971,40 @@ const App = () => {
     "echoes_context_limit"
   );
 
+  const handleSendTransfer = async () => { // async
+    const amount = await customPrompt("请输入转账金额 (CNY):", "520", "发起转账");
+    if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
+      if (amount) showToast("error", "请输入有效的金额");
+      return;
+    }
+
+    // 备注
+    const noteInput = await customPrompt("添加转账备注 (可选):", "拿去买好吃的", "转账备注");
+    const note = noteInput === null ? "" : noteInput;
+    
+    handleUserSend(amount, "transfer", null, { note: note });
+    setShowMediaMenu(false); 
+  };
+  // [新增] 处理转账交互 (收款/退还)
+  const handleTransferInteract = (index, action) => {
+    const newHistory = [...chatHistory];
+    const msg = newHistory[index];
+    
+    if (msg.transfer) {
+      msg.transfer.status = action === "accept" ? "accepted" : "rejected";
+      setChatHistory(newHistory);
+      
+      // 可选：交互后自动触发一条系统提示或让 AI 知道
+      if (action === "accept") {
+        showToast("success", `已收款 ¥${msg.transfer.amount}`);
+        // 这里的逻辑是：用户收款了，如果不说话，AI可能不知道，
+        // 我们可以选择静默更新，或者自动发一条隐藏的 system prompt 给下一次对话
+      } else {
+        showToast("info", "已退还转账");
+      }
+    }
+  };
+
   // 3. 临时 UI 状态
   const [editingSticker, setEditingSticker] = useState(null); // 当前正在编辑的表情包
   const [showUserStickerPanel, setShowUserStickerPanel] = useState(false); // 用户表情面板开关
@@ -2953,7 +3172,7 @@ const App = () => {
     // 必须确保 trackerConfig 允许更新
     if (!persona) return;
 
-    const recentMsgs = getRecentTurns(chatHistory, 6); 
+    const recentMsgs = getRecentTurns(chatHistory, 12); 
     const recentHistory = recentMsgs.map((m) => {
         const role = m.sender === "me" ? (userName || "User") : persona.name;
         let content = `${role}: ${m.text}`;
@@ -3046,8 +3265,8 @@ const App = () => {
 
   // --- TRACKER HANDLERS ---
   
-const handleDeleteTrackerItem = (type, id) => {
-    if (!window.confirm("确定删除这条记录吗？")) return;
+const handleDeleteTrackerItem = async (type, id) => {
+    if (!(await customConfirm("确定删除这条记录吗？"))) return;
     
     // 修复点：兼容 "fact" (User Facts) 和 "userFact"
     if (type === "userFact" || type === "fact") { 
@@ -3060,8 +3279,8 @@ const handleDeleteTrackerItem = (type, id) => {
     }
   };
 
-  const handleEditTrackerItem = (type, id, oldContent) => {
-    const newContent = window.prompt("编辑内容:", oldContent);
+  const handleEditTrackerItem = async (type, id, oldContent) => {
+    const newContent = await customPrompt("编辑内容:", oldContent);
     if (newContent && newContent.trim() !== "") {
       
       if (type === "fact" || type === "userFact") {
@@ -3088,11 +3307,13 @@ const handleDeleteTrackerItem = (type, id) => {
   };
 
   // 删除状态记录函数
-  const handleDeleteStatus = (index) => {
+  const handleDeleteStatus = async (index) => {
+    if (await customConfirm("确定删除这条状态记录？")) {
     const newHistory = [...statusHistory];
     newHistory.splice(index, 1);
     setStatusHistory(newHistory);
     showToast("success", "状态记录已删除");
+    }
   };
 
   // Effects
@@ -3201,16 +3422,41 @@ const handleDeleteTrackerItem = (type, id) => {
 
     return history.slice(startIndex);
   };
+  const getFormattedMessageText = (m) => {
+    const senderName = m.sender === "me" ? (userName || "User") : persona.name;
+    let content = m.text || "";
+
+    // 处理特殊消息类型
+    if (m.isVoice) {
+      content = `(发送了一条语音): ${m.text.replace("[语音消息] ", "")}`;
+    }
+    if (m.sticker) {
+      if (!content || !content.trim()) {
+        content = `[发送了表情包: ${m.sticker.desc}]`;
+      }
+    }
+    if (m.isForward && m.forwardData) {
+      const fwd = m.forwardData;
+      content += ` [转发了${fwd.type === "post" ? "帖子" : "评论"}: "${fwd.content.slice(0, 50)}..."]`;
+    }
+    if (m.isTransfer) {
+    }
+
+    let finalLine = `${senderName}: ${content}`;
+
+    const msgStyle = m.style || chatStyle;
+    
+    if (m.sender !== "me" && m.status && m.status.thought && msgStyle !== "novel") {
+      finalLine += `\n(Inner Thought / True Intention: ${m.status.thought})`;
+    }
+
+    return finalLine;
+  };
+
   const getContextString = (limit = contextLimit) => {
     const recent = getRecentTurns(chatHistory, limit);
-
     if (recent.length === 0) return "None.";
-    return recent
-      .map(
-        (m) =>
-          `${m.sender === "me" ? userName || "User" : persona?.name}: ${m.text}`
-      )
-      .join("\n");
+    return recent.map(getFormattedMessageText).join("\n");
   };
   const getWorldInfoString = () =>
     worldBook
@@ -3235,12 +3481,7 @@ const handleDeleteTrackerItem = (type, id) => {
     setIsSummarizing(true);
 
     const recentMsgs = getRecentTurns(chatHistory, memoryConfig.threshold);
-    const recentHistoryText = recentMsgs
-      .map(
-        (m) =>
-          `${m.sender === "me" ? userName || "User" : persona.name}: ${m.text}`
-      )
-      .join("\n");
+    const recentHistoryText = recentMsgs.map(getFormattedMessageText).join("\n");
 
     if (!recentHistoryText.trim()) {
       setIsSummarizing(false);
@@ -3262,14 +3503,8 @@ const handleDeleteTrackerItem = (type, id) => {
       );
 
       if (summaryText) {
-        const timeStamp = new Date().toLocaleString("zh-CN", {
-          hour12: false,
-          month: "numeric",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-        const newEntry = `[${timeStamp}] ${summaryText}`;
+        /* const timeStamp = new Date().toLocaleString("zh-CN", {hour12: false,month: "numeric",day: "numeric",hour: "2-digit",minute: "2-digit",});*/
+        const newEntry = `${summaryText}`;
 
         setLongMemory((prev) => (prev ? prev + "\n\n" + newEntry : newEntry));
         setMsgCountSinceSummary(0);
@@ -3309,12 +3544,12 @@ const handleDeleteTrackerItem = (type, id) => {
   };
 
   // 2. 移动世界书条目到新分组
-  const moveWorldBookEntry = (id, newGroup) => {
-    // 特殊逻辑：如果用户选了 "新建分组..." (NEW_GROUP_TRIGGER)
+  const moveWorldBookEntry = async (id, newGroup) => {
+    let finalGroup = newGroup;
     if (newGroup === "NEW_GROUP_TRIGGER") {
-        const name = window.prompt("请输入新分组名称:");
-        if (!name) return; // 用户取消
-        newGroup = name;
+        const name = await customPrompt("请输入新分组名称:", "", "新建分组");
+        if (!name) return;
+        finalGroup = name;
     }
 
     setWorldBook(prev => prev.map(entry => 
@@ -3323,8 +3558,8 @@ const handleDeleteTrackerItem = (type, id) => {
   };
 
   // 重命名世界书分组
-  const renameWorldBookGroup = (oldName) => {
-    const newName = window.prompt("重命名分组:", oldName);
+  const renameWorldBookGroup = async (oldName) => {
+    const newName = await customPrompt("重命名分组:", oldName);
     if (!newName || newName.trim() === "" || newName === oldName) return;
 
     setWorldBook((prev) =>
@@ -3334,8 +3569,21 @@ const handleDeleteTrackerItem = (type, id) => {
     );
   };
 
-  const addStickerGroup = () => {
-    const name = window.prompt("请输入新表情包库名称:");
+  // [新增] 删除世界书分组 (支持自定义弹窗)
+  const deleteWorldBookGroup = async (groupName) => {
+    if (
+      await customConfirm(
+        `确定删除分组 "${groupName}" 下的所有条目吗？`,
+        "删除分组",
+      )
+    ) {
+      setWorldBook((prev) => prev.filter((w) => w.group !== groupName));
+      showToast("success", "分组已删除");
+    }
+  };
+
+  const addStickerGroup = async () => {
+    const name = await customPrompt("请输入新表情包库名称:", "", "新建库");
     if (!name || name.trim() === "") return;
     
     // 检查是否已存在
@@ -3353,15 +3601,15 @@ const handleDeleteTrackerItem = (type, id) => {
   };
 
   // [新增] 删除表情包库
-  const deleteStickerGroup = (groupName) => {
-    if (window.confirm(`确定删除库 "${groupName}" 及其中所有表情包吗？`)) {
+  const deleteStickerGroup = async (groupName) => {
+    if (await customConfirm(`确定删除库 "${groupName}" 及其中所有表情包吗？`, "删除表情包库", )) {
       setCharStickers(prev => prev.filter(s => s.group !== groupName));
     }
   };
 
   // [新增] 重命名表情包库
-  const renameStickerGroup = (oldName) => {
-    const newName = window.prompt("重命名表情包库:", oldName);
+  const renameStickerGroup = async (oldName) => {
+    const newName = await customPrompt("重命名表情包库:", oldName);
     if (!newName || newName.trim() === "" || newName === oldName) return;
 
     setCharStickers(prev => prev.map(s => 
@@ -3461,17 +3709,17 @@ const handleDeleteTrackerItem = (type, id) => {
     }
   };
 
-  // [修正] 务必确保参数里有 targetGroup = null
   const handleStickerUpload = async (event, type = "char", targetGroup = null) => {
     const file = event.target.files[0];
     if (file) {
-      // 1. 获取描述
-      const desc = window.prompt(
+      // 替换 window.prompt
+      const desc = await customPrompt(
         "请输入表情包的描述 (AI将根据描述决定何时发送):",
-        "开心"
+        "开心",
+        "添加表情包"
       );
-      if (!desc) {
-        event.target.value = ""; // 如果取消，也要重置 input
+      if (!desc) { // 处理取消 (null)
+        event.target.value = "";
         return; 
       }
 
@@ -3523,8 +3771,8 @@ const handleDeleteTrackerItem = (type, id) => {
   };
 
   // 删除表情包
-  const handleDeleteSticker = (id) => {
-    if (window.confirm("确定删除这个表情包吗？")) {
+  const handleDeleteSticker = async (id) => {
+    if (await customConfirm("确定删除这个表情包吗？")) {
       if (editingSticker?.source === "user") {
         setUserStickers((prev) => prev.filter((s) => s.id !== id));
       } else {
@@ -3570,14 +3818,16 @@ const handleDeleteTrackerItem = (type, id) => {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const data = JSON.parse(e.target.result);
         if (data.history && Array.isArray(data.history)) {
           // 简单校验一下格式
           if (
-            window.confirm(
-              `确认覆盖当前的聊天记录吗？\n文件包含 ${data.history.length} 条消息。\n(建议先备份当前记录)`
+            await customConfirm(
+              `确认覆盖当前的聊天记录吗？\n文件包含 ${data.history.length} 条消息。\n(建议先备份当前记录)`,
+              "导入备份",
+              true
             )
           ) {
             setChatHistory(data.history);
@@ -3793,12 +4043,12 @@ const handleDeleteTrackerItem = (type, id) => {
     }
   };
 
-  const handleLogout = () => {
-    // 4. Logout Confirmation
+  const handleLogout = async () => { // 加上 async
     if (
-      !window.confirm(
-        "确定要登出吗？这将彻底清除当前角色的所有本地数据，无法恢复。"
-      )
+      !(await customConfirm( // 替换 window.confirm
+        "确定要登出吗？这将彻底清除当前角色的所有本地数据，无法恢复。",
+        "清除数据",
+      ))
     ) {
       return;
     }
@@ -3873,15 +4123,18 @@ const handleDeleteTrackerItem = (type, id) => {
     setShowMediaMenu(false); 
   };
 
-  const handleUserSend = (content, type = "text", sticker = null) => {
+  const handleUserSend = (content, type = "text", sticker = null, extraData = null) => {
     let displayText = "";
     const stickerId = sticker?.id;
 
     if (type === "voice") {
       displayText = `[语音消息] ${content}`;
     } else if (type === "sticker") {
-      const stickerName = sticker?.desc || "未知图片";
-      displayText = `[表情包] ${stickerName}`;
+      displayText = `[表情包] ${sticker?.desc || "图片"}`;
+    } else if (type === "transfer") {
+      // [新增] 文本回退显示包含备注
+      const note = extraData?.note ? ` (${extraData.note})` : "";
+      displayText = `[转账] ¥${content}${note}`;
     } else {
       displayText = content;
     }
@@ -3890,6 +4143,15 @@ const handleDeleteTrackerItem = (type, id) => {
       sender: "me",
       text: displayText,
       isVoice: type === "voice",
+      
+      // [新增] 转账数据结构更新
+      isTransfer: type === "transfer",
+      transfer: type === "transfer" ? { 
+        amount: content, 
+        status: "pending",
+        note: extraData?.note || "" // 存入备注
+      } : null,
+      
       stickerId: stickerId, 
       sticker: stickerId ? null : sticker, 
       stickerSource: sticker ? "user" : null, 
@@ -4043,6 +4305,26 @@ const handleDeleteTrackerItem = (type, id) => {
         // 成功生成回复后，清空转发上下文，避免影响后续对话
         setForwardContext(null);
 
+        if (responseData.transfer_action) {
+          // 寻找最近一条用户发出的、状态为 pending 的转账
+          const lastUserTransferIndex = [...chatHistory].reverse().findIndex(
+             m => m.sender === "me" && m.isTransfer && m.transfer?.status === "pending"
+          );
+          
+          if (lastUserTransferIndex !== -1) {
+             // 因为是 reverse 找的索引，需要转换回原始索引
+             const realIndex = chatHistory.length - 1 - lastUserTransferIndex;
+             
+             // 更新 React 状态
+             setChatHistory(prev => prev.map((m, i) => {
+               if (i === realIndex) {
+                 return { ...m, transfer: { ...m.transfer, status: responseData.transfer_action } };
+               }
+               return m;
+             }));
+          }
+        }
+
         // 更新状态历史
         if (responseData.status) {
           setStatusHistory((prev) => [
@@ -4093,6 +4375,27 @@ const handleDeleteTrackerItem = (type, id) => {
             }
           }
 
+          if (responseData.transfer && responseData.transfer.amount) {
+             if (newMsgs.length > 0) delete newMsgs[newMsgs.length - 1].status;
+
+             const amount = responseData.transfer.amount;
+             const reason = responseData.transfer.reason || ""; // 获取 AI 的理由作为备注
+             
+             newMsgs.push({
+                sender: "char",
+                // 文本回退也带上备注
+                text: `[转账] ¥${amount}${reason ? ` (${reason})` : ""}`, 
+                isTransfer: true,
+                transfer: { 
+                   amount: amount, 
+                   status: "pending",
+                   note: reason // 存入备注
+                },
+                time: formatTime(getCurrentTimeObj()),
+                status: responseData.status
+             });
+          }
+
           setIsTyping(false);
           setMessageQueue(newMsgs);
 
@@ -4116,8 +4419,8 @@ const handleDeleteTrackerItem = (type, id) => {
               lastSender = msg.sender;
             }
 
-            // 判断阈值：每 3 轮触发一次
-            if (userTurnCount > 0 && userTurnCount % 3 === 0) {
+            // 判断阈值：每 6 轮触发一次
+            if (userTurnCount > 0 && userTurnCount % 6 === 0) {
                console.log(`[Echoes] 达到第 ${userTurnCount} 轮对话，正在更新档案...`);
                generateTrackerUpdate();
             }
@@ -4195,6 +4498,31 @@ const handleDeleteTrackerItem = (type, id) => {
   // 4. 保存编辑
   const saveEdit = (index) => {
     const newHistory = [...chatHistory];
+    const msg = newHistory[index];
+    const newText = editContent;
+
+    msg.text = newText;
+
+    if (msg.isTransfer && msg.transfer) {
+      try {
+        // 正则匹配: 找 ¥ 后面的数字，以及可选的括号内的内容
+        const match = newText.match(/¥\s*([\d\.]+)(?:\s*\((.*)\))?/);
+        if (match) {
+          const newAmount = match[1];
+          const newNote = match[2] || ""; // 如果没有括号内容，就是空字符串
+          
+          // 更新底层数据，这样气泡UI才会变！
+          msg.transfer = {
+            ...msg.transfer,
+            amount: newAmount,
+            note: newNote
+          };
+        }
+      } catch (e) {
+        console.error("解析转账编辑失败", e);
+      }
+    }
+
     newHistory[index].text = editContent;
     setChatHistory(newHistory);
     setEditIndex(null);
@@ -4819,8 +5147,8 @@ ${recentHistory}
     }));
   };
 
-  const handleDeletePost = (postId) => {
-    if (window.confirm("确定彻底删除这篇帖子吗？")) {
+  const handleDeletePost = async (postId) => {
+    if (await customConfirm("确定彻底删除这篇帖子吗？", "删除帖子", true)) {
       setForumData((prev) => ({
         ...prev,
         posts: prev.posts.filter((p) => p.id !== postId),
@@ -4834,8 +5162,8 @@ ${recentHistory}
   };
 
   // --- 新增：删除评论 ---
-  const handleDeleteReply = (threadId, replyId) => {
-    if (window.confirm("确定删除这条评论？")) {
+  const handleDeleteReply = async (threadId, replyId) => {
+    if (await customConfirm("确定删除这条评论？")) {
       setForumData((prev) => ({
         ...prev,
         posts: prev.posts.map((p) => {
@@ -5297,6 +5625,12 @@ ${recentHistory}
             previewData={generatedPreview}
             setPreviewData={setGeneratedPreview}
             onApply={applyGeneratedCharacter}
+          />
+        )}
+        {dialogConfig && (
+          <CustomDialog
+            config={dialogConfig}
+            onClose={() => setDialogConfig(null)}
           />
         )}
       </div>
@@ -5795,9 +6129,7 @@ ${recentHistory}
                   导入JSON
                   <input type="file" className="hidden" accept=".json" onChange={handleWorldBookUpload} />
                 </label>
-                <button
-                  onClick={() => {
-                     const name = window.prompt("请输入新分组名称 (将创建一个空条目):");
+                <button onClick={async () => { const name = await customPrompt("请输入新分组名称 (将创建一个空条目):");
                      if(name) {
                         setWorldBook([{ id: Date.now(), name: "新条目", content: "", group: name, enabled: true }, ...worldBook]);
                      }
@@ -5816,6 +6148,7 @@ ${recentHistory}
                   setWorldBook={setWorldBook}
                   moveWorldBookEntry={moveWorldBookEntry}
                   renameWorldBookGroup={renameWorldBookGroup} 
+                  deleteWorldBookGroup={deleteWorldBookGroup}
                   toggleWorldBookEntry={toggleWorldBookEntry}
                 />
               ))}
@@ -5914,6 +6247,8 @@ ${recentHistory}
                     }
                   }
 
+                  
+
                   return (
                     <div
                       key={i}
@@ -5979,13 +6314,14 @@ ${recentHistory}
                           )}
                         </div>
 
-                        {/* 2. 气泡内容 / 编辑框 */}
-                        <div
+                        
+
+                      <div
                           className={`flex flex-col ${
                             msg.sender === "me" ? "items-end" : "items-start"
                           } max-w-[72%] relative`}
                         >
-                          {/* 编辑模式判断 */}
+                          {/* 编辑模式 */}
                           {editIndex === i ? (
                             <div className="flex flex-col gap-2 w-64 animate-in zoom-in-95">
                               <textarea
@@ -6009,7 +6345,7 @@ ${recentHistory}
                               </div>
                             </div>
                           ) : (
-                            // 正常显示模式：绑定长按事件
+                            // 正常显示模式：绑定长按事件 (使得转账也能长按删除)
                             <div
                               className={
                                 isMultiSelectMode ? "pointer-events-none" : ""
@@ -6036,92 +6372,107 @@ ${recentHistory}
                                 !isMultiSelectMode ? handleTouchEnd : undefined
                               }
                             >
-                             {/* --- 修复后的渲染逻辑 --- */}
-                          {(() => {
-                            // 1. 尝试直接获取 (旧数据或兜底数据)
-                            let stickerUrl = msg.sticker?.url;
-                            
-                            // 2. 如果没有 URL 但有 ID，去库里找 (新数据)
-                            if (!stickerUrl && msg.stickerId) {
-                              // 先找角色库
-                              let found = charStickers.find(s => s.id === msg.stickerId);
-                              // 再找用户库
-                              if (!found) found = userStickers.find(s => s.id === msg.stickerId);
-                              
-                              if (found) stickerUrl = found.url;
-                            }
+                              {/* === 内容分发逻辑 === */}
+                              {(() => {
+                                // A. 转账渲染 (放在最优先)
+                                if (msg.isTransfer) {
+                                  return (
+                                    <TransferBubble
+                                      msg={msg}
+                                      isMe={msg.sender === "me"}
+                                      onInteract={(action) =>
+                                        handleTransferInteract(i, action)
+                                      }
+                                    />
+                                  );
+                                }
 
-                            // 3. 渲染逻辑 (图片 / 语音 / 文本)
-                    if (stickerUrl) {
-                      return (
-                        <div className="w-32 rounded-xl overflow-hidden shadow-sm border border-gray-100">
-                          <img src={stickerUrl} className="w-full h-auto" />
-                        </div>
-                      );
-                    } else {
-                      
-                      // [新增] 假图片渲染逻辑
-                      const isFakeImg = isImageMsg(msg.text); // 使用之前定义的工具函数判断
+                                // B. 图片/表情包逻辑
+                                let stickerUrl = msg.sticker?.url;
+                                if (!stickerUrl && msg.stickerId) {
+                                  let found = charStickers.find(
+                                    (s) => s.id === msg.stickerId
+                                  );
+                                  if (!found)
+                                    found = userStickers.find(
+                                      (s) => s.id === msg.stickerId
+                                    );
+                                  if (found) stickerUrl = found.url;
+                                }
 
-                      if (isFakeImg) {
-                        return (
-                          <div 
-                            className="cursor-pointer overflow-hidden rounded-xl border-2 border-white shadow-sm bg-gray-100 relative group/img"
-                            onClick={() => alert(getImageDesc(msg.text))}
-                          >
-                             {/* 占位图 */}
-                             <img 
-                               src={PLACEHOLDER_IMG_BASE64} 
-                               className="w-48 h-32 object-cover opacity-50" 
-                             />
-                             <div className="absolute inset-0 flex items-center justify-center">
-                                <ImageIcon size={24} className="text-gray-400" />
-                             </div>
-                             <div className="absolute bottom-1 right-1 bg-black/50 text-white text-[9px] px-1.5 py-0.5 rounded backdrop-blur-sm">
-                                IMAGE
-                             </div>
-                          </div>
-                        );
-                      }
+                                if (stickerUrl) {
+                                  return (
+                                    <div className="w-32 rounded-xl overflow-hidden shadow-sm border border-gray-100">
+                                      <img
+                                        src={stickerUrl}
+                                        className="w-full h-auto"
+                                      />
+                                    </div>
+                                  );
+                                } 
+                                
+                                // C. 假图片逻辑
+                                const isFakeImg = msg.text && msg.text.startsWith("<fake_image>"); 
+                                if (isFakeImg) {
+                                    // 简单提取，你需要确保 PLACEHOLDER_IMG_BASE64 已定义
+                                    const imgDesc = msg.text.replace("<fake_image>", "").replace("</fake_image>", "");
+                                    return (
+                                      <div 
+                                        className="cursor-pointer overflow-hidden rounded-xl border-2 border-white shadow-sm bg-white relative group/img transition-transform active:scale-95"
+                                        onClick={() => alert(imgDesc)}
+                                      >
+                                         <img 
+                                           src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mBk+A8AXYIBZn41+W0AAAAASUVORK5CYII=" 
+                                           className="w-48 h-32 object-cover block bg-gray-200" 
+                                         />
+                                         <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">
+                                            [图片: {imgDesc.slice(0,5)}...]
+                                         </div>
+                                      </div>
+                                    );
+                                }
 
-                      if (msg.isVoice) {
-                        return <VoiceMessageBubble msg={msg} isMe={msg.sender === "me"} />;
-                      }
-                      // 4. 普通文本气泡 (Fallback)
-                      return (
-                        <div
-                          className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap select-text ${
-                            msg.sender === "me"
-                              ? "bg-[#2C2C2C] text-white rounded-tr-none"
-                              : "bg-white border border-gray-100 text-gray-800 rounded-tl-none"
-                          }`}
-                        >
-                          {msg.isForward ? (
-                             <div className="text-left max-w-[240px] pl-3 border-l-2 border-white/30 my-1">
-                                <div className="flex items-center gap-2 mb-1 opacity-70">
-                                  <Share size={10} />
-                                  <span className="text-[10px] font-bold uppercase tracking-wider">
-                                    {msg.forwardData.type === "post" ? "帖子" : "评论"}
-                                  </span>
-                                </div>
-                                <div className="text-[10px] text-white/80 mb-1 font-bold">
-                                  @{msg.forwardData.author}
-                                </div>
-                                <div className="text-xs text-white/80 line-clamp-3 leading-relaxed font-light">
-                                   {msg.forwardData.content}
-                                </div>
-                             </div>
-                          ) : (
-                            msg.text
-                          )}
-                        </div>
-                      );
-                    }
-                          })()}
+                                // D. 语音消息逻辑
+                                if (msg.isVoice) {
+                                   return <VoiceMessageBubble msg={msg} isMe={msg.sender === "me"} />;
+                                }
+
+                                // E. 普通文本/转发卡片 (Fallback)
+                                return (
+                                  <div
+                                    className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap select-text ${
+                                      msg.sender === "me"
+                                        ? "bg-[#2C2C2C] text-white rounded-tr-none"
+                                        : "bg-white border border-gray-100 text-gray-800 rounded-tl-none"
+                                    }`}
+                                  >
+                                    {msg.isForward ? (
+                                      <div className="text-left max-w-[240px] pl-3 border-l-2 border-white/30 my-1">
+                                        <div className="flex items-center gap-2 mb-1 opacity-70">
+                                          <Share size={10} />
+                                          <span className="text-[10px] font-bold uppercase tracking-wider">
+                                            {msg.forwardData.type === "post"
+                                              ? "帖子"
+                                              : "评论"}
+                                          </span>
+                                        </div>
+                                        <div className="text-[10px] text-white/80 mb-1 font-bold">
+                                          @{msg.forwardData.author}
+                                        </div>
+                                        <div className="text-xs text-white/80 line-clamp-3 leading-relaxed font-light">
+                                          {msg.forwardData.content}
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      msg.text
+                                    )}
+                                  </div>
+                                );
+                              })()}
                             </div>
                           )}
 
-                          {/* --- 长按弹出的菜单 (Overlay) --- */}
+                          {/* --- 长按弹出的菜单 (现在对转账也生效) --- */}
                           {!isMultiSelectMode && activeMenuIndex === i && (
                             <div
                               className="absolute top-full mt-2 z-50 flex flex-col items-center animate-in fade-in zoom-in-95 duration-200"
@@ -6131,10 +6482,12 @@ ${recentHistory}
                               }}
                             >
                               <div className="bg-[#1a1a1a]/95 backdrop-blur-md text-white rounded-xl shadow-2xl p-1.5 flex gap-1 items-center border border-white/20">
+                                
+                                {/* 1. 复制按钮 (无条件显示) */}
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    handleCopy(msg.text);
+                                    handleCopy(msg.text); // 转账消息也有 text，完全可以复制
                                   }}
                                   className="flex flex-col items-center gap-1 p-2 hover:bg-white/20 rounded-lg min-w-[40px]"
                                 >
@@ -6143,10 +6496,11 @@ ${recentHistory}
 
                                 <div className="w-[1px] h-4 bg-white/20"></div>
 
+                                {/* 2. 改写按钮 (无条件显示) */}
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    startEdit(i, msg.text);
+                                    startEdit(i, msg.text); // 转账消息也可以进入编辑模式
                                   }}
                                   className="flex flex-col items-center gap-1 p-2 hover:bg-white/20 rounded-lg min-w-[40px]"
                                 >
@@ -6155,11 +6509,12 @@ ${recentHistory}
 
                                 <div className="w-[1px] h-4 bg-white/20"></div>
 
+                                {/* 3. 多选按钮 */}
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setIsMultiSelectMode(true);
-                                    setSelectedMsgs(new Set([i])); // 选中当前这条
+                                    setSelectedMsgs(new Set([i])); 
                                     setActiveMenuIndex(null);
                                   }}
                                   className="flex flex-col items-center gap-1 p-2 hover:bg-white/20 rounded-lg min-w-[40px]"
@@ -6169,6 +6524,7 @@ ${recentHistory}
 
                                 <div className="w-[1px] h-4 bg-white/20"></div>
 
+                                {/* 4. 删除按钮 */}
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -6179,7 +6535,8 @@ ${recentHistory}
                                   <span className="text-[11px]">删除</span>
                                 </button>
                               </div>
-                              {/* 点击遮罩层关闭菜单 */}
+                              
+                              {/* 遮罩 */}
                               <div
                                 className="fixed inset-0 z-[-1]"
                                 onClick={(e) => {
@@ -6191,7 +6548,7 @@ ${recentHistory}
                           )}
                         </div>
 
-                        {/* 3. (恢复位置) 状态按钮：在气泡旁边 */}
+                        {/* 3. 状态按钮 */}
                         {msg.sender === "char" && msg.status && (
                           <button
                             onClick={() =>
@@ -6210,7 +6567,7 @@ ${recentHistory}
                         )}
                       </div>
 
-                      {/* --- 第二行：底部信息栏 (仅时间 + 重说) --- */}
+                      {/* --- 第二行：时间 + 重说 --- */}
                       {!isMultiSelectMode && (
                         <div
                           className={`flex gap-3 mt-1 items-center opacity-0 group-hover:opacity-100 transition-opacity ${
@@ -6222,9 +6579,7 @@ ${recentHistory}
                           <span className="text-[9px] text-gray-300 font-mono">
                             {msg.time}
                           </span>
-
-                          {/* 这里彻底移除了删除按钮，只保留重说 */}
-                          {msg.sender === "char" && (
+                          {msg.sender === "char" && !msg.isTransfer && (
                             <button
                               onClick={() => setRegenerateTarget(i)}
                               className="text-gray-300 hover:text-black transition-colors p-1"
@@ -6236,42 +6591,31 @@ ${recentHistory}
                         </div>
                       )}
 
-                      {/* --- 第三行：状态栏展开卡片 (Status Card) --- */}
+                      {/* --- 第三行：状态展开卡片 --- */}
                       {expandedChatStatusIndex === i && msg.status && (
                         <div className="ml-12 mt-1 w-64 glass-card p-3 rounded-xl animate-in slide-in-from-top-2 border border-gray-200/50 relative z-10">
-                          <div className="space-y-2">
+                           {/* ... 状态卡片内容 ... */}
+                           <div className="space-y-2">
                             <div className="flex items-start gap-2">
-                              <Shirt
-                                size={10}
-                                className="mt-0.5 text-gray-400 shrink-0"
-                              />
+                              <Shirt size={10} className="mt-0.5 text-gray-400 shrink-0" />
                               <span className="text-[10px] text-gray-600 leading-tight">
                                 {msg.status.outfit}
                               </span>
                             </div>
                             <div className="flex items-start gap-2">
-                              <Eye
-                                size={10}
-                                className="mt-0.5 text-gray-400 shrink-0"
-                              />
+                              <Eye size={10} className="mt-0.5 text-gray-400 shrink-0" />
                               <span className="text-[10px] text-gray-600 leading-tight">
                                 {msg.status.action}
                               </span>
                             </div>
                             <div className="flex items-start gap-2">
-                              <Heart
-                                size={10}
-                                className="mt-0.5 text-blue-400 shrink-0"
-                              />
+                              <Heart size={10} className="mt-0.5 text-blue-400 shrink-0" />
                               <span className="text-[10px] text-blue-800 font-serif italic leading-tight">
                                 "{msg.status.thought}"
                               </span>
                             </div>
                             <div className="flex items-start gap-2">
-                              <Ghost
-                                size={10}
-                                className="mt-0.5 text-red-400 shrink-0"
-                              />
+                              <Ghost size={10} className="mt-0.5 text-red-400 shrink-0" />
                               <span className="text-[10px] text-red-800 font-serif italic leading-tight">
                                 "{msg.status.desire}"
                               </span>
@@ -6305,7 +6649,7 @@ ${recentHistory}
 
               {/* 用户表情包面板 */}
               {showUserStickerPanel && (
-                <div className="absolute bottom-16 left-4 right-4 h-48 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl p-4 z-50 overflow-y-auto custom-scrollbar border border-white animate-in slide-in-from-bottom-2">
+                <div className="absolute bottom-16 left-4 right-4 h-48 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl p-4 z-[100] overflow-y-auto custom-scrollbar border border-white animate-in slide-in-from-bottom-2">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-[10px] font-bold uppercase text-gray-400">
                       我的表情
@@ -6377,7 +6721,7 @@ ${recentHistory}
               )}
 
               {/* --- 底部输入栏 (V2: 按钮常驻 + 响应式布局) --- */}
-              <div className="p-3 glass-panel border-t border-white/50 shrink-0">
+              <div className="p-3 glass-panel border-t border-white/50 shrink-0 relative z-[100]">
                 {isMultiSelectMode ? (
                   /* 多选操作栏 */
                   <div className="flex items-center justify-between px-2 animate-in slide-in-from-bottom-2">
@@ -6427,6 +6771,16 @@ ${recentHistory}
                         >
                           <div className="p-2 bg-gray-100 rounded-full"><ImageIcon size={20} /></div>
                           <span className="text-[10px]">图片</span>
+                        </button>
+
+                        <button
+                          onClick={handleSendTransfer}
+                          className="flex flex-col items-center gap-1 text-gray-600 hover:text-black min-w-[40px]"
+                        >
+                          <div className="p-2 bg-gray-100 rounded-full">
+                             <Banknote size={20} />
+                          </div>
+                          <span className="text-[10px]">转账</span>
                         </button>
                       </div>
                     )}
@@ -6501,7 +6855,7 @@ ${recentHistory}
                             /* 情况B: 没字 -> 显示触发回复 */
                             <button
                               onClick={() => triggerAIResponse()}
-                              className="p-2 md:p-2.5 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 border border-gray-200 transition-all active:scale-95"
+                              className="p-2 md:p-2.5 bg-[#2C2C2C] text-white rounded-full hover:bg-gray-200 border border-gray-200 transition-all active:scale-95"
                               title="让对方回复"
                             >
                               <MessageSquare size={18} strokeWidth={1.5} />
@@ -7931,6 +8285,7 @@ ${recentHistory}
         </div>
         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1 bg-gray-800/20 rounded-full z-30"></div>
       </div>
+      
       {editingSticker && (
         <StickerEditorModal
           sticker={editingSticker}
@@ -7955,6 +8310,12 @@ ${recentHistory}
           onApply={applyGeneratedCharacter}
         />
       )}
+      {dialogConfig && (
+          <CustomDialog
+            config={dialogConfig}
+            onClose={() => setDialogConfig(null)}
+          />
+        )}
     </div>
   );
 };
@@ -8037,6 +8398,7 @@ const WorldBookGroup = ({
   setWorldBook, 
   moveWorldBookEntry, 
   renameWorldBookGroup,
+  deleteWorldBookGroup,
   toggleWorldBookEntry
 }) => {
   const [isExpanded, setIsExpanded] = React.useState(true);
@@ -8094,12 +8456,9 @@ const WorldBookGroup = ({
             <Edit2 size={12} />
           </button>
           <button
-            onClick={() => {
-              if (window.confirm(`确定删除分组 "${group}" 下的所有条目吗？`)) {
-                setWorldBook((prev) => prev.filter((w) => w.group !== group));
-              }
-            }}
+            onClick={() => deleteWorldBookGroup(group)} 
             className="text-gray-400 hover:text-red-500 p-1"
+            title="删除分组"
           >
             <Trash2 size={12} />
           </button>
