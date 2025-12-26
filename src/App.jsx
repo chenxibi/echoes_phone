@@ -1158,12 +1158,12 @@ const STYLE_PROMPTS = {
   4. Pure dialogue ONLY. No brackets.`,
 
   novel: `Literary Style: Warm, Plain, and Grounded.
-  1. Narrative Voice: Adopt a calm, leisurely, and kind observer's perspective. Tell the story slowly with warmth, avoiding dramatic or judgmental tones. Maintain a third-person perspective for {{char}} (referring to them by Name/He/She), while directly addressing {{user}} as 'you'.
+  1. Narrative Voice: Adopt a calm, leisurely, and kind observer's perspective. Tell the story slowly with warmth, avoiding dramatic or judgmental tones. Maintain a third-person perspective for {{char}} (referring to them by Name/He/She), and a second-person perspective for {{user}}, directly addressing {{user}} as 'you'.
   2. Diction ("白描/Bai Miao"): Use simple, unadorned spoken language. Avoid flowery adjectives. Rely on precise verbs and nouns to create a clean, "fresh water" texture.
   3. Atmosphere: Focus on the "smoke and fire" of daily life. deeply engage the senses—describe the specific smell of food, the texture of objects, and ambient sounds to make the scene tangible.
   4. Emotional Restraint: Do NOT state emotions directly. Reveal deep feelings solely through subtle physical actions, micro-expressions, and environmental details. Keep the emotional temperature constant and gentle.
   5. Rhythm: Mimic the bouncy, elastic rhythm of natural speech. Use short, crisp sentences mixed with relaxed narration.
-  6. Output Structure: This must be a unified, cohesive narrative stream. Output the entire response as ONE SINGLE, CONTINUOUS message.`,
+  6. Output Structure: This must be a unified, cohesive narrative stream. Output the entire response as **ONE SINGLE, CONTINUOUS** message (IMPORTANT). At least 500 Chinese characters.`,
 };
 
 const CHARACTER_CREATION_PROMPT = `# Role: 专家级角色架构师 & 提示词工程师 (Expert Character Architect)
@@ -2634,7 +2634,7 @@ const App = () => {
 
   // User Profile
   const [userPersona, setUserPersona] = useStickyState(
-    "对{{NAME}}很特别的人",
+    "",
     "echoes_user_persona"
   );
   const [userName, setUserName] = useStickyState("", "echoes_user_name");
@@ -3036,6 +3036,38 @@ const App = () => {
     }
   };
 
+  // [新增] 核心回退逻辑：根据消息 ID 删除它生成的所有 Facts 和 Events
+  const rollbackTrackerData = (sourceMsgId) => {
+    if (!sourceMsgId) return;
+
+    // 1. 回退 User Facts
+    setUserFacts((prev) => {
+      const filtered = prev.filter((item) => item.sourceMsgId !== sourceMsgId);
+      if (filtered.length !== prev.length) {
+        console.log(`[Echoes] 已回退关联的 User Facts (${prev.length - filtered.length}条)`);
+      }
+      return filtered;
+    });
+
+    // 2. 回退 Char Facts
+    setCharFacts((prev) => {
+      const filtered = prev.filter((item) => item.sourceMsgId !== sourceMsgId);
+      if (filtered.length !== prev.length) {
+        console.log(`[Echoes] 已回退关联的 Char Facts (${prev.length - filtered.length}条)`);
+      }
+      return filtered;
+    });
+
+    // 3. 回退 Shared Events (pending 状态的)
+    setSharedEvents((prev) => {
+      const filtered = prev.filter((item) => item.sourceMsgId !== sourceMsgId);
+      if (filtered.length !== prev.length) {
+        console.log(`[Echoes] 已回退关联的 Events (${prev.length - filtered.length}条)`);
+      }
+      return filtered;
+    });
+  };
+
   // 3. 临时 UI 状态
   const [editingSticker, setEditingSticker] = useState(null); // 当前正在编辑的表情包
   const [showUserStickerPanel, setShowUserStickerPanel] = useState(false); // 用户表情面板开关
@@ -3199,8 +3231,7 @@ const App = () => {
     showToast("success", `角色「${finalName}」已加载`);
   };
 
-  const generateTrackerUpdate = async () => {
-    // 必须确保 trackerConfig 允许更新
+  const generateTrackerUpdate = async (sourceMsgId) => {
     if (!persona) return;
 
     const recentMsgs = getRecentTurns(chatHistory, 12);
@@ -3241,29 +3272,33 @@ const App = () => {
       );
 
       if (data) {
-        // 1. 处理 User Facts (注意字段名改成了 newUserFacts 以匹配新Prompt)
+        // 1. 处理 User Facts
         if (data.newUserFacts && data.newUserFacts.length > 0) {
           const newEntries = data.newUserFacts.map((f) => ({
             id: `ufact_${Date.now()}_${Math.random()}`,
             content: f.content,
             comment: f.comment,
             time: formatDate(getCurrentTimeObj()),
+            sourceMsgId: sourceMsgId, // <--- [关键新增] 记录来源消息ID
           }));
           setUserFacts((prev) => [...newEntries, ...prev]);
+          showToast("success", `记住了关于你的 ${newEntries.length} 件事`);
         }
 
-        // 2. [新增] 处理 Char Facts
+        // 2. 处理 Char Facts
         if (data.newCharFacts && data.newCharFacts.length > 0) {
           const newEntries = data.newCharFacts.map((f) => ({
             id: `cfact_${Date.now()}_${Math.random()}`,
             content: f.content,
             comment: f.comment,
             time: formatDate(getCurrentTimeObj()),
+            sourceMsgId: sourceMsgId, // <--- [关键新增]
           }));
           setCharFacts((prev) => [...newEntries, ...prev]);
+          showToast("success", `更新了角色设定 (${newEntries.length}条)`);
         }
 
-        // 3. 处理 Events (逻辑不变)
+        // 3. 处理 Events
         if (data.newEvents && data.newEvents.length > 0) {
           const newEntries = data.newEvents.map((e) => ({
             id: `evt_${Date.now()}_${Math.random()}`,
@@ -3271,6 +3306,7 @@ const App = () => {
             type: e.type || "pending",
             comment: e.comment,
             time: formatDate(getCurrentTimeObj()),
+            sourceMsgId: sourceMsgId, // <--- [关键新增]
           }));
           setSharedEvents((prev) => [...newEntries, ...prev]);
         }
@@ -4029,8 +4065,8 @@ const App = () => {
 
     let finalSystemPrompt = prompts.system
       .replaceAll("{{NAME}}", p.name)
-      .replaceAll("{{CHAR_DESCRIPTION}}", cleanCharDesc)
-      .replaceAll("{{USER_PERSONA}}", userPersona)
+      .replaceAll("{{CHAR_DESCRIPTION}}", cleanCharDesc + "\n" + charTrackerContext)
+      .replaceAll("{{USER_PERSONA}}", userPersona + "\n" + trackerContext)
       .replaceAll("{{USER_NAME}}", effectiveUserName)
       .replaceAll("{{CUSTOM_RULES}}", customRules)
       .replaceAll("{{WORLD_INFO}}", cleanWorldInfo);
@@ -4039,7 +4075,7 @@ const App = () => {
       .replaceAll("{{NAME}}", p.name)
       .replaceAll("{{TIME}}", getCurrentTimeObj().toLocaleString())
       .replaceAll("{{HISTORY}}", getContextString())
-      .replaceAll("{{USER_PERSONA}}", userPersona)
+      .replaceAll("{{USER_PERSONA}}", userPersona + "\n" + trackerContext)
       .replaceAll("{{USER_NAME}}", effectiveUserName);
 
     try {
@@ -4205,6 +4241,150 @@ const App = () => {
     setShowMediaMenu(false);
   };
 
+  const [isGhostwriting, setIsGhostwriting] = useState(false);
+
+  const handleGhostwrite = async () => {
+    if (isGhostwriting) return;
+    
+    if (!apiConfig?.key) {
+      alert("请先在设置中配置 API Key");
+      return;
+    }
+    if (!persona) return; 
+
+    setIsGhostwriting(true);
+
+    try {
+      const effectiveUserName = userName || "User";
+      const charName = persona.name; 
+      const cleanCharDesc = replacePlaceholders(inputKey, charName, effectiveUserName);
+      const cleanWorldInfo = replacePlaceholders(getWorldInfoString(), charName, effectiveUserName);
+
+      const historyText = getRecentTurns(chatHistory, contextLimit)
+        .map((m) => {
+          const senderName = m.sender === "me" ? effectiveUserName : charName;
+          let content = m.text || "";
+
+          // 处理语音
+          if (m.isVoice) {
+            content = `(Sent a Voice Message): ${m.text.replace("[语音消息] ", "")}`;
+          }
+          // 处理表情包
+          if (m.sticker && (!content || !content.trim())) {
+            content = `[Sent a Sticker: ${m.sticker.desc}]`;
+          }
+          // 处理转发
+          if (m.isForward && m.forwardData) {
+            const fwd = m.forwardData;
+            content += ` [Forwarded ${fwd.type === "post" ? "Post" : "Comment"}: "${fwd.content.slice(0, 50)}..."]`;
+          }
+          return `${senderName}: ${content}`;
+        })
+        .join("\n");
+
+      const modeInstruction = interactionMode === "online"
+        ? `[Interaction Mode: ONLINE CHAT / MESSAGING]
+         - Context: You are chatting with ${charName} via a smartphone.`
+        : `[Interaction Mode: REALITY / ACTION RP]
+         - Context: This scene takes place in the physical world (Real Life).`;
+
+      const systemInstruction = `
+You are an advanced creative writing AI.
+You are playing the role of ${effectiveUserName}.
+
+[Target Character (Interaction Partner)]
+Name: ${charName}
+Description:
+${cleanCharDesc}
+
+[Your Role (The User)]
+Name: ${effectiveUserName}
+Persona: ${userPersona || "A special person to " + charName}
+
+[World Info]
+${cleanWorldInfo}
+[Long-term Memory]
+${longMemory || "None."}
+
+[Literary Style Requirements] Literary Style: Warm, Plain, and Grounded.
+1. Narrative Voice: Adopt a calm, leisurely, and kind observer's perspective. Tell the story slowly with warmth, avoiding dramatic or judgmental tones. Maintain a third-person perspective for {{char}} (referring to them by Name/He/She), and a first-person perspective for {{user}} (addressing {{user}} as 'I' or 'me').
+2. Diction ("白描/Bai Miao"): Use simple, unadorned spoken language. Avoid flowery adjectives. Rely on precise verbs and nouns to create a clean, "fresh water" texture.
+3. Atmosphere: Focus on the "smoke and fire" of daily life. Deeply engage the senses—describe the specific smell of food, the texture of objects, and ambient sounds to make the scene tangible.
+4. Emotional Restraint: Do NOT state emotions directly. Reveal deep feelings solely through subtle physical actions, micro-expressions, and environmental details. Keep the emotional temperature constant and gentle.
+5. Rhythm: Mimic the bouncy, elastic rhythm of natural speech. Use short, crisp sentences mixed with relaxed narration.
+6. Output Structure: This must be a unified, cohesive narrative stream. Output the entire response as **ONE SINGLE, CONTINUOUS** message (IMPORTANT). At least 300 Chinese characters.`;
+
+      let userTask = "";
+      
+      // 动态构建 Context 部分
+      const contextSection = `
+Current Date: ${getCurrentTimeObj().toLocaleString()}
+${modeInstruction}
+
+[Conversation History]
+${historyText}
+`;
+
+      if (chatInput.trim()) {
+        // [扩写模式]
+        userTask = `
+${contextSection}
+
+[User's Draft Input]
+"${chatInput}"
+
+Task: Rewrite and expand the User's draft based on the Context History.
+Requirements:
+- Strictly follow the "Literary Style" defined in system instruction.
+- Write from the perspective of {{user}} ('I'/'me').
+- Seamlessly continue the flow of the conversation.
+- Output ONLY the rewritten text.
+`;
+      } else {
+        // [生成模式]
+        userTask = `
+${contextSection}
+
+User Input: (Empty)
+
+Task: Generate a natural response or action in Simplified Chinese for {{user}} based on the Context History.
+Requirements:
+- Strictly follow the "Literary Style" defined in system instruction.
+- Write from the perspective of {{user}} ('I'/'me').
+- Output ONLY the generated text.
+`;
+      }
+
+      const result = await generateContent(
+        {
+          prompt: userTask,
+          systemInstruction: systemInstruction,
+          isJson: false, 
+        },
+        apiConfig,
+        (err) => alert(`代写出错: ${err}`)
+      );
+
+      // --- 7. 填入结果 ---
+      if (result) {
+        setChatInput(result.trim());
+        // 自动调整高度
+        setTimeout(() => {
+           const el = document.getElementById('chat-input');
+           if(el) {
+             el.style.height = 'auto';
+             el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+           }
+        }, 10);
+      }
+
+    } catch (error) {
+      console.error("Ghostwrite error:", error);
+    } finally {
+      setIsGhostwriting(false);
+    }
+  };
+
   const handleUserSend = (
     content,
     type = "text",
@@ -4365,15 +4545,15 @@ const App = () => {
       )
       .replaceAll("{{STYLE_INSTRUCTION}}", styleInst)
       .replaceAll("{{STICKER_INSTRUCTION}}", stickerInst)
-      .replaceAll("{{USER_PERSONA}}", userPersona)
+      .replaceAll("{{USER_PERSONA}}", userPersona + "\n" + trackerContext)
       .replaceAll("{{USER_NAME}}", effectiveUserName)
       .replaceAll("{{MODE_INSTRUCTION}}", modeInstruction)
       .replaceAll("{{FORWARD_CONTEXT}}", finalForwardSection);
 
     const systemPrompt = prompts.system
       .replaceAll("{{NAME}}", persona.name)
-      .replaceAll("{{CHAR_DESCRIPTION}}", cleanCharDesc)
-      .replaceAll("{{USER_PERSONA}}", userPersona)
+      .replaceAll("{{CHAR_DESCRIPTION}}", cleanCharDesc + "\n" + charTrackerContext)
+      .replaceAll("{{USER_PERSONA}}", userPersona + "\n" + trackerContext)
       .replaceAll("{{USER_NAME}}", effectiveUserName)
       .replaceAll("{{CUSTOM_RULES}}", customRules)
       .replaceAll("{{WORLD_INFO}}", cleanWorldInfo)
@@ -4439,6 +4619,7 @@ const App = () => {
           ]);
         }
 
+
         // 处理返回的消息
         if (responseData.messages && Array.isArray(responseData.messages)) {
           const newMsgs = responseData.messages.map((item, index) => {
@@ -4499,8 +4680,13 @@ const App = () => {
             });
           }
 
+          const finalizedMsgs = newMsgs.map((msg) => ({
+            ...msg,
+            id: msg.id || `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          }));
+
           setIsTyping(false);
-          setMessageQueue(newMsgs);
+          setMessageQueue(finalizedMsgs);
 
           // --- 惊喜触发器：AI 回复后有概率触发剧情发帖 ---
           // 逻辑：论坛已初始化 + 10% 概率 + 只有 AI 发送文本消息时才触发
@@ -4511,7 +4697,8 @@ const App = () => {
           }
 
           setTimeout(() => {
-            const fullConversation = [...newHistory, ...newMsgs];
+            const fullConversation = [...newHistory, ...finalizedMsgs];
+            
             let userTurnCount = 0;
             let lastSender = null;
 
@@ -4522,12 +4709,16 @@ const App = () => {
               lastSender = msg.sender;
             }
 
-            // 判断阈值：每 6 轮触发一次
             if (userTurnCount > 0 && userTurnCount % 6 === 0) {
               console.log(
                 `[Echoes] 达到第 ${userTurnCount} 轮对话，正在更新档案...`
               );
-              generateTrackerUpdate();
+
+              const lastAiMsg = finalizedMsgs[finalizedMsgs.length - 1];
+
+              if (lastAiMsg && lastAiMsg.id) {
+                generateTrackerUpdate(lastAiMsg.id);
+              }
             }
           }, 3000);
 
@@ -4662,9 +4853,24 @@ const App = () => {
     }
   };
 
+  const formatTrackerLine = (text) => {
+    if (!text) return "";
+    return text
+      .replace(/{{user}}/gi, userName || "User")
+      .replace(/{{char}}/gi, persona.name || "Character");
+  };
+
   const factsList = trackerConfig.facts
     ? userFacts
-        .map((f) => `- [User Fact]: ${f.content} (Note: ${f.comment})`)
+        .map((f) => 
+          formatTrackerLine(`- [Facts about {{user}}]: ${f.content} ({{char}}'s Note: ${f.comment})`)
+        )
+        .join("\n")
+    : "";
+
+  const charFactsList = trackerConfig.facts
+    ? charFacts
+        .map((f) => formatTrackerLine(`- [Facts about {{char}}]: ${f.content} ({{char}}'s Note: ${f.comment})`))
         .join("\n")
     : "";
 
@@ -4688,6 +4894,13 @@ ${factsList || "None"}
 [SHARED HISTORY & EVENTS]:
 ${eventsList || "None"}
 `;
+
+const charTrackerContext = `
+[DYNAMIC CHARACTER PROFILE]:
+${charFactsList || "None"}
+`;
+
+
 
   // Smart Watch State
   const [smartWatchLocations, setSmartWatchLocations] = useStickyState(
@@ -4786,7 +4999,7 @@ ${eventsList || "None"}
       currentUserName
     );
     const prompt = prompts.forum_gen_posts
-      .replaceAll("{{CHAR_DESCRIPTION}}", cleanCharDesc)
+      .replaceAll("{{CHAR_DESCRIPTION}}", cleanCharDesc  + "\n" + charTrackerContext)
       .replaceAll("{{GUIDANCE}}", finalGuidance)
       .replaceAll("{{FORUM_NAME}}", forumData.name)
       .replaceAll("{{NAME}}", persona.name)
@@ -4960,7 +5173,7 @@ ${recentHistory}
     // --- 5. 处理 System Prompt (修复：替换占位符) ---
     const finalSystemPrompt = prompts.system
       .replaceAll("{{NAME}}", persona.name)
-      .replaceAll("{{CHAR_DESCRIPTION}}", cleanCharDesc)
+      .replaceAll("{{CHAR_DESCRIPTION}}", cleanCharDesc + "\n" + charTrackerContext)
       .replaceAll("{{USER_NAME}}", currentUserName)
       .replaceAll("{{USER_PERSONA}}", userPersona + "\n" + trackerContext)
       .replaceAll("{{CUSTOM_RULES}}", customRules)
@@ -4975,7 +5188,7 @@ ${recentHistory}
       .replaceAll("{{RELATIONSHIP_CONTEXT}}", relationshipContextBlock)
       .replaceAll("{{NAME}}", persona.name)
       .replaceAll("{{CHAR_NICK}}", charNick)
-      .replaceAll("{{CHAR_DESCRIPTION}}", cleanCharDesc)
+      .replaceAll("{{CHAR_DESCRIPTION}}", cleanCharDesc + "\n" + charTrackerContext)
       .replaceAll("{{WORLD_INFO}}", cleanWorldInfo)
       .replaceAll("{{MODE}}", aiPromptMode);
 
@@ -5098,7 +5311,7 @@ ${recentHistory}
 
     const prompt = prompts.forum_chat_event
       .replaceAll("{{NAME}}", persona.name)
-      .replaceAll("{{CHAR_DESCRIPTION}}", cleanCharDesc)
+      .replaceAll("{{CHAR_DESCRIPTION}}", cleanCharDesc + "\n" + charTrackerContext)
       .replaceAll("{{HISTORY}}", recentHistory);
 
     try {
@@ -5173,7 +5386,7 @@ ${recentHistory}
     );
     const prompt = prompts.forum_char_post
       .replaceAll("{{NAME}}", persona.name)
-      .replaceAll("{{CHAR_DESCRIPTION}}", cleanCharDesc)
+      .replaceAll("{{CHAR_DESCRIPTION}}", cleanCharDesc + "\n" + charTrackerContext)
       .replaceAll("{{WORLD_INFO}}", cleanWorldInfo)
       .replaceAll("{{TOPIC}}", postDrafts.char.topic)
       .replaceAll("{{HISTORY}}", getContextString(10))
@@ -6982,55 +7195,96 @@ ${recentHistory}
                           </button>
                         </div>
 
-                        {/* 中间输入框 */}
-                        <input
-                          id="chat-input"
-                          autoComplete="off"
-                          type="text"
-                          value={chatInput}
-                          onChange={(e) => setChatInput(e.target.value)}
-                          onKeyPress={(e) =>
-                            e.key === "Enter" &&
-                            chatInput.trim() &&
-                            handleUserSend(
-                              chatInput,
-                              isVoiceMode ? "voice" : "text"
-                            )
-                          }
-                          placeholder={isVoiceMode ? "语音..." : "发消息..."}
-                          className={`flex-grow min-w-0 border rounded-full py-2.5 px-3 md:px-4 text-sm focus:outline-none transition-all font-sans shadow-inner ${
-                            isVoiceMode
-                              ? "bg-[#7A2A3A]/10 border-[#7A2A3A]/30 text-[#7A2A3A] placeholder:text-[#7A2A3A]/50"
-                              : "bg-white/60 border-gray-200 text-gray-800 focus:border-gray-400"
-                          }`}
-                        />
+                        <div className="relative flex-grow">
+              <textarea
+                id="chat-input"
+                autoComplete="off"
+                value={chatInput}
+                onChange={(e) => {
+                  setChatInput(e.target.value);
+                  e.target.style.height = 'auto';
+                  e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    if (chatInput.trim()) {
+                      handleUserSend(chatInput, isVoiceMode ? "voice" : "text");
+                      setTimeout(() => {
+                        const el = document.getElementById('chat-input');
+                        if(el) el.style.height = 'auto';
+                      }, 0);
+                    }
+                  }
+                }}
+                placeholder={
+                  isVoiceMode 
+                    ? "语音..." 
+                    : (chatStyle === "novel" && !chatInput 
+                        ? "点击右侧按钮可AI代写..." 
+                        : "发消息...")
+                }
+                rows={1}
+                // 注意：这里加了 w-full 和 pr-10 (右侧留白给按钮)，去掉了 flex-grow (因为父容器已经是 flex-grow)
+                className={`w-full min-w-0 border rounded-2xl py-2.5 pl-4 pr-10 text-sm focus:outline-none transition-all font-sans shadow-inner resize-none custom-scrollbar ${
+                  isVoiceMode
+                    ? "bg-[#7A2A3A]/10 border-[#7A2A3A]/30 text-[#7A2A3A] placeholder:text-[#7A2A3A]/50"
+                    : "bg-white/60 border-gray-200 text-gray-800 focus:border-gray-400"
+                }`}
+                style={{ height: 'auto', minHeight: '42px', maxHeight: '120px' }}
+              />
 
-                        {/* 右侧：互斥按钮 (有字显发送，无字显触发) */}
-                        <div className="flex gap-1 shrink-0">
-                          {chatInput.trim().length > 0 ? (
-                            /* 情况A: 有字 -> 显示发送 */
-                            <button
-                              onClick={() =>
-                                handleUserSend(
-                                  chatInput,
-                                  isVoiceMode ? "voice" : "text"
-                                )
-                              }
-                              className="p-2 md:p-2.5 bg-[#2C2C2C] text-white rounded-full hover:bg-black transition-all shadow-md animate-in zoom-in-50"
-                            >
-                              <Send size={18} strokeWidth={1.5} />
-                            </button>
-                          ) : (
-                            /* 情况B: 没字 -> 显示触发回复 */
-                            <button
-                              onClick={() => triggerAIResponse()}
-                              className="p-2 md:p-2.5 bg-[#2C2C2C] text-white rounded-full hover:bg-gray-200 border border-gray-200 transition-all active:scale-95"
-                              title="让对方回复"
-                            >
-                              <MessageSquare size={18} strokeWidth={1.5} />
-                            </button>
-                          )}
-                        </div>
+              {chatStyle === "novel" && !isVoiceMode && (
+                <button
+                  onClick={handleGhostwrite}
+                  disabled={isGhostwriting}
+                  className={`
+                    absolute right-2 top-1/2 -translate-y-1/2 -mt-[3px] p-1.5 rounded-full transition-all z-10
+                    ${isGhostwriting 
+                      ? "text-red-900 red-50/50 cursor-wait" // 加载时样式
+                      : "text-red-900 hover:text-red-900 hover: bg-red-50/50 active:scale-90" // 平时样式
+                    }
+                  `}
+                  title="AI 代写/扩写"
+                >
+                  {isGhostwriting ? (
+                    /* 加载时：显示循环图标 (RefreshCw) 并旋转 */
+                    <RefreshCw size={16} strokeWidth={1} className="animate-spin" />
+                  ) : (
+                    /* 平时：显示魔棒图标 */
+                    <WandSparkles size={16} strokeWidth={1} />
+                  )}
+                </button>
+              )}
+            </div>
+
+            {/* 右侧：按钮组 (只保留发送/触发按钮) */}
+            <div className="flex gap-1 shrink-0 items-end pb-1">
+              {chatInput.trim().length > 0 ? (
+                /* 发送按钮 */
+                <button
+                  onClick={() => {
+                    handleUserSend(chatInput, isVoiceMode ? "voice" : "text");
+                    setTimeout(() => {
+                        const el = document.getElementById('chat-input');
+                        if(el) el.style.height = 'auto';
+                      }, 0);
+                  }}
+                  className="p-2 md:p-2.5 bg-[#2C2C2C] text-white rounded-full hover:bg-black transition-all shadow-md animate-in zoom-in-50"
+                >
+                  <Send size={18} strokeWidth={1.5} />
+                </button>
+              ) : (
+                /* 触发回复按钮 */
+                <button
+                  onClick={() => triggerAIResponse()}
+                  className="p-2 md:p-2.5 bg-[#2C2C2C] text-white rounded-full hover:bg-gray-200 border border-gray-200 transition-all active:scale-95"
+                  title="让对方回复"
+                >
+                  <MessageSquare size={18} strokeWidth={1.5} />
+                </button>
+              )}
+            </div>
                       </>
                     )}
                   </div>
