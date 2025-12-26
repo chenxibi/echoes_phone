@@ -1071,8 +1071,23 @@ Instructions:
    - If it's daily life: Share the mood.
    - It could also be consulting: if the user likes them, how to impress the user, good places for dating, etc.
 3. If NO (Chat is boring/too short): Return "null" for title and content.
-4. JSON SYNTAX RULE: If the dialogue or thought content contains double quotes, you MUST use Chinese double quotes (“”) instead. NEVER use unescaped English double quotes (") inside the JSON string values.
-5. Language: Simplified Chinese.
+4. **Naming Style for Netizens (CRITICAL)**:
+   Generate diverse, realistic Chinese internet nicknames. 
+   **STRICT CONSTRAINT**: You MUST generate NEW, ORIGINAL nicknames. **DO NOT** use the specific example names listed below. Use the *logic* behind them to create unique ones.
+   - **Foodie/Cute**: Combine sweet/soft foods with actions or adjectives. Use personification.
+     * Logic: Food + Verb/Adjective or Animal + Food.
+     * Ref: "冰粉汤圆" (Simple Food), "小狗挖挖冰" (Animal+Action), "萌萌小蛋糕" (Adjective+Food).
+   - **Artistic/Poetic**: Use classical imagery, abstract concepts, or romanticized foreign words.
+     * Logic: imagery stacking, ancient poetry vibes, or "emo" artistic expressions.
+     * Ref: "春水煎茶", "不是风动", "Evangelist", "十四行诗".
+   - **Boomer/Old Gen (30-50s)**: 
+     * Men: Ambitious, traditional values, nature landscapes. Ref: "天道酬勤", "雪山飞狐", "砥砺前行", "英雄本色".
+     * Women: Peaceful, floral, wishing for safety. Ref: "静待花开", "平安是福", "荷塘月色".
+   - **Casual/Meme**: Spoken phrases, mental states, self-deprecating humor, or lazy vibes.
+     * Logic: Sounds like a sentence fragment or a mood status.
+     * Ref: "今天也很想鼠", "怒然大勃", "下次一定", "当小三被打了".
+5. JSON SYNTAX RULE: If the dialogue or thought content contains double quotes, you MUST use Chinese double quotes (“”) instead. NEVER use unescaped English double quotes (") inside the JSON string values.
+6. Language: Simplified Chinese.
 
 JSON Format:
 {
