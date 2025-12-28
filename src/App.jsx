@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { jsonrepair } from "jsonrepair";
+import mapBg from "./map_bg.jpg";
 import {
   Wifi,
   Battery,
@@ -2616,20 +2617,30 @@ const CustomDialog = ({ config, onClose }) => {
   );
 };
 
-// [新增组件] 位置消息气泡
 const LocationBubble = ({ name, address }) => (
-  <div className="flex flex-col bg-white border border-gray-200 rounded-lg overflow-hidden w-64 shadow-sm">
-    {/* 上半部分：地图示意图 (这里用 CSS 模拟一个地图背景) */}
-    <div className="h-24 bg-gray-100 relative overflow-hidden flex items-center justify-center">
-      {/* 模拟地图纹理 */}
-      <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#9ca3af_1px,transparent_1px)] [background-size:8px_8px]" />
-      <div className="absolute inset-0 bg-orange-50/20" />
-      {/* 红色大头针图标 */}
-      <MapPin
-        size={32}
-        className="text-red-500 relative z-10 drop-shadow-md -mt-2"
-        fill="currentColor"
+  <div className="flex flex-col bg-white border border-gray-200 rounded-lg overflow-hidden w-64 shadow-sm select-none">
+    {/* 上半部分：地图背景图 */}
+    <div className="h-24 bg-gray-100 relative">
+      {/* 记得确保 mapBg 已经 import 进来了 */}
+      <img
+        src={mapBg}
+        alt="Map"
+        className="w-full h-full object-cover"
+        draggable="false"
       />
+
+      {/* 自定义 SVG 图标容器 - 绝对居中定位 */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -mt-3 drop-shadow-md">
+        <svg
+          viewBox="0 0 1024 1024"
+          version="1.1"
+          xmlns="http://www.w3.org/2000/svg"
+          className="w-8 h-8 text-[#CE4A3A]" // 这里控制大小(w-8 h-8)和颜色(text-red-600)
+          fill="currentColor" // 使用 currentColor 让它跟随 className 的颜色
+        >
+          <path d="M511.913993 63.989249C317.882076 63.989249 159.973123 221.898203 159.973123 415.930119c0 187.323366 315.473879 519.998656 328.890979 534.103813 6.020494 6.364522 14.449185 9.976818 23.221905 9.976818 0.172014 0 0.516042 0 0.688056 0 8.944734 0 17.545439-4.128339 23.393919-11.008903l109.22896-125.054258c145.179909-177.690576 218.629934-314.957836 218.629934-407.845456C864.026877 221.898203 706.117924 63.989249 511.913993 63.989249zM511.913993 575.903242c-88.415253 0-159.973123-71.55787-159.973123-159.973123s71.55787-159.973123 159.973123-159.973123 159.973123 71.55787 159.973123 159.973123S600.329246 575.903242 511.913993 575.903242z" />
+        </svg>
+      </div>
     </div>
 
     {/* 下半部分：文字信息 */}
@@ -7258,7 +7269,7 @@ ${recentHistory}
                                 let messageContent = null;
 
                                 if (msg.isLocation) {
-                                  messageContent = (
+                                  return (
                                     <LocationBubble
                                       name={msg.location?.name || "地点"}
                                       address={msg.location?.address || ""}
@@ -9280,7 +9291,7 @@ ${recentHistory}
                 <input
                   id="loc-name-input"
                   className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 pr-9 text-sm focus:border-[#7A2A3A] focus:outline-none transition-colors" // pr-9 留出按钮位置
-                  placeholder="可输入提示词如“法餐厅”并点击右侧按钮)"
+                  placeholder="可输入地点类型如“餐厅”并点击右侧按钮"
                 />
                 {/* [复用] 位置弹窗里的代写按钮 */}
                 <GhostButton
