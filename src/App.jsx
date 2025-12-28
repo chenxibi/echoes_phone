@@ -1477,6 +1477,32 @@ const MinimalCard = ({ item, type = "fact", onDelete, onEdit }) => {
   );
 };
 
+// [新增通用组件] AI 代写按钮 (GhostButton)
+const GhostButton = ({ loading, onClick, className = "" }) => {
+  return (
+    <button
+      onClick={onClick}
+      disabled={loading}
+      className={`
+        p-1.5 rounded-full transition-all z-10
+        ${
+          loading
+            ? "text-red-900 bg-red-50/50 cursor-wait" // 加载时样式
+            : "text-red-900 hover:bg-red-50/50 active:scale-90" // 平时样式
+        }
+        ${className} // 允许从外部传入定位样式 (absolute ...)
+      `}
+      title="AI 代写/扩写"
+    >
+      {loading ? (
+        <RefreshCw size={16} strokeWidth={1} className="animate-spin" />
+      ) : (
+        <WandSparkles size={16} strokeWidth={1} />
+      )}
+    </button>
+  );
+};
+
 /* --- HELPER COMPONENTS --- */
 const StickerEditorModal = ({ sticker, onSave, onDelete, onClose }) => {
   const [desc, setDesc] = useState(sticker.desc);
@@ -2498,13 +2524,6 @@ const TransferBubble = ({ msg, isMe, onInteract }) => {
             </button>
           </div>
         )}
-
-        {/* 完成状态图标 */}
-        {!isPending && (
-          <div className="text-white/80">
-            {isAccepted ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -2596,6 +2615,34 @@ const CustomDialog = ({ config, onClose }) => {
     </div>
   );
 };
+
+// [新增组件] 位置消息气泡
+const LocationBubble = ({ name, address }) => (
+  <div className="flex flex-col bg-white border border-gray-200 rounded-lg overflow-hidden w-64 shadow-sm">
+    {/* 上半部分：地图示意图 (这里用 CSS 模拟一个地图背景) */}
+    <div className="h-24 bg-gray-100 relative overflow-hidden flex items-center justify-center">
+      {/* 模拟地图纹理 */}
+      <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#9ca3af_1px,transparent_1px)] [background-size:8px_8px]" />
+      <div className="absolute inset-0 bg-orange-50/20" />
+      {/* 红色大头针图标 */}
+      <MapPin
+        size={32}
+        className="text-red-500 relative z-10 drop-shadow-md -mt-2"
+        fill="currentColor"
+      />
+    </div>
+
+    {/* 下半部分：文字信息 */}
+    <div className="p-3 bg-white">
+      <div className="text-sm font-medium text-gray-900 truncate leading-tight mb-1">
+        {name}
+      </div>
+      <div className="text-xs text-gray-500 truncate leading-tight">
+        {address}
+      </div>
+    </div>
+  </div>
+);
 
 /* --- MAIN COMPONENT --- */
 const App = () => {
@@ -2847,6 +2894,16 @@ const App = () => {
         url: "https://github.com/user-attachments/assets/f5e1ae53-07d5-4149-9c3d-517a3c2cc19d",
         desc: "一个幽默可爱、可以用于调情的表情包，用直白的邀请函写着“上线了，泡我^^！”",
       },
+      {
+        id: "s31",
+        url: "https://github.com/user-attachments/assets/070efa3c-5043-44cd-b702-0d2d3780c815",
+        desc: "一张复古像素风格的电脑屏幕许愿图，写着“请只让姐姐和我过得好吧”，表达了一种占有欲极强、只在乎特定对象的自私又可爱的祈祷",
+      },
+      {
+        id: "s32",
+        url: "https://github.com/user-attachments/assets/b61ca1bf-8eed-4559-b420-76867047a5e9",
+        desc: "一只流着泪灰溜溜跑掉的小狗，配文“就这样狗溜溜地逃离”",
+      },
     ],
     "echoes_char_stickers"
   );
@@ -2993,6 +3050,116 @@ const App = () => {
         url: "https://github.com/user-attachments/assets/91c936aa-ac14-49be-b75c-d2c6e68b6ee7",
         desc: "两位表情严肃的警察注视着前方，头顶问号质问“又开始了是吗？”，用来制止对方发癫或做奇怪的事情",
       },
+      {
+        id: "us29",
+        url: "https://github.com/user-attachments/assets/232ddef4-e417-4865-91cd-f49fdd5de5e1",
+        desc: "一只被气得倒在地上、灵魂出窍的小熊，配文“谢谢你 看完乳腺又长俩结节”，形容被对方的言论气得身体不适",
+      },
+      {
+        id: "us30",
+        url: "https://github.com/user-attachments/assets/118202a8-5f58-4183-8981-ec3ec1929e66",
+        desc: "长着人脸的小熊一脸冷漠敷衍，配文“0人在意”和“嗯嗯宝汁你继续”，阴阳怪气地表示根本不想听对方废话",
+      },
+      {
+        id: "us31",
+        url: "https://github.com/user-attachments/assets/0c48db7a-833c-4940-8de0-2db43aa9a76b",
+        desc: "一个正在左右摆动的催眠怀表，背景文字不断重复“你是我老公”，试图进行强制爱式的洗脑催眠",
+      },
+      {
+        id: "us32",
+        url: "https://github.com/user-attachments/assets/90e43c73-0295-4e6d-b31f-01e236a4db50",
+        desc: "一只拿着怀表的小黄猫，正在实施催眠术，满屏的“爱我”文字，好像在说“快点被催眠然后爱上我吧”",
+      },
+      {
+        id: "us33",
+        url: "https://github.com/user-attachments/assets/92c66a40-433e-4a89-a83d-d60910ff18fb",
+        desc: "一只戴着粉色蝴蝶结的小白兔挥出拳头，奶凶奶凶的似乎要打爆地球，好像在说“吃我一拳！”",
+      },
+      {
+        id: "us34",
+        url: "https://github.com/user-attachments/assets/808a0094-2fe2-4aa5-9c7e-4e7915accad2",
+        desc: "一只置身于浩瀚宇宙中的可爱棕色小熊，眼神充满了智慧的光芒，配文“我明白了一切！”，好像突然顿悟了宇宙真理",
+      },
+      {
+        id: "us35",
+        url: "https://github.com/user-attachments/assets/d09edef7-1842-4c4e-9d2a-34c4ae0ef5e0",
+        desc: "一只自带闪光特效、漂浮在空中的小白仓鼠，表情一脸陶醉，好像快乐得已经升天了",
+      },
+      {
+        id: "us36",
+        url: "https://github.com/user-attachments/assets/50c83362-fabf-4937-92c1-853453866904",
+        desc: "一只眼泪汪汪的幼猫大头特写，发出弱弱的一声“咪”，看起来楚楚可怜，好像在乞求怜爱",
+      },
+      {
+        id: "us37",
+        url: "https://github.com/user-attachments/assets/481fc84b-16f3-4938-a20c-cba5b12e4a68",
+        desc: "一只伸出手掌表示拒绝的小兔子，配着韩语和中文双语的“够了”，一脸麻木地要求对方停止",
+      },
+      {
+        id: "us38",
+        url: "https://github.com/user-attachments/assets/28cd5182-a48b-47b4-96cd-0c67928fcfb0",
+        desc: "两只白色小团子围坐在篝火旁发呆，配文“好无聊，可是好幸福”，描绘了一种虽然平淡无事但内心非常充实安宁的状态",
+      },
+      {
+        id: "us39",
+        url: "https://github.com/user-attachments/assets/9a3edd51-b275-4dcb-a58b-055b34736dc8",
+        desc: "一只竖起大拇指的小白仓鼠，配文“牛逼 又活一天”，用一种积极又带点心酸的语气庆祝自己顽强地活了下来",
+      },
+      {
+        id: "us40",
+        url: "https://github.com/user-attachments/assets/3659ad3c-5d50-46ff-a8f3-54197fa34386",
+        desc: "一只双手叠放在身前、看起来非常乖巧害羞的小白仓鼠，配着谐音梗“想鼠”，用最可爱的表情表达“想死”的尴尬或无奈心情",
+      },
+      {
+        id: "us41",
+        url: "https://github.com/user-attachments/assets/ef1954eb-89d7-4c7f-a2b0-1f75294860a9",
+        desc: "一个红白扩音大喇叭的特写，配文言简意赅的“收帅男人”，简单粗暴地广而告之自己的需求",
+      },
+      {
+        id: "us42",
+        url: "https://github.com/user-attachments/assets/91a678dd-bfa8-4dab-81e4-4e02c6e6f72e",
+        desc: "一只看着手机感动落泪的黄色小熊，心里想着“太...可爱...真的是人类吗”，完全被屏幕对面的人萌翻了，甚至开始怀疑物种",
+      },
+      {
+        id: "us43",
+        url: "https://github.com/user-attachments/assets/73f33424-5fe5-4f57-b0ef-7617a4965811",
+        desc: "一张黑白漫画对话框截图，写着“像小狗一样好可爱...”，形容对方有着小狗般让人无法抗拒的天然萌感",
+      },
+      {
+        id: "us44",
+        url: "https://github.com/user-attachments/assets/29d77452-f2e7-44cb-b42b-5efb3e5218ce",
+        desc: "一只脸颊微红的小仓鼠，双手奉上一颗粉色爱心，配文“请收下”，非常直球、可爱又真诚的表白",
+      },
+      {
+        id: "us45",
+        url: "https://github.com/user-attachments/assets/9f043584-9d32-45d6-a01f-0d6087714c3d",
+        desc: "一只拿着“婚姻申报书”的小兔子，一脸“拿你没办法”的宠溺表情，配文“没办法咯~！我要和你结婚”，一种霸道又甜蜜的求婚",
+      },
+      {
+        id: "us46",
+        url: "https://github.com/user-attachments/assets/31248491-0008-4999-b611-0573c56a9ccb",
+        desc: "小狗竖起大拇指的表情包，配文“人，很棒”",
+      },
+      {
+        id: "us47",
+        url: "https://github.com/user-attachments/assets/b74c7b43-33f7-4648-815c-8ab9e7e368c0",
+        desc: "一只头顶问号的小猫，好像感到非常迷惑",
+      },
+      {
+        id: "us48",
+        url: "https://github.com/user-attachments/assets/b61ca1bf-8eed-4559-b420-76867047a5e9",
+        desc: "一只流着泪灰溜溜跑掉的小狗，配文“就这样狗溜溜地逃离”",
+      },
+      {
+        id: "us49",
+        url: "https://github.com/user-attachments/assets/43709720-1273-4336-8af7-f72617758f70",
+        desc: "一个躺在床上看手机的人，配文“聊几句又不回了，我是小三吗”",
+      },
+      {
+        id: "us50",
+        url: "https://github.com/user-attachments/assets/c4945484-f603-44a0-8792-93194454ccc5",
+        desc: "一只震惊地大张着嘴的青蛙，配文“我操，恶俗啊”",
+      },
     ],
     "echoes_user_stickers"
   );
@@ -3031,24 +3198,33 @@ const App = () => {
     handleUserSend(amount, "transfer", null, { note: note });
     setShowMediaMenu(false);
   };
-  // [新增] 处理转账交互 (收款/退还)
   const handleTransferInteract = (index, action) => {
     const newHistory = [...chatHistory];
     const msg = newHistory[index];
+    if (!msg.transfer || msg.transfer.status !== "pending") return;
 
-    if (msg.transfer) {
-      msg.transfer.status = action === "accept" ? "accepted" : "rejected";
-      setChatHistory(newHistory);
+    // 更新状态
+    msg.transfer.status = action === "accept" ? "accepted" : "rejected";
 
-      // 可选：交互后自动触发一条系统提示或让 AI 知道
-      if (action === "accept") {
-        showToast("success", `已收款 ¥${msg.transfer.amount}`);
-        // 这里的逻辑是：用户收款了，如果不说话，AI可能不知道，
-        // 我们可以选择静默更新，或者自动发一条隐藏的 system prompt 给下一次对话
-      } else {
-        showToast("info", "已退还转账");
-      }
-    }
+    const amount = msg.transfer.amount;
+    const actionText = action === "accept" ? "已收款" : "已退还";
+
+    // 生成系统消息
+    const notificationMsg = {
+      id: `sys_${Date.now()}`,
+      sender: "me",
+      isSystem: true,
+      text: `你${actionText} ¥${amount}`,
+      time: formatTime(getCurrentTimeObj()),
+    };
+
+    newHistory.push(notificationMsg);
+    setChatHistory(newHistory);
+
+    const hint = `[SYSTEM EVENT]: User ${
+      action === "accept" ? "accepted" : "rejected"
+    } the transfer (¥${amount}).`;
+    setPendingHint(hint);
   };
 
   // [新增] 核心回退逻辑：根据消息 ID 删除它生成的所有 Facts 和 Events
@@ -3059,7 +3235,11 @@ const App = () => {
     setUserFacts((prev) => {
       const filtered = prev.filter((item) => item.sourceMsgId !== sourceMsgId);
       if (filtered.length !== prev.length) {
-        console.log(`[Echoes] 已回退关联的 User Facts (${prev.length - filtered.length}条)`);
+        console.log(
+          `[Echoes] 已回退关联的 User Facts (${
+            prev.length - filtered.length
+          }条)`
+        );
       }
       return filtered;
     });
@@ -3068,7 +3248,11 @@ const App = () => {
     setCharFacts((prev) => {
       const filtered = prev.filter((item) => item.sourceMsgId !== sourceMsgId);
       if (filtered.length !== prev.length) {
-        console.log(`[Echoes] 已回退关联的 Char Facts (${prev.length - filtered.length}条)`);
+        console.log(
+          `[Echoes] 已回退关联的 Char Facts (${
+            prev.length - filtered.length
+          }条)`
+        );
       }
       return filtered;
     });
@@ -3077,7 +3261,9 @@ const App = () => {
     setSharedEvents((prev) => {
       const filtered = prev.filter((item) => item.sourceMsgId !== sourceMsgId);
       if (filtered.length !== prev.length) {
-        console.log(`[Echoes] 已回退关联的 Events (${prev.length - filtered.length}条)`);
+        console.log(
+          `[Echoes] 已回退关联的 Events (${prev.length - filtered.length}条)`
+        );
       }
       return filtered;
     });
@@ -3088,6 +3274,8 @@ const App = () => {
   const [showUserStickerPanel, setShowUserStickerPanel] = useState(false); // 用户表情面板开关
   const [isUserStickerEditMode, setIsUserStickerEditMode] = useState(false); // 用户表情包编辑模式开关
   const [isVoiceMode, setIsVoiceMode] = useState(false); // 语音模式开关
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [isLocGenerating, setIsLocGenerating] = useState(false);
 
   const [showMediaMenu, setShowMediaMenu] = useState(false);
 
@@ -3155,6 +3343,7 @@ const App = () => {
   const [regenHint, setRegenHint] = useState("");
   const [expandedMusicHistory, setExpandedMusicHistory] = useState(null);
   const [activeMenuIndex, setActiveMenuIndex] = useState(null); // 当前哪个消息显示了菜单
+  const [pendingHint, setPendingHint] = useState(null);
   const [editIndex, setEditIndex] = useState(null); // 当前正在编辑哪条消息
   const [editContent, setEditContent] = useState(""); // 编辑框的内容
   const longPressTimerRef = useRef(null);
@@ -3244,6 +3433,11 @@ const App = () => {
     setGeneratedPreview(null);
     setCreationInput("");
     showToast("success", `角色「${finalName}」已加载`);
+  };
+
+  const handleOpenLocationModal = () => {
+    setShowMediaMenu(false); // 关闭菜单
+    setShowLocationModal(true);
   };
 
   const generateTrackerUpdate = async (sourceMsgId) => {
@@ -4080,7 +4274,10 @@ const App = () => {
 
     let finalSystemPrompt = prompts.system
       .replaceAll("{{NAME}}", p.name)
-      .replaceAll("{{CHAR_DESCRIPTION}}", cleanCharDesc + "\n" + charTrackerContext)
+      .replaceAll(
+        "{{CHAR_DESCRIPTION}}",
+        cleanCharDesc + "\n" + charTrackerContext
+      )
       .replaceAll("{{USER_PERSONA}}", userPersona + "\n" + trackerContext)
       .replaceAll("{{USER_NAME}}", effectiveUserName)
       .replaceAll("{{CUSTOM_RULES}}", customRules)
@@ -4260,20 +4457,28 @@ const App = () => {
 
   const handleGhostwrite = async () => {
     if (isGhostwriting) return;
-    
+
     if (!apiConfig?.key) {
       alert("请先在设置中配置 API Key");
       return;
     }
-    if (!persona) return; 
+    if (!persona) return;
 
     setIsGhostwriting(true);
 
     try {
       const effectiveUserName = userName || "User";
-      const charName = persona.name; 
-      const cleanCharDesc = replacePlaceholders(inputKey, charName, effectiveUserName);
-      const cleanWorldInfo = replacePlaceholders(getWorldInfoString(), charName, effectiveUserName);
+      const charName = persona.name;
+      const cleanCharDesc = replacePlaceholders(
+        inputKey,
+        charName,
+        effectiveUserName
+      );
+      const cleanWorldInfo = replacePlaceholders(
+        getWorldInfoString(),
+        charName,
+        effectiveUserName
+      );
 
       const historyText = getRecentTurns(chatHistory, contextLimit)
         .map((m) => {
@@ -4282,7 +4487,10 @@ const App = () => {
 
           // 处理语音
           if (m.isVoice) {
-            content = `(Sent a Voice Message): ${m.text.replace("[语音消息] ", "")}`;
+            content = `(Sent a Voice Message): ${m.text.replace(
+              "[语音消息] ",
+              ""
+            )}`;
           }
           // 处理表情包
           if (m.sticker && (!content || !content.trim())) {
@@ -4291,16 +4499,19 @@ const App = () => {
           // 处理转发
           if (m.isForward && m.forwardData) {
             const fwd = m.forwardData;
-            content += ` [Forwarded ${fwd.type === "post" ? "Post" : "Comment"}: "${fwd.content.slice(0, 50)}..."]`;
+            content += ` [Forwarded ${
+              fwd.type === "post" ? "Post" : "Comment"
+            }: "${fwd.content.slice(0, 50)}..."]`;
           }
           return `${senderName}: ${content}`;
         })
         .join("\n");
 
-      const modeInstruction = interactionMode === "online"
-        ? `[Interaction Mode: ONLINE CHAT / MESSAGING]
+      const modeInstruction =
+        interactionMode === "online"
+          ? `[Interaction Mode: ONLINE CHAT / MESSAGING]
          - Context: You are chatting with ${charName} via a smartphone.`
-        : `[Interaction Mode: REALITY / ACTION RP]
+          : `[Interaction Mode: REALITY / ACTION RP]
          - Context: This scene takes place in the physical world (Real Life).`;
 
       const systemInstruction = `
@@ -4330,7 +4541,7 @@ ${longMemory || "None."}
 6. Output Structure: This must be a unified, cohesive narrative stream. Output the entire response as **ONE SINGLE, CONTINUOUS** message (IMPORTANT). At least 300 Chinese characters.`;
 
       let userTask = "";
-      
+
       // 动态构建 Context 部分
       const contextSection = `
 Current Date: ${getCurrentTimeObj().toLocaleString()}
@@ -4374,7 +4585,7 @@ Requirements:
         {
           prompt: userTask,
           systemInstruction: systemInstruction,
-          isJson: false, 
+          isJson: false,
         },
         apiConfig,
         (err) => alert(`代写出错: ${err}`)
@@ -4385,14 +4596,13 @@ Requirements:
         setChatInput(result.trim());
         // 自动调整高度
         setTimeout(() => {
-           const el = document.getElementById('chat-input');
-           if(el) {
-             el.style.height = 'auto';
-             el.style.height = Math.min(el.scrollHeight, 120) + 'px';
-           }
+          const el = document.getElementById("chat-input");
+          if (el) {
+            el.style.height = "auto";
+            el.style.height = Math.min(el.scrollHeight, 120) + "px";
+          }
         }, 10);
       }
-
     } catch (error) {
       console.error("Ghostwrite error:", error);
     } finally {
@@ -4417,6 +4627,8 @@ Requirements:
       // [新增] 文本回退显示包含备注
       const note = extraData?.note ? ` (${extraData.note})` : "";
       displayText = `[转账] ¥${content}${note}`;
+    } else if (type === "location") {
+      displayText = `[位置] ${extraData?.name || content}`;
     } else {
       displayText = content;
     }
@@ -4434,6 +4646,15 @@ Requirements:
               amount: content,
               status: "pending",
               note: extraData?.note || "", // 存入备注
+            }
+          : null,
+
+      isLocation: type === "location",
+      location:
+        type === "location"
+          ? {
+              name: extraData?.name || content,
+              address: extraData?.address || "",
             }
           : null,
 
@@ -4456,6 +4677,12 @@ Requirements:
     overrideContext = null
   ) => {
     if (!persona) return;
+
+    let finalHint = hint;
+    if (!finalHint && pendingHint) {
+      finalHint = pendingHint;
+      setPendingHint(null); // 消费掉，避免重复
+    }
 
     const backupHistory = [...chatHistory];
 
@@ -4529,7 +4756,7 @@ Requirements:
     if (lastCharMsg && lastCharMsg.style && lastCharMsg.style !== chatStyle) {
       styleInst += `\n\n[FORMATTING OVERRIDE]: You have switched to a NEW writing style (${chatStyle}). IGNORE the formatting patterns of previous messages in history. You must strictly adhere to the new style defined above immediately.`;
     }
-    if (hint) styleInst += `\n[Special Instruction]: ${hint}`;
+    if (finalHint) styleInst += `\n[Special Instruction]: ${finalHint}`;
 
     // --- 动态构建转发上下文 ---
     const rawForwardContext = overrideContext || forwardContext;
@@ -4567,7 +4794,10 @@ Requirements:
 
     const systemPrompt = prompts.system
       .replaceAll("{{NAME}}", persona.name)
-      .replaceAll("{{CHAR_DESCRIPTION}}", cleanCharDesc + "\n" + charTrackerContext)
+      .replaceAll(
+        "{{CHAR_DESCRIPTION}}",
+        cleanCharDesc + "\n" + charTrackerContext
+      )
       .replaceAll("{{USER_PERSONA}}", userPersona + "\n" + trackerContext)
       .replaceAll("{{USER_NAME}}", effectiveUserName)
       .replaceAll("{{CUSTOM_RULES}}", customRules)
@@ -4634,7 +4864,6 @@ Requirements:
           ]);
         }
 
-
         // 处理返回的消息
         if (responseData.messages && Array.isArray(responseData.messages)) {
           const newMsgs = responseData.messages.map((item, index) => {
@@ -4674,8 +4903,40 @@ Requirements:
             }
           }
 
+          if (responseData.transfer_action) {
+            // A. 更新历史记录中的状态
+            const lastUserTransferIndex = [...newHistory]
+              .reverse()
+              .findIndex(
+                (m) =>
+                  m.sender === "me" &&
+                  m.isTransfer &&
+                  m.transfer?.status === "pending"
+              );
+            if (lastUserTransferIndex !== -1) {
+              const realIndex = newHistory.length - 1 - lastUserTransferIndex;
+              if (newHistory[realIndex].transfer) {
+                newHistory[realIndex].transfer.status =
+                  responseData.transfer_action;
+              }
+            }
+
+            // B. 在回复列表最前面插入一条系统消息 (胶囊)
+            const actionText =
+              responseData.transfer_action === "accept" ? "已收款" : "已退还";
+            newMsgs.unshift({
+              sender: "char",
+              id: `sys_ai_${Date.now()}`,
+              text: `对方${actionText} ¥${amount}`,
+              isSystem: true,
+              time: formatTime(getCurrentTimeObj()),
+            });
+          }
+
           if (responseData.transfer && responseData.transfer.amount) {
-            if (newMsgs.length > 0) delete newMsgs[newMsgs.length - 1].status;
+            if (newMsgs.length > 0 && newMsgs[newMsgs.length - 1].status) {
+              delete newMsgs[newMsgs.length - 1].status;
+            }
 
             const amount = responseData.transfer.amount;
             const reason = responseData.transfer.reason || ""; // 获取 AI 的理由作为备注
@@ -4697,7 +4958,9 @@ Requirements:
 
           const finalizedMsgs = newMsgs.map((msg) => ({
             ...msg,
-            id: msg.id || `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            id:
+              msg.id ||
+              `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           }));
 
           setIsTyping(false);
@@ -4713,7 +4976,7 @@ Requirements:
 
           setTimeout(() => {
             const fullConversation = [...newHistory, ...finalizedMsgs];
-            
+
             let userTurnCount = 0;
             let lastSender = null;
 
@@ -4839,8 +5102,14 @@ Requirements:
   };
 
   // 5. 带确认的删除
-  const handleDeleteWithConfirm = (index) => {
-    if (window.confirm("确定要删除这条消息吗？")) {
+  const handleDeleteWithConfirm = async (index) => {
+    const msgToDelete = chatHistory[index];
+
+    if (await customConfirm("确定要删除这条消息吗？", "删除消息")) {
+      if (msgToDelete && msgToDelete.id) {
+        rollbackTrackerData(msgToDelete.id);
+      }
+
       handleDeleteChat(index);
       setActiveMenuIndex(null);
     }
@@ -4856,12 +5125,24 @@ Requirements:
     setSelectedMsgs(newSet);
   };
 
-  const handleBatchDelete = () => {
+  const handleBatchDelete = async () => {
     if (selectedMsgs.size === 0) return;
-    if (window.confirm(`确定要删除选中的 ${selectedMsgs.size} 条消息吗？`)) {
-      // 过滤掉被选中的索引
+
+    if (
+      await customConfirm(
+        `确定要删除选中的 ${selectedMsgs.size} 条消息吗？`,
+        "批量删除"
+      )
+    ) {
+      selectedMsgs.forEach((index) => {
+        const msg = chatHistory[index];
+        if (msg && msg.id) {
+          rollbackTrackerData(msg.id);
+        }
+      });
+
       setChatHistory((prev) => prev.filter((_, i) => !selectedMsgs.has(i)));
-      // 重置状态
+
       setIsMultiSelectMode(false);
       setSelectedMsgs(new Set());
       showToast("success", "已批量删除");
@@ -4877,15 +5158,21 @@ Requirements:
 
   const factsList = trackerConfig.facts
     ? userFacts
-        .map((f) => 
-          formatTrackerLine(`- [Facts about {{user}}]: ${f.content} ({{char}}'s Note: ${f.comment})`)
+        .map((f) =>
+          formatTrackerLine(
+            `- [Facts about {{user}}]: ${f.content} ({{char}}'s Note: ${f.comment})`
+          )
         )
         .join("\n")
     : "";
 
   const charFactsList = trackerConfig.facts
     ? charFacts
-        .map((f) => formatTrackerLine(`- [Facts about {{char}}]: ${f.content} ({{char}}'s Note: ${f.comment})`))
+        .map((f) =>
+          formatTrackerLine(
+            `- [Facts about {{char}}]: ${f.content} ({{char}}'s Note: ${f.comment})`
+          )
+        )
         .join("\n")
     : "";
 
@@ -4910,12 +5197,78 @@ ${factsList || "None"}
 ${eventsList || "None"}
 `;
 
-const charTrackerContext = `
+  const charTrackerContext = `
 [DYNAMIC CHARACTER PROFILE]:
 ${charFactsList || "None"}
 `;
 
+  const handleGhostwriteLocation = async (
+    draft,
+    setLocationName,
+    setLocationAddress,
+    setIsGenerating
+  ) => {
+    if (!apiConfig?.key) return alert("请配置 API Key");
 
+    setIsGenerating(true);
+    try {
+      const charName = persona?.name || "Character";
+      const effectiveUserName = userName || "User";
+
+      const cleanWorldInfo = replacePlaceholders(
+        getWorldInfoString(),
+        charName,
+        effectiveUserName
+      );
+
+      // --- [核心修改] 处理最近 5 条聊天记录 ---
+      const historyText = chatHistory
+        .slice(-5) // 取最后 5 条
+        .map((m) => {
+          // 判断发送者
+          const sender = m.sender === "me" ? effectiveUserName : charName;
+          // 判断内容 (处理文本、语音、图片、位置等不同类型)
+          let content = m.text || "";
+          if (m.isVoice) content = "[语音]";
+          if (m.isLocation) content = `[位置: ${m.location.name}]`;
+          // 如果没有文本也没有特殊类型，可能是空
+          if (!content) content = "[图片/表情]";
+
+          return `${sender}: ${content}`;
+        })
+        .join("\n");
+
+      const prompt = `
+Task: Generate a fictional location based on the user's draft.
+Context: Roleplay setting. Current World Info: ${cleanWorldInfo} Conversation History:${historyText}
+User Draft: "${draft || "A random interesting place"}"
+
+Requirements:
+1. Name: A realistic or atmospheric name fitting the draft (e.g., "La Crêperie").
+2. Address: A detailed, realistic address (e.g., "上海市静安区南京西路1601号...").
+3. Output Format: JSON ONLY. { "name": "...", "address": "..." }
+`;
+
+      const result = await generateContent(
+        {
+          prompt,
+          systemInstruction: "You are a location generator.",
+          isJson: true,
+        },
+        apiConfig,
+        (err) => alert(err)
+      );
+
+      if (result && result.name) {
+        setLocationName(result.name);
+        setLocationAddress(result.address);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   // Smart Watch State
   const [smartWatchLocations, setSmartWatchLocations] = useStickyState(
@@ -5014,7 +5367,10 @@ ${charFactsList || "None"}
       currentUserName
     );
     const prompt = prompts.forum_gen_posts
-      .replaceAll("{{CHAR_DESCRIPTION}}", cleanCharDesc  + "\n" + charTrackerContext)
+      .replaceAll(
+        "{{CHAR_DESCRIPTION}}",
+        cleanCharDesc + "\n" + charTrackerContext
+      )
       .replaceAll("{{GUIDANCE}}", finalGuidance)
       .replaceAll("{{FORUM_NAME}}", forumData.name)
       .replaceAll("{{NAME}}", persona.name)
@@ -5188,7 +5544,10 @@ ${recentHistory}
     // --- 5. 处理 System Prompt (修复：替换占位符) ---
     const finalSystemPrompt = prompts.system
       .replaceAll("{{NAME}}", persona.name)
-      .replaceAll("{{CHAR_DESCRIPTION}}", cleanCharDesc + "\n" + charTrackerContext)
+      .replaceAll(
+        "{{CHAR_DESCRIPTION}}",
+        cleanCharDesc + "\n" + charTrackerContext
+      )
       .replaceAll("{{USER_NAME}}", currentUserName)
       .replaceAll("{{USER_PERSONA}}", userPersona + "\n" + trackerContext)
       .replaceAll("{{CUSTOM_RULES}}", customRules)
@@ -5203,7 +5562,10 @@ ${recentHistory}
       .replaceAll("{{RELATIONSHIP_CONTEXT}}", relationshipContextBlock)
       .replaceAll("{{NAME}}", persona.name)
       .replaceAll("{{CHAR_NICK}}", charNick)
-      .replaceAll("{{CHAR_DESCRIPTION}}", cleanCharDesc + "\n" + charTrackerContext)
+      .replaceAll(
+        "{{CHAR_DESCRIPTION}}",
+        cleanCharDesc + "\n" + charTrackerContext
+      )
       .replaceAll("{{WORLD_INFO}}", cleanWorldInfo)
       .replaceAll("{{MODE}}", aiPromptMode);
 
@@ -5326,7 +5688,10 @@ ${recentHistory}
 
     const prompt = prompts.forum_chat_event
       .replaceAll("{{NAME}}", persona.name)
-      .replaceAll("{{CHAR_DESCRIPTION}}", cleanCharDesc + "\n" + charTrackerContext)
+      .replaceAll(
+        "{{CHAR_DESCRIPTION}}",
+        cleanCharDesc + "\n" + charTrackerContext
+      )
       .replaceAll("{{HISTORY}}", recentHistory);
 
     try {
@@ -5401,7 +5766,10 @@ ${recentHistory}
     );
     const prompt = prompts.forum_char_post
       .replaceAll("{{NAME}}", persona.name)
-      .replaceAll("{{CHAR_DESCRIPTION}}", cleanCharDesc + "\n" + charTrackerContext)
+      .replaceAll(
+        "{{CHAR_DESCRIPTION}}",
+        cleanCharDesc + "\n" + charTrackerContext
+      )
       .replaceAll("{{WORLD_INFO}}", cleanWorldInfo)
       .replaceAll("{{TOPIC}}", postDrafts.char.topic)
       .replaceAll("{{HISTORY}}", getContextString(10))
@@ -6597,6 +6965,93 @@ ${recentHistory}
                 </div>
                 {chatHistory.map((msg, i) => {
                   const isSelected = selectedMsgs.has(i);
+
+                  if (msg.isSystem) {
+                    return (
+                      <div
+                        key={i}
+                        className="relative group flex justify-center my-4 animate-in fade-in duration-300"
+                        // 绑定事件，支持菜单
+                        onContextMenu={
+                          !isMultiSelectMode
+                            ? (e) => handleContextMenu(e, i)
+                            : undefined
+                        }
+                        onTouchStart={
+                          !isMultiSelectMode
+                            ? () => handleTouchStart(i)
+                            : undefined
+                        }
+                        onTouchEnd={
+                          !isMultiSelectMode ? handleTouchEnd : undefined
+                        }
+                        onMouseDown={
+                          !isMultiSelectMode
+                            ? () => handleTouchStart(i)
+                            : undefined
+                        }
+                        onMouseUp={
+                          !isMultiSelectMode ? handleTouchEnd : undefined
+                        }
+                        onClick={() => {
+                          if (isMultiSelectMode) toggleMessageSelection(i);
+                        }}
+                      >
+                        {/* 胶囊本体 */}
+                        <div
+                          className={`
+                            bg-gray-200/60 backdrop-blur-sm text-gray-500 text-[10px] font-bold px-3 py-1 rounded-full shadow-sm cursor-pointer transition-all
+                            ${
+                              isMultiSelectMode && isSelected
+                                ? "ring-2 ring-[#7A2A3A] bg-white"
+                                : ""
+                            }
+                        `}
+                        >
+                          {msg.text.replace("[系统通知] ", "")}
+                        </div>
+
+                        {/* [新增] 菜单 (复用原有的菜单代码逻辑) */}
+                        {!isMultiSelectMode && activeMenuIndex === i && (
+                          <div className="absolute top-full mt-2 z-50 flex flex-col items-center animate-in fade-in zoom-in-95 duration-200">
+                            <div className="bg-[#1a1a1a]/95 backdrop-blur-md text-white rounded-xl shadow-2xl p-1.5 flex gap-1 items-center border border-white/20">
+                              {/* 系统消息只需要删除和多选 */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setIsMultiSelectMode(true);
+                                  setSelectedMsgs(new Set([i]));
+                                  setActiveMenuIndex(null);
+                                }}
+                                className="flex flex-col items-center gap-1 p-2 hover:bg-white/20 rounded-lg min-w-[40px]"
+                              >
+                                <span className="text-[11px]">多选</span>
+                              </button>
+                              <div className="w-[1px] h-4 bg-white/20"></div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteWithConfirm(i);
+                                }}
+                                className="flex flex-col items-center gap-1 p-2 hover:bg-red-500/50 rounded-lg min-w-[40px] text-red-300 hover:text-white"
+                              >
+                                <span className="text-[11px]">删除</span>
+                              </button>
+                            </div>
+                            {/* 遮罩 */}
+                            <div
+                              className="fixed inset-0 z-[-1]"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveMenuIndex(null);
+                              }}
+                            ></div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
                   let stickerUrl = null;
 
                   if (msg.sticker && msg.sticker.url) {
@@ -6800,8 +7255,16 @@ ${recentHistory}
                                   );
                                 }
 
-                                // D. 语音消息逻辑
-                                if (msg.isVoice) {
+                                let messageContent = null;
+
+                                if (msg.isLocation) {
+                                  messageContent = (
+                                    <LocationBubble
+                                      name={msg.location?.name || "地点"}
+                                      address={msg.location?.address || ""}
+                                    />
+                                  );
+                                } else if (msg.isVoice) {
                                   return (
                                     <VoiceMessageBubble
                                       msg={msg}
@@ -7033,7 +7496,7 @@ ${recentHistory}
 
               {/* 用户表情包面板 */}
               {showUserStickerPanel && (
-                <div className="absolute bottom-16 left-4 right-4 h-48 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl p-4 z-[100] overflow-y-auto custom-scrollbar border border-white animate-in slide-in-from-bottom-2">
+                <div className="absolute bottom-16 left-4 right-4 h-48 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl p-4 z-[110] overflow-y-auto custom-scrollbar border border-white animate-in slide-in-from-bottom-2">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-[10px] font-bold uppercase text-gray-400">
                       我的表情
@@ -7169,6 +7632,16 @@ ${recentHistory}
                           </div>
                           <span className="text-[10px]">转账</span>
                         </button>
+
+                        <button
+                          onClick={handleOpenLocationModal}
+                          className="flex flex-col items-center gap-1 text-gray-600 hover:text-black min-w-[40px]"
+                        >
+                          <div className="p-2 bg-gray-100 rounded-full">
+                            <MapPin size={20} />
+                          </div>
+                          <span className="text-[10px]">位置</span>
+                        </button>
                       </div>
                     )}
                     {loading.chat ? (
@@ -7211,95 +7684,93 @@ ${recentHistory}
                         </div>
 
                         <div className="relative flex-grow">
-              <textarea
-                id="chat-input"
-                autoComplete="off"
-                value={chatInput}
-                onChange={(e) => {
-                  setChatInput(e.target.value);
-                  e.target.style.height = 'auto';
-                  e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    if (chatInput.trim()) {
-                      handleUserSend(chatInput, isVoiceMode ? "voice" : "text");
-                      setTimeout(() => {
-                        const el = document.getElementById('chat-input');
-                        if(el) el.style.height = 'auto';
-                      }, 0);
-                    }
-                  }
-                }}
-                placeholder={
-                  isVoiceMode 
-                    ? "语音..." 
-                    : (chatStyle === "novel" && !chatInput 
-                        ? "点击右侧按钮可AI代写..." 
-                        : "发消息...")
-                }
-                rows={1}
-                // 注意：这里加了 w-full 和 pr-10 (右侧留白给按钮)，去掉了 flex-grow (因为父容器已经是 flex-grow)
-                className={`w-full min-w-0 border rounded-2xl py-2.5 pl-4 pr-10 text-sm focus:outline-none transition-all font-sans shadow-inner resize-none custom-scrollbar ${
-                  isVoiceMode
-                    ? "bg-[#7A2A3A]/10 border-[#7A2A3A]/30 text-[#7A2A3A] placeholder:text-[#7A2A3A]/50"
-                    : "bg-white/60 border-gray-200 text-gray-800 focus:border-gray-400"
-                }`}
-                style={{ height: 'auto', minHeight: '42px', maxHeight: '120px' }}
-              />
+                          <textarea
+                            id="chat-input"
+                            autoComplete="off"
+                            value={chatInput}
+                            onChange={(e) => {
+                              setChatInput(e.target.value);
+                              e.target.style.height = "auto";
+                              e.target.style.height =
+                                Math.min(e.target.scrollHeight, 120) + "px";
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" && !e.shiftKey) {
+                                e.preventDefault();
+                                if (chatInput.trim()) {
+                                  handleUserSend(
+                                    chatInput,
+                                    isVoiceMode ? "voice" : "text"
+                                  );
+                                  setTimeout(() => {
+                                    const el =
+                                      document.getElementById("chat-input");
+                                    if (el) el.style.height = "auto";
+                                  }, 0);
+                                }
+                              }
+                            }}
+                            placeholder={
+                              isVoiceMode
+                                ? "语音..."
+                                : chatStyle === "novel" && !chatInput
+                                ? "点击右侧按钮可AI代写..."
+                                : "发消息..."
+                            }
+                            rows={1}
+                            // 注意：这里加了 w-full 和 pr-10 (右侧留白给按钮)，去掉了 flex-grow (因为父容器已经是 flex-grow)
+                            className={`w-full min-w-0 border rounded-2xl py-2.5 pl-4 pr-10 text-sm focus:outline-none transition-all font-sans shadow-inner resize-none custom-scrollbar ${
+                              isVoiceMode
+                                ? "bg-[#7A2A3A]/10 border-[#7A2A3A]/30 text-[#7A2A3A] placeholder:text-[#7A2A3A]/50"
+                                : "bg-white/60 border-gray-200 text-gray-800 focus:border-gray-400"
+                            }`}
+                            style={{
+                              height: "auto",
+                              minHeight: "42px",
+                              maxHeight: "120px",
+                            }}
+                          />
 
-              {chatStyle === "novel" && !isVoiceMode && (
-                <button
-                  onClick={handleGhostwrite}
-                  disabled={isGhostwriting}
-                  className={`
-                    absolute right-2 top-1/2 -translate-y-1/2 -mt-[3px] p-1.5 rounded-full transition-all z-10
-                    ${isGhostwriting 
-                      ? "text-red-900 red-50/50 cursor-wait" // 加载时样式
-                      : "text-red-900 hover:text-red-900 hover: bg-red-50/50 active:scale-90" // 平时样式
-                    }
-                  `}
-                  title="AI 代写/扩写"
-                >
-                  {isGhostwriting ? (
-                    /* 加载时：显示循环图标 (RefreshCw) 并旋转 */
-                    <RefreshCw size={16} strokeWidth={1} className="animate-spin" />
-                  ) : (
-                    /* 平时：显示魔棒图标 */
-                    <WandSparkles size={16} strokeWidth={1} />
-                  )}
-                </button>
-              )}
-            </div>
+                          {chatStyle === "novel" && !isVoiceMode && (
+                            <GhostButton
+                              loading={isGhostwriting}
+                              onClick={handleGhostwrite}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 -mt-[3px]"
+                            />
+                          )}
+                        </div>
 
-            {/* 右侧：按钮组 (只保留发送/触发按钮) */}
-            <div className="flex gap-1 shrink-0 items-end pb-1">
-              {chatInput.trim().length > 0 ? (
-                /* 发送按钮 */
-                <button
-                  onClick={() => {
-                    handleUserSend(chatInput, isVoiceMode ? "voice" : "text");
-                    setTimeout(() => {
-                        const el = document.getElementById('chat-input');
-                        if(el) el.style.height = 'auto';
-                      }, 0);
-                  }}
-                  className="p-2 md:p-2.5 bg-[#2C2C2C] text-white rounded-full hover:bg-black transition-all shadow-md animate-in zoom-in-50"
-                >
-                  <Send size={18} strokeWidth={1.5} />
-                </button>
-              ) : (
-                /* 触发回复按钮 */
-                <button
-                  onClick={() => triggerAIResponse()}
-                  className="p-2 md:p-2.5 bg-[#2C2C2C] text-white rounded-full hover:bg-gray-200 border border-gray-200 transition-all active:scale-95"
-                  title="让对方回复"
-                >
-                  <MessageSquare size={18} strokeWidth={1.5} />
-                </button>
-              )}
-            </div>
+                        {/* 右侧：按钮组 (只保留发送/触发按钮) */}
+                        <div className="flex gap-1 shrink-0 items-end pb-1">
+                          {chatInput.trim().length > 0 ? (
+                            /* 发送按钮 */
+                            <button
+                              onClick={() => {
+                                handleUserSend(
+                                  chatInput,
+                                  isVoiceMode ? "voice" : "text"
+                                );
+                                setTimeout(() => {
+                                  const el =
+                                    document.getElementById("chat-input");
+                                  if (el) el.style.height = "auto";
+                                }, 0);
+                              }}
+                              className="p-2 md:p-2.5 bg-[#2C2C2C] text-white rounded-full hover:bg-black transition-all shadow-md animate-in zoom-in-50"
+                            >
+                              <Send size={18} strokeWidth={1.5} />
+                            </button>
+                          ) : (
+                            /* 触发回复按钮 */
+                            <button
+                              onClick={() => triggerAIResponse()}
+                              className="p-2 md:p-2.5 bg-[#2C2C2C] text-white rounded-full hover:bg-gray-200 border border-gray-200 transition-all active:scale-95"
+                              title="让对方回复"
+                            >
+                              <MessageSquare size={18} strokeWidth={1.5} />
+                            </button>
+                          )}
+                        </div>
                       </>
                     )}
                   </div>
@@ -8788,6 +9259,88 @@ ${recentHistory}
           config={dialogConfig}
           onClose={() => setDialogConfig(null)}
         />
+      )}
+      {/* [新增] 位置发送弹窗 */}
+      {showLocationModal && (
+        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl space-y-4">
+            <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
+              <MapPin size={20} className="text-[#7A2A3A]" />
+              发送位置
+            </h3>
+
+            {/* 输入区域 */}
+            <div className="space-y-3">
+              <div className="relative">
+                {" "}
+                {/* 加 relative 为了放按钮 */}
+                <label className="block text-xs text-gray-500 mb-1">
+                  位置名称
+                </label>
+                <input
+                  id="loc-name-input"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 pr-9 text-sm focus:border-[#7A2A3A] focus:outline-none transition-colors" // pr-9 留出按钮位置
+                  placeholder="可输入提示词如“法餐厅”并点击右侧按钮)"
+                />
+                {/* [复用] 位置弹窗里的代写按钮 */}
+                <GhostButton
+                  loading={isLocGenerating} // 需在 App 里定义此状态
+                  className="absolute right-2 bottom-2" // 定位在输入框右下角
+                  onClick={() => {
+                    const nameInput = document.getElementById("loc-name-input");
+                    const addrInput = document.getElementById("loc-addr-input");
+                    const draft = nameInput.value;
+
+                    // 调用位置代写逻辑
+                    handleGhostwriteLocation(
+                      draft,
+                      (n) => (nameInput.value = n),
+                      (a) => (addrInput.value = a),
+                      setIsLocGenerating // 传入设置加载状态的函数
+                    );
+                  }}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">
+                  详细地址
+                </label>
+                <input
+                  id="loc-addr-input"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm focus:border-[#7A2A3A] focus:outline-none transition-colors"
+                  placeholder="自动生成或手动输入..."
+                />
+              </div>
+            </div>
+
+            {/* 底部按钮 */}
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={() => setShowLocationModal(false)}
+                className="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={() => {
+                  const name = document.getElementById("loc-name-input").value;
+                  const addr = document.getElementById("loc-addr-input").value;
+                  if (!name) return alert("请输入位置名称");
+
+                  handleUserSend(name, "location", null, {
+                    name,
+                    address: addr,
+                  });
+                  setShowLocationModal(false);
+                }}
+                className="flex-1 py-2.5 bg-[#7A2A3A] text-white rounded-xl text-sm font-medium hover:bg-[#963448] shadow-md active:scale-95 transition-all"
+              >
+                发送
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
