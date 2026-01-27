@@ -451,7 +451,7 @@ Existing Char Facts: {{CHAR_FACTS}}
 }`,
 };
 
-const STYLE_PROMPTS = {
+export const STYLE_PROMPTS = {
   brackets:
     "Script/RP Style. Describe actions/expressions inside ( ). Dialogue outside. Be interactive.",
 
@@ -470,7 +470,7 @@ const STYLE_PROMPTS = {
   6. Output Structure: This must be a unified, cohesive narrative stream. Output the entire response as **ONE SINGLE, CONTINUOUS** message (IMPORTANT). At least 500 Chinese characters.`,
 };
 
-const CHARACTER_CREATION_PROMPT = `# Role: 专家级角色架构师 & 提示词工程师 (Expert Character Architect)
+export const CHARACTER_CREATION_PROMPT = `# Role: 专家级角色架构师 & 提示词工程师 (Expert Character Architect)
 
 ## Core Objective (核心目标)
 你的任务是将用户的简短描述（User Input），扩充为一份**高精度、高密度、逻辑闭环**的JSON格式角色卡。
