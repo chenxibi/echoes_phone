@@ -241,6 +241,33 @@ const GLOBAL_STYLES = `
 `;
 
 /* --- UTILS --- */
+
+// 解析批量链接文本
+const parseStickerLinks = (text) => {
+  if (!text) return [];
+  return text
+    .split("\n")
+    .map((line) => {
+      // 兼容中文冒号和英文冒号
+      const parts = line.split(/[:：]/);
+      if (parts.length >= 2) {
+        const desc = parts[0].trim();
+        // 后面可能还有冒号（如 https://），所以合并剩余部分
+        const url = parts.slice(1).join(":").trim();
+        if (desc && url.startsWith("http")) {
+          return {
+            id: `link_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+            url: url,
+            desc: desc,
+            enabled: true,
+          };
+        }
+      }
+      return null;
+    })
+    .filter((item) => item !== null);
+};
+
 const safeJSONParse = (text) => {
   if (!text) return null;
 
@@ -286,35 +313,37 @@ const safeJSONParse = (text) => {
   }
 };
 
-// Image Compression Utility for Mobile Stability
 const compressImage = (file, maxWidth = 500, quality = 0.7) => {
   return new Promise((resolve, reject) => {
+    // 如果是 GIF，直接返回原始 DataURL，不经过 Canvas 压缩以保留动图
+    if (file.type === "image/gif") {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = (e) => reject(e);
+      reader.readAsDataURL(file);
+      return;
+    }
+
     const reader = new FileReader();
     reader.readAsDataURL(file);
-    reader.onload = (event) => {
+    reader.onload = (e) => {
       const img = new Image();
-      img.src = event.target.result;
+      img.src = e.target.result;
       img.onload = () => {
         const canvas = document.createElement("canvas");
         let width = img.width;
         let height = img.height;
-
         if (width > maxWidth) {
-          height *= maxWidth / width;
+          height = (height * maxWidth) / width;
           width = maxWidth;
         }
-
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, width, height);
-
-        // Convert to base64 with compression
-        resolve(canvas.toDataURL("image/jpeg", quality));
+        resolve(canvas.toDataURL("image/webp", quality));
       };
-      img.onerror = (e) => reject(e);
     };
-    reader.onerror = (e) => reject(e);
   });
 };
 
@@ -887,6 +916,7 @@ const SettingsPanel = ({
   addStickerGroup,
   deleteStickerGroup,
   renameStickerGroup,
+  handleBulkImport,
 
   // --- 字体参数 ---
   fontName, // 当前字体文件名
@@ -1235,10 +1265,34 @@ const SettingsPanel = ({
 
                 {/* 表情包管理 (Inside SettingsPanel) */}
                 <div>
-                  <div className="flex justify-between items-center mb-3">
-                    <label className="text-[10px] font-bold uppercase text-gray-500">
+                  <div className="flex items-center gap-2 mb-3">
+                    <label className="text-[10px] font-bold uppercase text-gray-500 mr-auto">
                       角色表情包库
                     </label>
+                    {/* Add Single Button */}
+                    {/* 上传按钮 */}
+                    <button
+                      onClick={() => stickerInputRef.current.click()}
+                      className="flex items-center justify-center gap-1 p-0 text-[10px] text-gray-400 hover:text-[#7A2A3A] transition-colors"
+                      title="上传本地图片"
+                    >
+                      <Plus size={10} />
+                      <span>上传</span>
+                    </button>
+
+                    {/* 批量导入按钮 */}
+                    <button
+                      onClick={() => {
+                        const input = prompt("请输入表情包链接进行导入");
+                        if (input) handleBulkImport(input, "char");
+                      }}
+                      className="flex items-center justify-center gap-1 pl-1 pr-3 text-[10px] text-gray-400 hover:text-blue-500 transition-colors"
+                      title="链接一键导入"
+                    >
+                      <Download size={10} />
+                      <span>批量</span>
+                    </button>
+
                     <button
                       onClick={() => setStickersEnabled(!stickersEnabled)}
                       className={`w-8 h-4 rounded-full relative transition-colors ${
@@ -1263,6 +1317,7 @@ const SettingsPanel = ({
                           stickers={stickers}
                           toggleStickerGroup={toggleStickerGroup}
                           setEditingSticker={setEditingSticker}
+                          handleBulkImport={handleBulkImport}
                           deleteStickerGroup={deleteStickerGroup}
                           renameStickerGroup={renameStickerGroup}
                           handleStickerUpload={handleStickerUpload}
@@ -1270,21 +1325,12 @@ const SettingsPanel = ({
                       ))}
 
                       {/* 上传区域 */}
-                      <div
-                        className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-[#7A2A3A] hover:bg-white/50 transition-colors h-24 w-full"
-                        onClick={() => stickerInputRef.current.click()}
-                      >
-                        <Plus size={16} className="text-gray-400" />
-                        <span className="text-[9px] text-gray-400 mt-1">
-                          上传新表情 (默认进入自定义组)
-                        </span>
-                        <input
-                          type="file"
-                          ref={stickerInputRef}
-                          className="hidden"
-                          onChange={(e) => handleStickerUpload(e, "char")}
-                        />
-                      </div>
+                      <input
+                        type="file"
+                        ref={stickerInputRef}
+                        className="hidden"
+                        onChange={(e) => handleStickerUpload(e, "char")}
+                      />
                     </div>
                   )}
                 </div>
@@ -1969,6 +2015,56 @@ const LocationBubble = ({ name, address }) => (
 
 /* --- MAIN COMPONENT --- */
 const App = () => {
+  const [charStickers, setCharStickers] = useStickyState(
+    DEFAULT_CHAR_STICKERS,
+    "echoes_char_stickers",
+  );
+  const [userStickers, setUserStickers] = useStickyState(
+    DEFAULT_USER_STICKERS,
+    "echoes_user_stickers",
+  );
+  // 批量导入表情包函数
+  const handleBulkImport = (
+    text,
+    type = "char",
+    targetGroup = "自定义表情",
+  ) => {
+    const lines = text.split("\n");
+    const newStickers = [];
+    const now = Date.now();
+
+    lines.forEach((line, index) => {
+      const parts = line.split(/[:：]/);
+      if (parts.length >= 2) {
+        const desc = parts[0].trim();
+        const url = parts.slice(1).join(":").trim();
+        if (desc && url.startsWith("http")) {
+          newStickers.push({
+            id: `s${now}_${index}`,
+            url: url,
+            desc: desc,
+            group: targetGroup,
+            enabled: true,
+          });
+        }
+      }
+    });
+
+    if (newStickers.length > 0) {
+      if (type === "char") {
+        setCharStickers((prev) => [...prev, ...newStickers]);
+      } else {
+        setUserStickers((prev) => [...prev, ...newStickers]);
+      }
+      if (typeof showToast === "function")
+        // 加上第一个参数 "success"
+        showToast("success", `已成功导入 ${newStickers.length} 个表情包`);
+    } else {
+      if (typeof showToast === "function")
+        // 把 "error" 挪到前面
+        showToast("error", "格式错误 (应为 描述: 链接)");
+    }
+  };
   // -- PERSISTENT STATE --
   const [apiConfig, setApiConfig] = useStickyState(
     { useCustom: true, baseUrl: "", key: "", model: "" },
@@ -2126,15 +2222,7 @@ const App = () => {
     "dialogue",
     "echoes_chat_style",
   );
-  const [charStickers, setCharStickers] = useStickyState(
-    DEFAULT_CHAR_STICKERS,
-    "echoes_char_stickers",
-  );
-  // 2. 用户表情包库
-  const [userStickers, setUserStickers] = useStickyState(
-    DEFAULT_USER_STICKERS,
-    "echoes_user_stickers",
-  );
+
   const [stickersEnabled, setStickersEnabled] = useStickyState(
     true,
     "echoes_stickers_enabled",
@@ -6471,30 +6559,48 @@ ${recentHistory}
               {showUserStickerPanel && (
                 <div className="absolute bottom-16 left-4 right-4 h-48 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl p-4 z-[110] overflow-y-auto custom-scrollbar border border-white animate-in slide-in-from-bottom-2">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-[10px] font-bold uppercase text-gray-400">
+                    <span className="text-[10px] font-bold uppercase text-gray-500">
                       我的表情
                     </span>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() =>
-                          setIsUserStickerEditMode(!isUserStickerEditMode)
-                        }
-                        className={`text-[10px] px-2 py-1 rounded-full transition-colors ${
-                          isUserStickerEditMode
-                            ? "bg-red-50 text-red-500 font-bold"
-                            : "text-gray-400 hover:text-gray-600"
-                        }`}
-                      >
-                        {isUserStickerEditMode ? "完成" : "编辑"}
-                      </button>
-                      <label className="text-[10px] bg-black text-white px-2 py-1 rounded-full cursor-pointer hover:bg-gray-800">
-                        + 上传
-                        <input
-                          type="file"
-                          className="hidden"
-                          onChange={(e) => handleStickerUpload(e, "user")}
-                        />
-                      </label>
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex items-center gap-2">
+                        {/* 编辑按钮 */}
+                        <button
+                          onClick={() =>
+                            setIsUserStickerEditMode(!isUserStickerEditMode)
+                          }
+                          // 这里我建议把 px-1 改成 px-2，这样跟后面两个按钮大小更一致，你可以看看效果
+                          className={`text-[10px] px-2 py-1 rounded-full transition-colors ${
+                            isUserStickerEditMode
+                              ? "bg-red-50 text-red-500 font-bold"
+                              : "text-gray-600 hover:text-gray-400"
+                          }`}
+                        >
+                          {isUserStickerEditMode ? "完成" : "编辑"}
+                        </button>
+
+                        {/* 上传按钮 - 改为透明灰色风格 */}
+                        <label className="text-[10px] text-gray-600 hover:text-gray-400 px-2 py-1 rounded-full cursor-pointer transition-colors flex items-center gap-1">
+                          <Plus size={10} /> 上传
+                          <input
+                            type="file"
+                            className="hidden"
+                            onChange={(e) => handleStickerUpload(e, "user")}
+                          />
+                        </label>
+
+                        {/* 批量按钮 - 改为透明灰色风格 */}
+                        <button
+                          onClick={() => {
+                            const input = prompt("请输入链接进行批量导入");
+                            if (input) handleBulkImport(input, "user", "我的");
+                          }}
+                          className="text-[10px] text-gray-600 hover:text-gray-400 px-2 py-1 rounded-full cursor-pointer transition-colors flex items-center gap-1"
+                        >
+                          {/* 注意：你原代码这里用的是 Download 图标，我保留了，如果需要 Link 图标请自行替换 */}
+                          <Download size={10} /> 批量
+                        </button>
+                      </div>
                     </div>
                   </div>
                   <div className="grid grid-cols-5 gap-2">
@@ -6793,6 +6899,7 @@ ${recentHistory}
                 setEditingSticker={setEditingSticker}
                 stickerInputRef={stickerInputRef}
                 handleStickerUpload={handleStickerUpload}
+                handleBulkImport={handleBulkImport}
                 // 指令参数
                 prompts={prompts}
                 // 传递全屏参数
