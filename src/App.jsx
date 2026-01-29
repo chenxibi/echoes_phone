@@ -113,9 +113,10 @@ const getImageDesc = (content) => content.replace(IMG_TAG_START, "");
 /* --- STYLES --- */
 const GLOBAL_STYLES = `
 
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@200..900&display=swap');
   /* 1. 定义全局字体变量 */
   :root {
-    --app-font: 'Inter', sans-serif; /* 这里是默认字体 */
+    --app-font: 'Noto Serif SC', serif; /* 这里是默认字体 */
   }
 
   /* 2. 强制应用到所有文字元素 */
@@ -672,7 +673,7 @@ const CollapsibleThought = ({ text, label = "查看心声" }) => {
 
       {isOpen && (
         <div className="bg-white/40 p-3 rounded-lg border-l-2 border-[#7A2A3A] animate-in slide-in-from-top-2">
-          <p className="text-xs font-serif italic text-gray-600 leading-relaxed">
+          <p className="text-xs italic text-gray-600 leading-relaxed">
             "{text}"
           </p>
         </div>
@@ -750,7 +751,7 @@ const MinimalCard = ({ item, type = "fact", onDelete, onEdit }) => {
           }`}
         />
         <p
-          className={`font-serif italic ${
+          className={`italic ${
             isCompleted ? "text-gray-400" : "text-gray-600"
           }`}
         >
@@ -1702,7 +1703,7 @@ const StatusPanel = ({ statusHistory, onClose, onDelete }) => (
                 <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-blue-400 mb-1">
                   <Heart size={10} /> 心声
                 </div>
-                <div className="text-xs text-blue-900 bg-blue-50/50 p-2 rounded-lg font-serif italic">
+                <div className="text-xs text-blue-900 bg-blue-50/50 p-2 rounded-lg italic">
                   "{entry.status.thought || "..."}"
                 </div>
               </div>
@@ -1710,7 +1711,7 @@ const StatusPanel = ({ statusHistory, onClose, onDelete }) => (
                 <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-red-400 mb-1">
                   <Ghost size={10} /> 坏心思
                 </div>
-                <div className="text-xs text-red-900 bg-red-50/50 p-2 rounded-lg font-serif italic">
+                <div className="text-xs text-red-900 bg-red-50/50 p-2 rounded-lg italic">
                   "{entry.status.desire || "..."}"
                 </div>
               </div>
@@ -2117,7 +2118,7 @@ const App = () => {
 
     // 3. 更新界面状态
     setFontName("自定义字体");
-    showToast("success", "网络字体已应用");
+    showToast("success", "字体已应用（移动端加载可能延迟）");
   };
 
   // 恢复默认
@@ -3478,7 +3479,7 @@ const App = () => {
     setSmartWatchLogs([]);
     setForumData({ name: "本地生活圈", posts: [], isInitialized: false });
     setForumSettings({
-      userNick: "匿名用户",
+      userNick: "User本U",
       smurfNick: "不是小号",
       charNick: "匿名用户",
     });
@@ -4532,7 +4533,7 @@ Requirements:
 
     const aiPromptMode = isCharThread || mode === "Manual" ? "Manual" : "Auto";
     const currentUserName = userName || "User";
-    const userNick = forumSettings.userNick || userName || "匿名用户";
+    const userNick = forumSettings.userNick || userName || "User本U";
 
     const charNick = forumSettings.charNick || persona.name || "匿名用户";
 
@@ -5172,7 +5173,7 @@ ${recentHistory}
   /* --- MAIN RENDER --- */
   if (isLocked) {
     return (
-      <div className="h-screen w-full bg-[#F5F5F7] flex flex-col items-center justify-start pt-32 p-8 font-serif text-[#2C2C2C] relative overflow-hidden">
+      <div className="h-screen w-full bg-[#F5F5F7] flex flex-col items-center justify-start pt-32 p-8 text-[#2C2C2C] relative overflow-hidden">
         <div className="absolute -top-20 -left-20 w-96 h-96 bg-blue-50/50 rounded-full blur-3xl animate-pulse delay-1000 pointer-events-none"></div>
         <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-gray-100/60 rounded-full blur-3xl animate-pulse pointer-events-none"></div>
         {notification && (
@@ -5230,9 +5231,9 @@ ${recentHistory}
           </div>
         )}
 
-        <div className="max-w-md w-full space-y-8 z-10 flex flex-col items-center h-auto">
+        <div className="max-w-md w-full space-y-8 z-10 flex flex-col items-center h-auto pb-10">
           <div className="text-center flex flex-col items-center space-y-2 mb-4">
-            <h1 className="text-7xl font-extralight text-[#1a1a1a] lock-time mb-3">
+            <h1 className="text-7xl font-serif text-[#1a1a1a] lock-time mb-3">
               {formatTime(getCurrentTimeObj())}
             </h1>
             <p className="text-sm font-sans uppercase tracking-widest text-gray-400">
@@ -5382,7 +5383,7 @@ ${recentHistory}
           </div>
           <button
             onClick={() => setShowLockSettings(true)}
-            className="text-gray-400 hover:text-[#2C2C2C] transition-colors p-3 rounded-full hover:bg-gray-100/50"
+            className="text-gray-400 hover:text-[#2C2C2C] transition-colors p-3 rounded-full hover:bg-gray-100/50 pb-5"
           >
             <SettingsIcon size={18} strokeWidth={1.5} />
           </button>
@@ -5587,7 +5588,7 @@ ${recentHistory}
                   {avatar ? (
                     <img src={avatar} className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-4xl text-gray-300 font-serif italic">
+                    <span className="text-4xl text-gray-300 italic">
                       {persona.name[0]}
                     </span>
                   )}
@@ -5648,7 +5649,7 @@ ${recentHistory}
                   /* 2. 查看模式 (View Mode) - 已修改为显示 Raw Prompt */
                   <>
                     <div className="text-center">
-                      <h2 className="text-3xl font-serif text-gray-900">
+                      <h2 className="text-3xl text-gray-900">
                         {persona.name}
                       </h2>
                       {/* 仅当有英文名时显示 */}
@@ -5678,7 +5679,7 @@ ${recentHistory}
                         onClick={() => setShowEditPersona(true)} // 点击卡片也能直接编辑
                         title="点击编辑"
                       >
-                        <p className="font-mono text-[10px] leading-relaxed text-gray-600 whitespace-pre-wrap">
+                        <p className="text-[10px] leading-relaxed text-gray-600 whitespace-pre-wrap">
                           {inputKey ||
                             "暂无设定数据... 请点击编辑手动输入或上传 JSON"}
                         </p>
@@ -6515,7 +6516,7 @@ ${recentHistory}
                                 size={10}
                                 className="mt-0.5 text-blue-400 shrink-0"
                               />
-                              <span className="text-[10px] text-blue-800 font-serif italic leading-tight">
+                              <span className="text-[10px] text-blue-800 italic leading-tight">
                                 "{msg.status.thought}"
                               </span>
                             </div>
@@ -6524,7 +6525,7 @@ ${recentHistory}
                                 size={10}
                                 className="mt-0.5 text-red-400 shrink-0"
                               />
-                              <span className="text-[10px] text-red-800 font-serif italic leading-tight">
+                              <span className="text-[10px] text-red-800 italic leading-tight">
                                 "{msg.status.desire}"
                               </span>
                             </div>
@@ -7069,7 +7070,7 @@ ${recentHistory}
                         />
                       </div>
                       <div
-                        className="font-serif text-sm leading-loose text-gray-700 whitespace-pre-line diary-content"
+                        className="text-sm leading-loose text-gray-700 whitespace-pre-line diary-content"
                         dangerouslySetInnerHTML={{ __html: d.content }}
                       />
                       {d.quote && (
@@ -7078,7 +7079,7 @@ ${recentHistory}
                             size={12}
                             className="text-gray-400 flex-shrink-0 mt-0.5"
                           />
-                          <p className="font-serif italic text-gray-500 text-xs">
+                          <p className="italic text-gray-500 text-xs">
                             {d.quote}
                           </p>
                         </div>
@@ -8191,14 +8192,14 @@ ${recentHistory}
               </div>
               {music.length > 0 ? (
                 <div className="text-center w-full px-6">
-                  <h2 className="text-2xl font-serif truncate text-gray-900">
+                  <h2 className="text-2xl truncate text-gray-900">
                     {music[0].title}
                   </h2>
                   <p className="text-xs uppercase font-bold text-gray-400 mb-6 mt-1">
                     {music[0].artist}
                   </p>
                   <div className="glass-card p-4 rounded-xl mb-4 border-none bg-white/40">
-                    <p className="font-serif italic text-gray-600 text-sm">
+                    <p className="italic text-gray-600 text-sm">
                       "{music[0].lyric}"
                     </p>
                   </div>
@@ -8259,7 +8260,7 @@ ${recentHistory}
                             0{idx + 1}
                           </span>
                           <div className="flex flex-col overflow-hidden">
-                            <span className="font-serif text-sm text-gray-800 truncate">
+                            <span className="text-sm text-gray-800 truncate">
                               {track.title}
                             </span>
                             <span className="text-[9px] font-sans uppercase text-gray-400 truncate">
@@ -8287,7 +8288,7 @@ ${recentHistory}
                       </div>
                       {expandedMusicHistory === idx && (
                         <div className="mt-3 pt-3 border-t border-gray-100 animate-in slide-in-from-top-2">
-                          <p className="font-serif italic text-gray-600 text-xs mb-2">
+                          <p className="italic text-gray-600 text-xs mb-2">
                             "{track.lyric}"
                           </p>
                           {track.thought && (
