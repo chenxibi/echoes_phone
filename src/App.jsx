@@ -1,6 +1,21 @@
 import React, { useState, useEffect, useRef } from "react";
 import { jsonrepair } from "jsonrepair";
 import { PRESET_LOCATION_IMAGES } from "./constants/assets";
+import Forum from "./components/Forum";
+import SettingsPanel from "./components/Settings";
+import WorldBook from "./components/WorldBook";
+import {
+  showToast,
+  initNotification,
+  getCurrentTimeObj,
+  getContextString,
+  getWorldInfoString,
+  getRecentTurns,
+  getStickerInstruction,
+} from "./utils/helpers";
+import AppWindow from "./components/AppWindow";
+import PersonalizationPanel from "./components/Personalization";
+import "./index.css";
 import {
   DEFAULT_CHAR_STICKERS,
   DEFAULT_USER_STICKERS,
@@ -15,10 +30,12 @@ import {
   Wifi,
   Battery,
   Signal,
+  Palette,
   ChevronLeft,
   Send,
   Settings as SettingsIcon,
   Play,
+  Wand,
   SkipForward,
   Banknote,
   RefreshCw,
@@ -110,135 +127,17 @@ const isImageMsg = (content) => content && content.startsWith(IMG_TAG_START);
 
 const getImageDesc = (content) => content.replace(IMG_TAG_START, "");
 
-/* --- STYLES --- */
-const GLOBAL_STYLES = `
-
-  /* 1. 定义全局字体变量 */
-  :root {
-    --app-font: 'Inter', sans-serif; /* 这里是默认字体 */
-  }
-
-  /* 2. 强制应用到所有文字元素 */
-  body, button, input, textarea, select, span, div {
-    font-family: var(--app-font) !important;
-  }
-
-  .diary-content p { margin-bottom: 1em; }
-  .small-note { font-size: 0.8em; color: #888; font-style: italic; display: inline-block; transform: rotate(-1deg); margin: 0 4px; }
-  .wavy-underline { text-decoration: underline wavy #7A2A3A; text-decoration-thickness: 1px; }
-  .highlighted { background-color: rgba(122, 42, 58, 0.1); color: #7A2A3A; padding: 0 4px; border-radius: 2px; }
-  .crossed-out { text-decoration: line-through; opacity: 0.6; }
-  .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-  .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
-  
-  @keyframes slideDown {
-    from { transform: translateY(-100%); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
-  .toast-enter { animation: slideDown 0.3s ease-out forwards; }
-  
-  @keyframes pulse-subtle {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
-  }
-  .typing-dot { animation: pulse-subtle 1s infinite; }
-
-  /* Frosted Glass Utilities */
-  .glass-panel {
-    background: rgba(255, 255, 255, 0.65);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
-  }
-  
-  .glass-card {
-    background: rgba(255, 255, 255, 0.5);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.6);
-  }
-
-  .lock-time {
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.02em;
-  }
-
-  /* ...原有样式... */
-
-/* Smart Watch Map Styles */
-.map-line {
-  position: absolute;
-  left: 50%;
-  top: 20px;
-  bottom: 20px;
-  width: 1px;
-  background-color: #333;
-  transform: translateX(-50%);
-  z-index: 0;
-}
-
-.map-node-container {
-  position: absolute;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.map-node-dot {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: white;
-  border: 2px solid #1a1a1a;
-  z-index: 2;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.map-node-dot.active {
-  background: #22c55e; /* Green-500 */
-  box-shadow: 0 0 10px #22c55e;
-  transform: scale(1.2);
-}
-
-.map-card {
-  position: absolute;
-  width: 110px;
-  background: #e5e7eb; /* Gray-200 */
-  padding: 8px;
-  font-family: serif;
-  font-size: 10px;
-  color: #1a1a1a;
-  z-index: 1;
-  transition: all 0.3s;
-  cursor: pointer;
-}
-
-.map-card:hover {
-  background: #d1d5db;
-  z-index: 10;
-}
-
-.map-card img {
-  width: 100%;
-  height: 60px;
-  object-fit: cover;
-  margin-bottom: 4px;
-  opacity: 0.8;
-}
-
-/* Connectors */
-.map-connector {
-  position: absolute;
-  height: 1px;
-  background: #333;
-  top: 50%;
-  z-index: 0;
-}
-`;
+const APP_LIST = [
+  { id: "forum", label: "生活圈", icon: Hash },
+  { id: "smartwatch", label: "智能家", icon: ScanEye },
+  { id: "browser", label: "浏览器", icon: Globe },
+  { id: "journal", label: "日记", icon: Book },
+  { id: "traces", label: "生活痕迹", icon: Receipt },
+  { id: "music", label: "共鸣旋律", icon: Disc3 },
+  { id: "worldbook", label: "世界书", icon: BookOpen },
+  { id: "personalization", label: "个性化", icon: Wand },
+  { id: "settings", label: "系统设置", icon: SlidersHorizontal },
+];
 
 /* --- UTILS --- */
 
@@ -394,60 +293,6 @@ const replacePlaceholders = (text, charName, userName) => {
   return text
     .replace(/\{\{char\}\}/gi, charName) // gi 表示全局+忽略大小写
     .replace(/\{\{user\}\}/gi, userName);
-};
-
-// --- 辅助函数：根据时间生成话题引导 ---
-const getTimeBasedGuidance = (dateObj) => {
-  const hour = dateObj.getHours();
-  const month = dateObj.getMonth() + 1; // 0-11 转 1-12
-
-  let timeVibe = "";
-  let seasonalVibe = "";
-
-  // 1. 时间段判断
-  if (hour >= 23 || hour < 5) {
-    // 深夜：EMO、成人话题、怪谈、失眠
-    timeVibe =
-      "Late Night (深夜): Emo/Emotional venting, Adult topics/NSFW hints, Urban legends, Insomnia thoughts.";
-  } else if (hour >= 6 && hour < 10) {
-    // 早晨：早高峰、早八、上班打卡、早餐、起床气
-    timeVibe =
-      "Morning (早晨): Morning rush/Commute, Breakfast choices, Waking up, sleepy.";
-  } else if (hour >= 11 && hour <= 13) {
-    // 午饭点：外卖、纠结吃什么、探店、美食推荐
-    timeVibe =
-      "Lunch Time (午饭): Food delivery, 'What to eat?', Hunger, Office break.";
-  } else if (hour >= 17 && hour <= 20) {
-    // 晚饭点：做饭、聚餐、团建、下班
-    timeVibe =
-      "Dinner Time (晚饭): Cooking/Recipes, Dining out, Relaxing after work, Night life starting.";
-  } else {
-    // 其他时间：摸鱼、日常
-    timeVibe =
-      "Daily Life (日常): Slacking off at work/school, Afternoon tea, Random gossip.";
-  }
-
-  // 2. 月份/季节判断 (仅作氛围参考)
-  if (month === 12) {
-    seasonalVibe =
-      " Season: Winter/December. (Keywords: Cold, Christmas vibes, End of year).";
-  } else if (month === 1 || month === 2) {
-    seasonalVibe =
-      " Season: Winter/New Year. (Keywords: Holidays, Family, Cold).";
-  } else if (month >= 6 && month <= 8) {
-    seasonalVibe =
-      " Season: Summer. (Keywords: Heat waves, Air conditioning, Ice cream, Rainstorms).";
-  }
-
-  return `
-  Current Context: Real-world time is ${hour}:00 (${timeVibe}). ${
-    seasonalVibe ? "Season: " + seasonalVibe : ""
-  }
-  [Generation Strategy]: 
-  - You MAY generate **at most 1 thread** related to the current time/season (e.g., food, weather, mood).
-  - The REST of the threads MUST be completely **random and diverse** (e.g., gaming, gossip, hobbies, weird questions) to make the forum feel alive and unpredictable.
-  - DO NOT make every post about the time/season.
-  `;
 };
 
 /* --- API HANDLER --- */
@@ -672,7 +517,7 @@ const CollapsibleThought = ({ text, label = "查看心声" }) => {
 
       {isOpen && (
         <div className="bg-white/40 p-3 rounded-lg border-l-2 border-[#7A2A3A] animate-in slide-in-from-top-2">
-          <p className="text-xs font-serif italic text-gray-600 leading-relaxed">
+          <p className="text-xs italic text-gray-600 leading-relaxed">
             "{text}"
           </p>
         </div>
@@ -750,7 +595,7 @@ const MinimalCard = ({ item, type = "fact", onDelete, onEdit }) => {
           }`}
         />
         <p
-          className={`font-serif italic ${
+          className={`italic ${
             isCompleted ? "text-gray-400" : "text-gray-600"
           }`}
         >
@@ -860,622 +705,6 @@ const toggleFullScreen = () => {
     }
   }
 };
-
-/* --- SettingsPanel Component --- */
-const SettingsPanel = ({
-  // --- 连接配置参数 ---
-  apiConfig,
-  setApiConfig,
-  connectionStatus,
-
-  isFetchingModels,
-  fetchModels,
-  availableModels,
-  testConnection,
-  close,
-
-  // --- 上下文参数 ---
-  contextLimit,
-  setContextLimit,
-
-  // --- 长记忆参数 ---
-  memoryConfig,
-  setMemoryConfig,
-  longMemory,
-  setLongMemory,
-  triggerSummary,
-  isSummarizing,
-
-  // --- 聊天设置参数 ---
-  chatStyle,
-  setChatStyle,
-  interactionMode,
-  setInteractionMode,
-  stickersEnabled,
-  setStickersEnabled,
-  getGroups,
-  toggleStickerGroup,
-  stickers,
-  setStickers,
-  stickerInputRef,
-  handleStickerUpload,
-  setEditingSticker,
-
-  // --- 指令参数 ---
-  prompts,
-  setPrompts,
-
-  // 接收全屏参数
-  isFullscreen,
-  toggleFullScreen,
-
-  // --- 数据备份参数 ---
-  onExportChat,
-  onImportChat,
-
-  addStickerGroup,
-  deleteStickerGroup,
-  renameStickerGroup,
-  handleBulkImport,
-
-  // --- 字体参数 ---
-  fontName, // 当前字体文件名
-  handleResetFont, // 恢复默认函数
-  handleFontUrlSubmit,
-  inputUrl,
-  setInputUrl,
-
-  simpleMode = false,
-}) => (
-  <div className="flex flex-col h-full">
-    <div className="space-y-10 overflow-y-auto custom-scrollbar flex-grow px-1 pb-10">
-      {/* ---------------------------------------------------------
-          连接配置
-         --------------------------------------------------------- */}
-      <section>
-        <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4 border-b border-gray-200/50 pb-2">
-          连接配置
-        </h3>
-        <div className="glass-card p-4 rounded-xl space-y-4">
-          {/* API Base URL */}
-          <div>
-            <label className="block text-[10px] uppercase text-gray-500 mb-1.5 font-bold">
-              API 地址 (Base URL)
-            </label>
-            <input
-              type="text"
-              value={apiConfig.baseUrl}
-              onChange={(e) =>
-                setApiConfig((p) => ({ ...p, baseUrl: e.target.value }))
-              }
-              className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono outline-none focus:border-black transition-colors"
-              placeholder="https://api.openai.com/v1"
-            />
-          </div>
-
-          {/* API Key */}
-          <div>
-            <label className="block text-[10px] uppercase text-gray-500 mb-1.5 font-bold">
-              密钥 (API Key)
-            </label>
-            <input
-              type="password"
-              value={apiConfig.key}
-              onChange={(e) =>
-                setApiConfig((p) => ({ ...p, key: e.target.value }))
-              }
-              className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono outline-none focus:border-black transition-colors"
-              placeholder="sk-..."
-            />
-          </div>
-
-          {/* Model Selection */}
-          <div>
-            <label className="block text-[10px] uppercase text-gray-500 mb-1.5 font-bold">
-              模型 (Model)
-            </label>
-            <div className="flex gap-2">
-              <div className="relative flex-grow">
-                {availableModels.length > 0 ? (
-                  <select
-                    value={apiConfig.model}
-                    onChange={(e) =>
-                      setApiConfig((p) => ({ ...p, model: e.target.value }))
-                    }
-                    className="w-full p-3.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono focus:border-black outline-none transition-colors appearance-none cursor-pointer"
-                  >
-                    <option value="" disabled>
-                      选择模型...
-                    </option>
-                    {availableModels.map((m) => (
-                      <option key={m} value={m}>
-                        {m}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type="text"
-                    placeholder="gpt-4o"
-                    value={apiConfig.model}
-                    onChange={(e) =>
-                      setApiConfig((p) => ({ ...p, model: e.target.value }))
-                    }
-                    className="w-full p-3.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono focus:border-black outline-none transition-colors placeholder:text-gray-300"
-                  />
-                )}
-                {availableModels.length > 0 && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                    <ChevronDown size={14} />
-                  </div>
-                )}
-              </div>
-              <button
-                onClick={fetchModels}
-                disabled={
-                  isFetchingModels || !apiConfig.baseUrl || !apiConfig.key
-                }
-                className="px-4 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-xl transition-colors flex items-center justify-center text-gray-600 disabled:opacity-50"
-              >
-                {isFetchingModels ? (
-                  <RefreshCw size={16} className="animate-spin" />
-                ) : (
-                  <CloudFog size={18} />
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* 测试连接按钮 (紧跟连接配置) */}
-          <div className="pt-2">
-            <button
-              onClick={testConnection}
-              disabled={
-                !apiConfig.baseUrl ||
-                !apiConfig.key ||
-                connectionStatus === "testing"
-              }
-              className={`w-full py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-md ${
-                connectionStatus === "success"
-                  ? "bg-green-600 text-white"
-                  : connectionStatus === "error"
-                    ? "bg-red-600 text-white"
-                    : "bg-[#1a1a1a] text-white hover:bg-[#333]"
-              }`}
-            >
-              {connectionStatus === "testing" && (
-                <RefreshCw size={14} className="animate-spin" />
-              )}
-              {connectionStatus === "success" && <CheckCircle2 size={14} />}
-              {connectionStatus === "error" && <AlertCircle size={14} />}
-              {connectionStatus === "testing"
-                ? "连接中..."
-                : connectionStatus === "success"
-                  ? "连接成功"
-                  : connectionStatus === "error"
-                    ? "连接失败"
-                    : "测试连接并保存"}
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {!simpleMode && (
-        <>
-          {/* ---------------------------------------------------------
-          上下文记忆
-         --------------------------------------------------------- */}
-          <section>
-            <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4 border-b border-gray-200/50 pb-2">
-              上下文
-            </h3>
-            <div className="glass-card p-4 rounded-xl flex items-center justify-between">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
-                  上下文记忆 (轮数)
-                </label>
-                <p className="text-[10px] text-gray-400">
-                  按对话轮次计算，同一人连续发送的多条消息仅计为 1 轮。
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min="2"
-                  max="50"
-                  value={contextLimit}
-                  onChange={(e) => {
-                    const val = parseInt(e.target.value);
-                    if (!isNaN(val)) setContextLimit(val);
-                  }}
-                  className="w-16 p-2 bg-white border border-gray-200 rounded-lg text-center text-xs font-mono outline-none focus:border-black"
-                />
-                <span className="text-[10px] text-gray-400">轮</span>
-              </div>
-            </div>
-          </section>
-
-          {/* ---------------------------------------------------------
-          长记忆配置
-         --------------------------------------------------------- */}
-          <section>
-            <div className="flex justify-between items-center mb-4 border-b border-gray-200/50 pb-2">
-              <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                长记忆
-              </h3>
-              {/* 开关放在标题行 */}
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] text-gray-400">
-                  {memoryConfig.enabled ? "已开启" : "已关闭"}
-                </span>
-                <button
-                  onClick={() =>
-                    setMemoryConfig((p) => ({ ...p, enabled: !p.enabled }))
-                  }
-                  className={`w-8 h-4 rounded-full relative transition-colors ${
-                    memoryConfig.enabled ? "bg-green-500" : "bg-gray-300"
-                  }`}
-                >
-                  <div
-                    className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${
-                      memoryConfig.enabled ? "left-4.5" : "left-0.5"
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-
-            <div className="glass-card p-4 rounded-xl space-y-4">
-              {/* 阈值 */}
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-gray-600">
-                  自动总结阈值
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min="5"
-                    max="100"
-                    value={memoryConfig.threshold}
-                    onChange={(e) =>
-                      setMemoryConfig((p) => ({
-                        ...p,
-                        threshold: parseInt(e.target.value) || 10,
-                      }))
-                    }
-                    className="w-16 p-2 bg-white border border-gray-200 rounded-lg text-center text-xs font-mono outline-none focus:border-black"
-                  />
-                  <span className="text-[10px] text-gray-400">轮对话触发</span>
-                </div>
-              </div>
-
-              {/* 记忆文本与手动按钮 */}
-              <div>
-                <div className="flex justify-between items-end mb-2">
-                  <label className="text-[10px] uppercase font-bold text-gray-400">
-                    记忆详情 (Prompt)
-                  </label>
-                  <button
-                    onClick={triggerSummary}
-                    disabled={isSummarizing || !memoryConfig.enabled}
-                    className="flex items-center gap-1 text-[10px] text-blue-600 hover:underline disabled:opacity-50 disabled:no-underline disabled:text-gray-400 cursor-pointer"
-                  >
-                    {isSummarizing ? (
-                      <RefreshCw size={10} className="animate-spin" />
-                    ) : (
-                      <FileText size={10} />
-                    )}
-                    手动总结
-                  </button>
-                </div>
-                <textarea
-                  value={longMemory}
-                  onChange={(e) => setLongMemory(e.target.value)}
-                  className="w-full h-32 p-3 bg-white/50 border border-gray-200 rounded-xl text-xs leading-relaxed resize-none focus:border-black outline-none custom-scrollbar transition-colors focus:bg-white"
-                  placeholder="角色将自动在此处积累对你的长期记忆..."
-                />
-              </div>
-            </div>
-          </section>
-
-          {/* ---------------------------------------------------------
-          SECTION 3: 聊天设置 (独立区块)
-         --------------------------------------------------------- */}
-          {chatStyle && (
-            <section>
-              <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4 border-b border-gray-200/50 pb-2">
-                聊天设置
-              </h3>
-              <div className="glass-card p-4 rounded-xl space-y-4">
-                {/* 风格 */}
-                <div>
-                  <label className="block text-[10px] font-bold uppercase text-gray-500 mb-2">
-                    风格 (Style)
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      {
-                        id: "dialogue",
-                        label: "短信",
-                        desc: "拟真聊天体验",
-                      },
-                      {
-                        id: "novel",
-                        label: "小说",
-                        desc: "大段文字描写",
-                      },
-                      {
-                        id: "brackets",
-                        label: "剧本",
-                        desc: "括号动作描写",
-                      },
-                    ].map((style) => (
-                      <button
-                        key={style.id}
-                        onClick={() => setChatStyle(style.id)}
-                        className={`flex flex-col items-center justify-center py-2 rounded-lg transition-all border ${
-                          chatStyle === style.id
-                            ? "bg-black text-white border-black shadow-md"
-                            : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"
-                        }`}
-                      >
-                        <span className="text-xs font-bold">{style.label}</span>
-                        <span
-                          className={`text-[8px] mt-0.5 ${
-                            chatStyle === style.id
-                              ? "text-gray-300"
-                              : "text-gray-400"
-                          }`}
-                        >
-                          {style.desc}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 交互模式 */}
-                <div>
-                  <label className="block text-[10px] font-bold uppercase text-gray-500 mb-2">
-                    交互模式 (Mode)
-                  </label>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setInteractionMode("online")}
-                      className={`flex-1 py-2 text-xs rounded-lg transition-colors flex items-center justify-center gap-1 ${
-                        interactionMode === "online"
-                          ? "bg-black text-white shadow-md"
-                          : "bg-white/50 text-gray-500 hover:bg-white"
-                      }`}
-                    >
-                      <Smartphone size={12} /> 线上 (Phone)
-                    </button>
-                    <button
-                      onClick={() => setInteractionMode("offline")}
-                      className={`flex-1 py-2 text-xs rounded-lg transition-colors flex items-center justify-center gap-1 ${
-                        interactionMode === "offline"
-                          ? "bg-black text-white shadow-md"
-                          : "bg-white/50 text-gray-500 hover:bg-white"
-                      }`}
-                    >
-                      <MapPin size={12} /> 现实 (Reality)
-                    </button>
-                  </div>
-                </div>
-
-                {/* 表情包管理 (Inside SettingsPanel) */}
-                <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <label className="text-[10px] font-bold uppercase text-gray-500 mr-auto">
-                      角色表情包库
-                    </label>
-                    {/* Add Single Button */}
-                    {/* 上传按钮 */}
-                    <button
-                      onClick={() => stickerInputRef.current.click()}
-                      className="flex items-center justify-center gap-1 p-0 text-[10px] text-gray-400 hover:text-[#7A2A3A] transition-colors"
-                      title="上传本地图片"
-                    >
-                      <Plus size={10} />
-                      <span>上传</span>
-                    </button>
-
-                    {/* 批量导入按钮 */}
-                    <button
-                      onClick={() => {
-                        const input = prompt("请输入表情包链接进行导入");
-                        if (input) handleBulkImport(input, "char");
-                      }}
-                      className="flex items-center justify-center gap-1 pl-1 pr-3 text-[10px] text-gray-400 hover:text-blue-500 transition-colors"
-                      title="链接一键导入"
-                    >
-                      <Download size={10} />
-                      <span>批量</span>
-                    </button>
-
-                    <button
-                      onClick={() => setStickersEnabled(!stickersEnabled)}
-                      className={`w-8 h-4 rounded-full relative transition-colors ${
-                        stickersEnabled ? "bg-[#7A2A3A]" : "bg-gray-300"
-                      }`}
-                    >
-                      <div
-                        className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${
-                          stickersEnabled ? "left-4.5" : "left-0.5"
-                        }`}
-                      />
-                    </button>
-                  </div>
-
-                  {stickersEnabled && (
-                    <div className="space-y-4">
-                      {/* [替换后] 使用 StickerGroup 组件 */}
-                      {getGroups(stickers).map((group) => (
-                        <StickerGroup
-                          key={group}
-                          group={group}
-                          stickers={stickers}
-                          toggleStickerGroup={toggleStickerGroup}
-                          setEditingSticker={setEditingSticker}
-                          handleBulkImport={handleBulkImport}
-                          deleteStickerGroup={deleteStickerGroup}
-                          renameStickerGroup={renameStickerGroup}
-                          handleStickerUpload={handleStickerUpload}
-                        />
-                      ))}
-
-                      {/* 上传区域 */}
-                      <input
-                        type="file"
-                        ref={stickerInputRef}
-                        className="hidden"
-                        onChange={(e) => handleStickerUpload(e, "char")}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            </section>
-          )}
-
-          <section className="mb-6">
-            {/* 标题行现在只显示标题，不放开关 */}
-            <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4 border-b border-gray-200/50 pb-2">
-              显示设置
-            </h3>
-
-            {/* 具体条目卡片 */}
-            <div className="glass-card p-4 rounded-xl">
-              {/* 使用 Flex 布局实现左右对齐 */}
-              <div className="flex items-center justify-between">
-                {/* 左侧：文字说明 */}
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">
-                    沉浸模式（隐藏系统栏）
-                  </label>
-                  <p className="text-[10px] text-gray-400">
-                    隐藏浏览器顶部的状态栏和地址栏。
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-gray-400">
-                    {isFullscreen ? "已开启" : "已关闭"}
-                  </span>
-                  <button
-                    onClick={toggleFullScreen}
-                    className={`w-8 h-4 rounded-full relative transition-colors ${
-                      isFullscreen ? "bg-green-500" : "bg-gray-300"
-                    }`}
-                  >
-                    <div
-                      className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${
-                        isFullscreen ? "left-4.5" : "left-0.5"
-                      }`}
-                    />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section className="mb-6">
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                界面字体链接
-              </label>
-
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="粘贴字体链接 (例如 https://...)"
-                  className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#7A2A3A]"
-                  value={inputUrl}
-                  onChange={(e) => setInputUrl(e.target.value)}
-                />
-                <button
-                  onClick={() => handleFontUrlSubmit(inputUrl)} // 调用上面父组件传下来的函数，或者在这里直接处理
-                  className="px-3 py-2 bg-[#7A2A3A] text-white text-xs rounded-lg hover:bg-[#9e3b4e] transition-colors"
-                >
-                  应用
-                </button>
-              </div>
-
-              {/* 如果想保留恢复默认按钮 */}
-              {fontName && (
-                <button
-                  onClick={handleResetFont}
-                  className="text-xs text-gray-400 flex items-center gap-1 mt-1"
-                >
-                  <RotateCcw size={10} /> 恢复默认字体
-                </button>
-              )}
-            </div>
-          </section>
-
-          <section>
-            <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4 border-b border-gray-200/50 pb-2">
-              数据管理
-            </h3>
-            <div className="glass-card p-4 rounded-xl space-y-3">
-              <p className="text-[9px] text-gray-400 mb-2">
-                将聊天记录导出为文件保存，或从文件恢复。
-              </p>
-              <div className="flex gap-3">
-                {/* 导出按钮 */}
-                <button
-                  onClick={onExportChat}
-                  className="flex-1 py-3 bg-black text-white rounded-xl text-xs font-bold hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 shadow-md"
-                >
-                  <Download size={14} />
-                  导出备份
-                </button>
-
-                {/* 导入按钮 (关联隐藏的 input) */}
-                <label className="flex-1 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl text-xs font-bold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm">
-                  <Upload size={14} />
-                  导入恢复
-                  <input
-                    type="file"
-                    accept=".json"
-                    className="hidden"
-                    onChange={onImportChat}
-                  />
-                </label>
-              </div>
-            </div>
-          </section>
-
-          {/*<section>
-        <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4 border-b border-gray-200/50 pb-2">
-          指令
-        </h3>
-        {prompts &&
-          Object.keys(prompts).map((k) => (
-            <div key={k} className="mb-4">
-              <label
-                className="text-[9px] uppercase font-bold text-gray-400 mb-1 block"
-                htmlFor={`prompt-${k}`}
-              >
-                {k}
-              </label>
-              <textarea
-                id={`prompt-${k}`}
-                name={`prompt-${k}`}
-                className="w-full h-20 p-2 text-[10px] font-mono bg-white/40 border border-gray-200 rounded-lg resize-y focus:bg-white transition-colors outline-none"
-                value={prompts[k]}
-                onChange={(e) =>
-                  setPrompts((p) => ({ ...p, [k]: e.target.value }))
-                }
-              />
-            </div>
-          ))}
-      </section>*/}
-        </>
-      )}
-    </div>
-  </div>
-);
 
 // 1. 把它移到 App 外面，并添加 props 参数解构
 const CreationAssistantModal = ({
@@ -1599,7 +828,7 @@ const CreationAssistantModal = ({
                           description: e.target.value,
                         }))
                       }
-                      className="w-full h-48 p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono resize-y outline-none focus:border-[#7A2A3A] focus:bg-white transition-all leading-relaxed"
+                      className="w-full h-48 p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs resize-y outline-none focus:border-[#7A2A3A] focus:bg-white transition-all leading-relaxed"
                       placeholder="此处显示角色的人设详情..."
                     />
                   </div>
@@ -1670,9 +899,7 @@ const StatusPanel = ({ statusHistory, onClose, onDelete }) => (
             className="glass-card p-4 rounded-xl animate-in slide-in-from-bottom-2 relative group"
           >
             <div className="absolute top-3 right-3 flex items-center gap-2">
-              <span className="text-[9px] font-mono text-gray-400">
-                {entry.time}
-              </span>
+              <span className="text-[9px] text-gray-400">{entry.time}</span>
               <button
                 // [修改] 确保这里调用的是传入的 onDelete，并使用计算好的 originalIndex
                 onClick={() => onDelete(originalIndex)}
@@ -1702,7 +929,7 @@ const StatusPanel = ({ statusHistory, onClose, onDelete }) => (
                 <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-blue-400 mb-1">
                   <Heart size={10} /> 心声
                 </div>
-                <div className="text-xs text-blue-900 bg-blue-50/50 p-2 rounded-lg font-serif italic">
+                <div className="text-xs text-blue-900 bg-blue-50/50 p-2 rounded-lg italic">
                   "{entry.status.thought || "..."}"
                 </div>
               </div>
@@ -1710,7 +937,7 @@ const StatusPanel = ({ statusHistory, onClose, onDelete }) => (
                 <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-red-400 mb-1">
                   <Ghost size={10} /> 坏心思
                 </div>
-                <div className="text-xs text-red-900 bg-red-50/50 p-2 rounded-lg font-serif italic">
+                <div className="text-xs text-red-900 bg-red-50/50 p-2 rounded-lg italic">
                   "{entry.status.desire || "..."}"
                 </div>
               </div>
@@ -1789,7 +1016,7 @@ const VoiceMessageBubble = ({ msg, isMe }) => {
 
           {/* 时长 */}
           <div
-            className={`text-xs font-mono font-bold ${
+            className={`text-xs font-bold ${
               isMe ? "text-white/60" : "text-gray-400"
             }`}
           >
@@ -1841,7 +1068,7 @@ const TransferBubble = ({ msg, isMe, onInteract }) => {
           <div className="text-[10px] font-bold opacity-90 mb-0.5 truncate">
             {isMe ? "向对方转账" : "向你转账"}
           </div>
-          <div className="text-xl font-bold font-mono tracking-tight truncate">
+          <div className="text-xl font-bold tracking-tight truncate">
             ¥ {amount}
           </div>
         </div>
@@ -2128,6 +1355,53 @@ const App = () => {
     setFontName("");
   };
 
+  // [新增] 自定义图标状态
+  const [customIcons, setCustomIcons] = useStickyState(
+    {},
+    "echoes_custom_icons",
+  );
+
+  // [新增] 处理图标上传
+  // 1. 确保函数前面加了 async
+  const handleAppIconUpload = async (e, appId) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const compressedIcon = await compressImage(file, 128, 0.7);
+
+      setCustomIcons((prev) => {
+        const newIcons = {
+          ...prev,
+          [appId]: compressedIcon, // 存入压缩后的 base64
+        };
+
+        // 4. 写入 localStorage 时增加错误捕获
+        try {
+          localStorage.setItem("my_custom_icons", JSON.stringify(newIcons));
+        } catch (storageError) {
+          console.error("存储空间已满:", storageError);
+          alert("浏览器存储空间将满，请注意备份数据");
+        }
+
+        return newIcons;
+      });
+    } catch (error) {
+      console.error("压缩图片失败:", error);
+    }
+  };
+
+  // [新增] 重置图标
+  const handleResetIcon = (appId) => {
+    if (confirm("确定恢复默认图标吗？")) {
+      setCustomIcons((prev) => {
+        const newState = { ...prev };
+        delete newState[appId];
+        return newState;
+      });
+    }
+  };
+
   // --- CUSTOM DIALOG STATE ---
   const [dialogConfig, setDialogConfig] = useState(null);
 
@@ -2379,6 +1653,9 @@ const App = () => {
   const [activeApp, setActiveApp] = useState(null);
   const [showLockSettings, setShowLockSettings] = useState(false);
   const [notification, setNotification] = useState(null);
+  useEffect(() => {
+    initNotification(setNotification);
+  }, []);
   const [showEditPersona, setShowEditPersona] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState("idle");
   const [availableModels, setAvailableModels] = useState([]);
@@ -2389,6 +1666,7 @@ const App = () => {
     customDate: "2025-11-11",
     customTime: "23:45",
   });
+  const currentTime = getCurrentTimeObj(timeSettings);
   const [interactionMode, setInteractionMode] = useStickyState(
     "online",
     "echoes_interaction_mode",
@@ -2533,7 +1811,7 @@ const App = () => {
 
     try {
       const data = await generateContent(
-        { prompt, systemInstruction: prompts.system },
+        { prompt, systemInstruction: getFinalSystemPrompt() },
         apiConfig,
         null,
       );
@@ -2687,7 +1965,7 @@ const App = () => {
     setCharStickers((prev) =>
       prev.map((s) => ({
         ...s,
-        group: s.group || "小狗小狗",
+        group: s.group || "狗男日记",
         enabled: s.enabled !== undefined ? s.enabled : true,
       })),
     );
@@ -2730,140 +2008,6 @@ const App = () => {
   }, [isTyping, messageQueue]);
 
   // Helpers
-  const showToast = (type, message) =>
-    setNotification({ type, message: String(message) });
-  const getCurrentTimeObj = () =>
-    timeSettings.useSystem
-      ? new Date()
-      : new Date(`${timeSettings.customDate}T${timeSettings.customTime}`);
-  // --- 新增辅助函数：按轮次获取最近消息 ---
-  const getRecentTurns = (history, limit) => {
-    if (history.length === 0) return [];
-
-    let turnsFound = 0;
-    let startIndex = 0;
-    let currentSender = null;
-
-    // 从后往前遍历，计算轮次
-    for (let i = history.length - 1; i >= 0; i--) {
-      const msg = history[i];
-      // 如果发送者变了（或者是最后一条消息），轮次+1
-      if (msg.sender !== currentSender) {
-        turnsFound++;
-        currentSender = msg.sender;
-      }
-
-      // 如果轮次超过限制，停止，当前 i + 1 就是截取点
-      if (turnsFound > limit) {
-        startIndex = i + 1;
-        break;
-      }
-      // 如果已经遍历到头了，startIndex 保持 0
-    }
-
-    return history.slice(startIndex);
-  };
-  const getFormattedMessageText = (m) => {
-    const senderName = m.sender === "me" ? userName || "User" : persona.name;
-    let content = m.text || "";
-
-    // 处理特殊消息类型
-    if (m.isVoice) {
-      content = `(发送了一条语音): ${m.text.replace("[语音消息] ", "")}`;
-    }
-    if (m.sticker) {
-      if (!content || !content.trim()) {
-        content = `[发送了表情包: ${m.sticker.desc}]`;
-      }
-    }
-    if (m.isForward && m.forwardData) {
-      const fwd = m.forwardData;
-      content += ` [转发了${
-        fwd.type === "post" ? "帖子" : "评论"
-      }: "${fwd.content.slice(0, 50)}..."]`;
-    }
-    if (m.isTransfer) {
-    }
-
-    let finalLine = `${senderName}: ${content}`;
-
-    const msgStyle = m.style || chatStyle;
-
-    if (
-      m.sender !== "me" &&
-      m.status &&
-      m.status.thought &&
-      msgStyle !== "novel"
-    ) {
-      finalLine += `\n(Inner Thought / True Intention: ${m.status.thought})`;
-    }
-
-    return finalLine;
-  };
-
-  const getContextString = (limit = contextLimit) => {
-    const recent = getRecentTurns(chatHistory, limit);
-    if (recent.length === 0) return "None.";
-    return recent.map(getFormattedMessageText).join("\n");
-  };
-  const getWorldInfoString = () =>
-    worldBook
-      .filter((e) => e.enabled)
-      .map((e) => `[${e.name}]: ${e.content}`)
-      .join("\n\n");
-  const getStickerInstruction = (list = charStickers) => {
-    if (!stickersEnabled) return "";
-
-    const activeList = list.filter((s) => s.enabled !== false);
-
-    if (activeList.length === 0) return "";
-    const listStr = list.map((s) => `ID: ${s.id}, Desc: ${s.desc}`).join("\n");
-    return `\n[STICKER SYSTEM]\nAvailable Stickers:\n${listStr}[Usage Frequency Rules]
-    1. **Frequency constraint**: Use a sticker ONLY when the emotion is strong or the context specifically demands it. 
-    2. **Probability**: Aim for a 30% - 40% usage rate. Most responses (approx. 6/10) should have "stickerId": null.
-    3. To send a sticker, use "stickerId" field in JSON. Otherwise, set it to null.`;
-  };
-
-  const generateSummary = async () => {
-    if (!persona) return;
-    setIsSummarizing(true);
-
-    const recentMsgs = getRecentTurns(chatHistory, memoryConfig.threshold);
-    const recentHistoryText = recentMsgs
-      .map(getFormattedMessageText)
-      .join("\n");
-
-    if (!recentHistoryText.trim()) {
-      setIsSummarizing(false);
-      return;
-    }
-
-    const prompt = prompts.summary
-      .replaceAll("{{NAME}}", persona.name)
-      .replaceAll("{{EXISTING_MEMORY}}", longMemory || "None")
-      .replaceAll("{{RECENT_HISTORY}}", recentHistoryText);
-
-    const simpleSystem = "You are a text summarizer.";
-
-    try {
-      const summaryText = await generateContent(
-        { prompt, systemInstruction: simpleSystem, isJson: false },
-        apiConfig,
-        (err) => showToast("error", "总结失败: " + err),
-      );
-
-      if (summaryText) {
-        /* const timeStamp = new Date().toLocaleString("zh-CN", {hour12: false,month: "numeric",day: "numeric",hour: "2-digit",minute: "2-digit",});*/
-        const newEntry = `${summaryText}`;
-
-        setLongMemory((prev) => (prev ? prev + "\n\n" + newEntry : newEntry));
-        setMsgCountSinceSummary(0);
-        showToast("info", "记忆已追加");
-      }
-    } finally {
-      setIsSummarizing(false);
-    }
-  };
 
   // Actions
   const handleJsonUpload = (event) => {
@@ -3344,13 +2488,13 @@ const App = () => {
     const prompt = promptTemplate
       .replaceAll("{{NAME}}", p.name)
       .replaceAll("{{TIME}}", getCurrentTimeObj().toLocaleString())
-      .replaceAll("{{HISTORY}}", getContextString())
+      .replaceAll("{{HISTORY}}", getContextString(chatHistory, contextLimit))
       .replaceAll("{{USER_PERSONA}}", userPersona + "\n" + trackerContext)
       .replaceAll("{{USER_NAME}}", effectiveUserName);
 
     try {
       const data = await generateContent(
-        { prompt, systemInstruction: finalSystemPrompt },
+        { prompt, systemInstruction: getFinalSystemPrompt() },
         apiConfig,
         (err) => showToast("error", err),
         abortController.signal,
@@ -3478,7 +2622,7 @@ const App = () => {
     setSmartWatchLogs([]);
     setForumData({ name: "本地生活圈", posts: [], isInitialized: false });
     setForumSettings({
-      userNick: "匿名用户",
+      userNick: "User本U",
       smurfNick: "不是小号",
       charNick: "匿名用户",
     });
@@ -3509,6 +2653,37 @@ const App = () => {
     handleUserSend(msgContent, "text");
 
     setShowMediaMenu(false);
+  };
+
+  // 统一生成系统指令的辅助函数
+  const getFinalSystemPrompt = () => {
+    if (!persona) return "";
+    const effectiveUserName = userName || "你";
+
+    // 1. 处理描述和世界书中的 {{user}}/{{char}} 替换
+    const cleanCharDesc = replacePlaceholders(
+      inputKey,
+      persona.name,
+      effectiveUserName,
+    );
+    const cleanWorldInfo = replacePlaceholders(
+      getWorldInfoString(),
+      persona.name,
+      effectiveUserName,
+    );
+
+    // 2. 替换系统模板中的所有大项占位符
+    return prompts.system
+      .replaceAll("{{NAME}}", persona.name)
+      .replaceAll(
+        "{{CHAR_DESCRIPTION}}",
+        cleanCharDesc + "\n" + charTrackerContext,
+      )
+      .replaceAll("{{USER_NAME}}", effectiveUserName)
+      .replaceAll("{{USER_PERSONA}}", userPersona + "\n" + trackerContext)
+      .replaceAll("{{CUSTOM_RULES}}", customRules)
+      .replaceAll("{{WORLD_INFO}}", cleanWorldInfo)
+      .replaceAll("{{LONG_MEMORY}}", longMemory || "暂无长期记忆。");
   };
 
   const [isGhostwriting, setIsGhostwriting] = useState(false);
@@ -3805,7 +2980,7 @@ Requirements:
 
     // --- 构建 Prompt ---
 
-    const stickerInst = getStickerInstruction(charStickers);
+    const stickerInst = getStickerInstruction(charStickers, stickersEnabled);
 
     let styleInst = stylePrompts[chatStyle];
     const lastCharMsg = [...newHistory]
@@ -4375,638 +3550,41 @@ Requirements:
     ],
   };
 
-  // --- FORUM LOGIC ---
+  const currentWorldInfoString = getWorldInfoString(worldBook);
 
-  // 辅助函数：获取当前显示的昵称
-  const getForumName = (type) => {
-    if (type === "me") return forumSettings.userNick || userName || "我";
-    if (type === "char") return forumSettings.charNick || "匿名用户";
-    return "匿名";
-  };
-
-  // (替换原有的 initForum)
-  const initForum = async () => {
-    if (!persona) return;
-    setLoading((prev) => ({ ...prev, forum: true }));
-    const prompt = prompts.forum_init
-      .replaceAll("{{NAME}}", persona.name)
-      .replaceAll("{{CHAR_DESCRIPTION}}", inputKey)
-      .replaceAll("{{WORLD_INFO}}", getWorldInfoString());
-
-    try {
-      const data = await generateContent(
-        { prompt, systemInstruction: prompts.system },
-        apiConfig,
-        (err) => showToast("error", err),
-      );
-      if (data && data.posts) {
-        setForumData({
-          name: data.forumName || "本地社区",
-          posts: data.posts.map((p) => ({
-            ...p,
-            // 确保有 replies 数组，并计算数量
-            replies: p.replies || [],
-            replyCount: (p.replies || []).length,
-          })),
-          isInitialized: true,
-        });
-        showToast("success", "生活圈已初始化");
-      }
-    } finally {
-      setLoading((prev) => ({ ...prev, forum: false }));
-    }
-  };
-
-  const generateForumPosts = async () => {
-    if (!persona) return;
-    setLoading((prev) => ({ ...prev, forum_new: true }));
-    const currentUserName = userName || "User";
-    const cleanCharDesc = replacePlaceholders(
-      inputKey,
-      persona.name,
-      currentUserName,
-    );
-    const timeGuidance = getTimeBasedGuidance(getCurrentTimeObj());
-    const finalGuidance = forumGuidance ? forumGuidance : timeGuidance;
-    const cleanWorldInfo = replacePlaceholders(
-      getWorldInfoString(),
-      persona.name,
-      currentUserName,
-    );
-    const prompt = prompts.forum_gen_posts
-      .replaceAll(
-        "{{CHAR_DESCRIPTION}}",
-        cleanCharDesc + "\n" + charTrackerContext,
-      )
-      .replaceAll("{{GUIDANCE}}", finalGuidance)
-      .replaceAll("{{FORUM_NAME}}", forumData.name)
-      .replaceAll("{{NAME}}", persona.name)
-      .replaceAll("{{USER_NAME}}", currentUserName)
-      .replaceAll("{{WORLD_INFO}}", cleanWorldInfo);
-
-    try {
-      const data = await generateContent(
-        {
-          prompt,
-          systemInstruction:
-            "You are a creative writer helping to generate background world content. You are NOT playing the character.",
-        },
-        apiConfig,
-        (err) => showToast("error", err),
-      );
-      if (data && data.posts) {
-        setForumData((prev) => ({
-          ...prev,
-          posts: [
-            ...data.posts.map((p) => ({
-              ...p,
-              id: `gen_${Date.now()}_${Math.random()}`,
-              replies: p.replies || [],
-              replyCount: (p.replies || []).length,
-            })),
-            ...prev.posts,
-          ],
-        }));
-        showToast("success", "已生成新帖");
-      }
-    } finally {
-      setLoading((prev) => ({ ...prev, forum_new: false }));
-    }
-  };
-
-  const generateForumReplies = async (threadId, mode = "Auto") => {
-    const thread = forumData.posts.find((p) => p.id === threadId);
-    if (!thread) return;
-
-    // 区分 loading 状态
-    const loadingKey = mode === "Manual" ? "forum_char_reply" : "forum_reply";
-    setLoading((prev) => ({ ...prev, [loadingKey]: true }));
-
-    // --- 1. 智能提取上下文逻辑 ---
-    const allReplies = thread.replies || [];
-
-    // [修改] 找到用户最后一条发言（包括大号和小号）
-    const userLastReplyIndex = allReplies
-      .map((r) => r.isUser || r.authorType === "me" || r.authorType === "smurf")
-      .lastIndexOf(true);
-
-    const userLastReply =
-      userLastReplyIndex !== -1 ? allReplies[userLastReplyIndex] : null;
-
-    // [新增] 判断用户最后一次是用大号还是小号
-    const isSmurfReply = userLastReply && userLastReply.authorType === "smurf";
-
-    let contextList = allReplies.slice(-5);
-
-    // 如果用户的发言不在最后5条里，把它强行插到最前面
-    if (userLastReply && !contextList.find((r) => r.id === userLastReply.id)) {
-      contextList = [userLastReply, ...contextList];
-    }
-
-    const existingRepliesStr = contextList
-      .map((r) => `${r.author}: ${r.content}`)
-      .join("\n");
-
-    // --- 2. 状态检测与指令生成 (关键新增) ---
-
-    // 检查在用户最后一次发言之后，角色是否已经回复过了？
-    let charHasRepliedToUser = false;
-    if (userLastReplyIndex !== -1) {
-      const subsequentReplies = allReplies.slice(userLastReplyIndex + 1);
-      charHasRepliedToUser = subsequentReplies.some(
-        (r) => r.isCharacter || r.authorType === "char",
-      );
-    }
-
-    const isCharThread = thread.authorType === "char";
-    const isUserThread = thread.authorType === "me";
-    const hasMainUserReplied = userLastReplyIndex !== -1 && !isSmurfReply;
-
-    // 判定：如果跟主角有关，或者用户强制刷新，就需要记忆
-    const needsDeepContext =
-      (isCharThread ||
-        isUserThread ||
-        hasMainUserReplied ||
-        mode === "Manual") &&
-      !isSmurfReply;
-
-    const aiPromptMode = isCharThread || mode === "Manual" ? "Manual" : "Auto";
-    const currentUserName = userName || "User";
-    const userNick = forumSettings.userNick || userName || "匿名用户";
-
-    const charNick = forumSettings.charNick || persona.name || "匿名用户";
-
-    // 生成针对性的指令 (避免 AI 乱回)
-    let targetInstruction = "";
-    // [修改] 如果是小号，AI 看到的只是一个陌生昵称，不需要特殊 targeting 指令，也不要禁止回复
-    if (isSmurfReply) {
-      targetInstruction = `
-        - **Context**: A netizen named "${userLastReply.author}" just commented.
-        - **Action**: Decide naturally whether to reply to "${userLastReply.author}" or others based on content interest.
-       `;
-    } else if (userLastReplyIndex === -1) {
-      // 用户没说话 -> 禁止回复用户
-      targetInstruction = `
-        - **Targeting Constraint**: The user "${userNick}" has NOT commented in this thread yet.
-        - **Action**: Do NOT reply to "${userNick} or ${charNick}". Interact with other netizens instead.
-        `;
-    } else if (!charHasRepliedToUser) {
-      // 用户(大号)说话了且角色没回 -> 必须回复
-      targetInstruction = `
-        - **Targeting Priority**: "${userNick}" just commented and is waiting for a reply.
-        - **Action**: ${persona.name} MUST prioritize replying to "${userNick}"'s latest comment.
-        `;
-    } else {
-      // 用户说话了但角色已回 -> 禁止重复回复
-      targetInstruction = `
-        - **Targeting Constraint**: You have ALREADY replied to "${userNick}". 
-        - **Action**: DO NOT reply to "${userNick}" again immediately. Reply to others or post a general comment.
-        `;
-    }
-
-    // --- 3. 数据清洗 (保持你已有的逻辑) ---
-    const cleanCharDesc = replacePlaceholders(
-      inputKey,
-      persona.name,
-      currentUserName,
-    );
-    const cleanWorldInfo = replacePlaceholders(
-      getWorldInfoString(),
-      persona.name,
-      currentUserName,
-    );
-
-    // --- 4. 构建动态 Context ---
-    let relationshipContextBlock = "";
-
-    if (needsDeepContext) {
-      // [情况A：相关贴] 注入完整记忆 + 身份识别 + 动态指令
-      const recentHistory = getContextString(10);
-
-      relationshipContextBlock = `
-[DATA SOURCE 2: PRIVATE CHAT MEMORY]:
-"""
-${recentHistory}
-"""
-
-[USER IDENTITY INFO - CRITICAL]:
-- Real User Name: "${currentUserName}"
-- User's Current Forum Nickname: "${userNick}"
-- **ABSOLUTE RULE**: "${persona.name}" KNOWS that "${userNick}" is "${currentUserName}".
-- **Netizen Logic**: Random NPCs should react to "${userNick}" if they comment.
-- **Character Logic**: 
-  1. Tone must reflect the relationship in [DATA SOURCE 2].
-  ${targetInstruction} 
-`;
-    } else {
-      // [情况B：路人水贴] 注入隔离指令
-      relationshipContextBlock = `
-[SCENARIO CONSTRAINT]:
-- This is a random background thread.
-- **Netizen Logic**: Normal internet users discussing the topic "{{TITLE}}".
-- **Character Logic**: ${persona.name} should ONLY reply if the topic is extremely interesting.
-`;
-    }
-
-    // --- 5. 处理 System Prompt (修复：替换占位符) ---
-    const finalSystemPrompt = prompts.system
-      .replaceAll("{{NAME}}", persona.name)
-      .replaceAll(
-        "{{CHAR_DESCRIPTION}}",
-        cleanCharDesc + "\n" + charTrackerContext,
-      )
-      .replaceAll("{{USER_NAME}}", currentUserName)
-      .replaceAll("{{USER_PERSONA}}", userPersona + "\n" + trackerContext)
-      .replaceAll("{{CUSTOM_RULES}}", customRules)
-      .replaceAll("{{WORLD_INFO}}", cleanWorldInfo);
-
-    // --- 6. 处理 User Prompt ---
-    let prompt = prompts.forum_gen_replies
-      .replaceAll("{{TITLE}}", thread.title)
-      .replaceAll("{{CONTENT}}", thread.content)
-      .replaceAll("{{AUTHOR}}", thread.author)
-      .replaceAll("{{EXISTING_REPLIES}}", existingRepliesStr || "None")
-      .replaceAll("{{RELATIONSHIP_CONTEXT}}", relationshipContextBlock)
-      .replaceAll("{{NAME}}", persona.name)
-      .replaceAll("{{CHAR_NICK}}", charNick)
-      .replaceAll(
-        "{{CHAR_DESCRIPTION}}",
-        cleanCharDesc + "\n" + charTrackerContext,
-      )
-      .replaceAll("{{WORLD_INFO}}", cleanWorldInfo)
-      .replaceAll("{{MODE}}", aiPromptMode);
-
-    try {
-      const data = await generateContent(
-        {
-          prompt,
-          systemInstruction: finalSystemPrompt,
-        },
-        apiConfig,
-        (err) => showToast("error", err),
-      );
-
-      if (data && data.replies) {
-        const newReplies = data.replies.map((r) => ({
-          id: `r_${Date.now()}_${Math.random()}`,
-          author: r.isCharacter
-            ? forumSettings.charNick || "匿名用户"
-            : r.author,
-          content: r.content,
-          isCharacter: r.isCharacter || false,
-          isUser: false,
-        }));
-
-        setForumData((prev) => ({
-          ...prev,
-          posts: prev.posts.map((p) =>
-            p.id === threadId
-              ? {
-                  ...p,
-                  replies: [...(p.replies || []), ...newReplies],
-                  replyCount: (p.replyCount || 0) + newReplies.length,
-                }
-              : p,
-          ),
-        }));
-
-        if (mode === "Manual") showToast("success", "已刷新评论");
-      }
-    } finally {
-      setLoading((prev) => ({ ...prev, [loadingKey]: false }));
-    }
-  };
-
-  const refreshAllForumReplies = async () => {
-    // 选取最近的 5 个帖子进行更新，避免消耗过多
-    const recentPosts = forumData.posts.slice(0, 5);
-    if (recentPosts.length === 0) return;
-
-    setLoading((prev) => ({ ...prev, forum_refresh_all: true }));
-    showToast("info", "正在更新首页动态...");
-
-    for (const post of recentPosts) {
-      await generateForumReplies(post.id, "Auto"); // Auto 模式，角色一般不说话
-    }
-
-    setLoading((prev) => ({ ...prev, forum_refresh_all: false }));
-    showToast("success", "动态更新完毕");
-  };
-
-  const handleForwardToChat = (item, type = "post", parentTitle = "") => {
-    // 1. 构造消息
-    const content =
-      type === "post"
-        ? `【转发帖子】\n标题：${item.title}\n作者：${item.author}\n内容：${item.content}`
-        : `【转发评论】\n来源帖子：${parentTitle}\n评论人：${item.author}\n内容：${item.content}`;
-
-    // 2. 存入 Chat History (模拟特殊卡片)
-    const newMsg = {
-      sender: "me",
-      text: content,
-      isForward: true, // 标记为转发
-      forwardData: { ...item, type, parentTitle }, // 存储原始数据用于渲染卡片
-      time: formatTime(getCurrentTimeObj()),
-    };
-
-    setChatHistory((prev) => [...prev, newMsg]);
-    setMsgCountSinceSummary((prev) => prev + 1);
-
-    // 3. 构造 Context 传给 AI
-    let contextStr = "";
-    const isUserAuthor =
-      item.author === getForumName("me") || item.authorType === "me";
-    const isCharAuthor =
-      item.author === getForumName("char") ||
-      item.authorType === "char" ||
-      item.isCharacter;
-
-    if (isUserAuthor) {
-      contextStr = `User forwarded their own ${type}. Character should react to User's online activity.`;
-    } else if (isCharAuthor) {
-      contextStr = `User forwarded Character's own ${type} back to them. Character might feel exposed, shy, or proud.`;
-    } else {
-      contextStr = `User forwarded a random netizen's ${type}. Discuss the content.`;
-    }
-
-    setForwardContext(contextStr); // 存入 state 供 triggerAIResponse 读取
-
-    // 4. 跳转到聊天
-    setActiveApp("chat");
-  };
-
-  // --- 剧情自动发帖 (修复版：带初始评论 + 修复通知) ---
-  const generateChatEventPost = async (isSilent = false) => {
-    // 1. 基础检查
-    if (!forumData.isInitialized || chatHistory.length < 5) return;
-
-    if (!isSilent) {
-      setLoading((prev) => ({ ...prev, chat_event_post: true }));
-    }
-
-    // 2. 准备 Prompt
-    const currentUserName = userName || "User";
-    const cleanCharDesc = replacePlaceholders(
-      inputKey,
-      persona.name,
-      currentUserName,
-    );
-    const recentHistory = getContextString(15); // 获取最近 15 条聊天
-
-    const prompt = prompts.forum_chat_event
-      .replaceAll("{{NAME}}", persona.name)
-      .replaceAll(
-        "{{CHAR_DESCRIPTION}}",
-        cleanCharDesc + "\n" + charTrackerContext,
-      )
-      .replaceAll("{{HISTORY}}", recentHistory);
-
-    try {
-      const data = await generateContent(
-        { prompt, systemInstruction: prompts.system },
-        apiConfig,
-        (err) => !isSilent && showToast("error", err),
-      );
-
-      // 3. 处理生成结果
-      if (data && data.shouldPost && data.title && data.content) {
-        // 处理 AI 生成的初始评论
-        const initialReplies = (data.replies || []).map((r) => ({
-          id: `r_init_${Date.now()}_${Math.random()}`,
-          author: r.author,
-          content: r.content,
-          isCharacter: false, // 初始评论通常是路人
-          isUser: false,
-        }));
-
-        const newPost = {
-          id: `char_event_${Date.now()}`,
-          author: forumSettings.charNick || "匿名用户",
-          authorType: "char",
-          title: data.title,
-          content: data.content,
-          time: "刚刚",
-          replyCount: initialReplies.length, // 初始就有评论数
-          views: Math.floor(Math.random() * 100) + 20, // 随机一点浏览量
-          isUserCreated: true, // 标记为重要
-          replies: initialReplies, // <--- 注入初始评论
-        };
-
-        // 4. 更新数据
-        setForumData((prev) => ({
-          ...prev,
-          posts: [newPost, ...prev.posts],
-        }));
-
-        // 5. 发送强提醒 (延迟100ms确保状态更新不阻塞UI)
-        // 哪怕是静默模式(isSilent=true)，只要发帖成功了，也必须通知用户！
-        setTimeout(() => {
-          showToast(
-            "info",
-            `🔔 特别关注：${persona.name} 在生活圈发布了一条新讨论！`,
-          );
-        }, 100);
-      } else {
-        if (!isSilent) showToast("info", "角色觉得此刻风平浪静");
-      }
-    } finally {
-      if (!isSilent)
-        setLoading((prev) => ({ ...prev, chat_event_post: false }));
-    }
-  };
-  const generateCharacterPost = async () => {
-    if (!postDrafts.char.topic) {
-      showToast("error", "请输入提示词");
-      return;
-    }
-    setLoading((prev) => ({ ...prev, forum_char: true }));
-    const currentUserName = userName || "User";
-    const cleanCharDesc = replacePlaceholders(
-      inputKey,
-      persona.name,
-      currentUserName,
-    );
-    const cleanWorldInfo = replacePlaceholders(
-      getWorldInfoString(),
-      persona.name,
-      currentUserName,
-    );
-    const prompt = prompts.forum_char_post
-      .replaceAll("{{NAME}}", persona.name)
-      .replaceAll(
-        "{{CHAR_DESCRIPTION}}",
-        cleanCharDesc + "\n" + charTrackerContext,
-      )
-      .replaceAll("{{WORLD_INFO}}", cleanWorldInfo)
-      .replaceAll("{{TOPIC}}", postDrafts.char.topic)
-      .replaceAll("{{HISTORY}}", getContextString(10))
-      .replaceAll("{{USER_NAME}}", currentUserName);
-
-    try {
-      const data = await generateContent(
-        { prompt, systemInstruction: prompts.system },
-        apiConfig,
-        (err) => showToast("error", err),
-      );
-      if (data) {
-        // 只更新角色草稿，不影响“我自己”
-        setPostDrafts((prev) => ({
-          ...prev,
-          char: { ...prev.char, title: data.title, content: data.content },
-        }));
-      }
-    } finally {
-      setLoading((prev) => ({ ...prev, forum_char: false }));
-    }
-  };
-
-  const handleCreatePost = () => {
-    const draft = postTab === "me" ? postDrafts.me : postDrafts.char;
-    if (!draft.title || !draft.content) return;
-
-    const newPost = {
-      id: `${postTab}_${Date.now()}`,
-      author: getForumName(postTab), // 使用动态获取的名字
-      authorType: postTab, // 记录类型，方便改名时回溯：'me' 或 'char'
-      title: draft.title,
-      content: draft.content,
-      time: "刚刚",
-      replyCount: 0,
-      views: 0,
-      isUserCreated: true,
-      replies: [],
-    };
-
-    setForumData((prev) => ({
-      ...prev,
-      posts: [newPost, ...prev.posts],
-    }));
-
-    setShowPostModal(false);
-    // 清空当前发出的草稿
-    setPostDrafts((prev) => ({
-      ...prev,
-      [postTab]: { title: "", content: "", topic: "" },
-    }));
-
-    // 发帖后自动生成一波回复
-    setTimeout(() => generateForumReplies(newPost.id), 500);
-  };
-
-  // 增加 type 参数，默认为 'me'
-  const handleUserReply = (threadId, content, type = "me") => {
-    if (!content.trim()) return;
-
-    // 根据类型获取对应的昵称
-    const replyAuthor =
-      type === "smurf"
-        ? forumSettings.smurfNick || "马甲用户"
-        : getForumName("me");
-
-    const newReply = {
-      id: `ur_${Date.now()}`,
-      author: replyAuthor,
-      authorType: type, // 记录类型: 'me' 或 'smurf'
-      content: content,
-      isUser: true,
-    };
-    setForumData((prev) => ({
-      ...prev,
-      posts: prev.posts.map((p) =>
-        p.id === threadId
-          ? {
-              ...p,
-              replies: [...(p.replies || []), newReply],
-              replyCount: (p.replyCount || 0) + 1,
-            }
-          : p,
-      ),
-    }));
-  };
-
-  const handleDeletePost = async (postId) => {
-    if (await customConfirm("确定彻底删除这篇帖子吗？", "删除帖子")) {
-      setForumData((prev) => ({
-        ...prev,
-        posts: prev.posts.filter((p) => p.id !== postId),
-      }));
-      // 如果当前正在看这篇帖子，删除后要退回列表页
-      if (activeThreadId === postId) {
-        setActiveThreadId(null);
-      }
-      showToast("success", "帖子已删除");
-    }
-  };
-
-  // --- 新增：删除评论 ---
-  const handleDeleteReply = async (threadId, replyId) => {
-    if (await customConfirm("确定删除这条评论？")) {
-      setForumData((prev) => ({
-        ...prev,
-        posts: prev.posts.map((p) => {
-          // 找到对应的帖子
-          if (p.id !== threadId) return p;
-
-          // 过滤掉要删除的评论
-          const newReplies = (p.replies || []).filter((r) => r.id !== replyId);
-
-          return {
-            ...p,
-            replies: newReplies,
-            replyCount: newReplies.length, // 更新评论数
-          };
-        }),
-      }));
-      showToast("success", "评论已删除");
-    }
-  };
-
-  // 修改昵称并回溯更新历史帖子
-  const updateForumSettings = (newSettings) => {
-    setForumSettings(newSettings);
-    setShowForumSettings(false);
-
-    // 回溯更新
-    setForumData((prev) => {
-      const newPosts = prev.posts.map((p) => {
-        // 更新帖子作者
-        let newAuthor = p.author;
-        if (p.authorType === "me") newAuthor = newSettings.userNick || "匿名";
-        else if (p.authorType === "char")
-          newAuthor = newSettings.charNick || "匿名用户"; // [修改]
-        else if (p.author === persona.name)
-          newAuthor = newSettings.charNick || "匿名用户"; // [修改]
-
-        // 更新回复作者
-        const newReplies = (p.replies || []).map((r) => {
-          let rAuthor = r.author;
-          if (r.authorType === "me" || r.isUser)
-            rAuthor = newSettings.userNick || "匿名";
-          else if (r.authorType === "smurf")
-            // 顺便把上一步的小号逻辑补全
-            rAuthor = newSettings.smurfNick || "马甲";
-          else if (r.isCharacter) rAuthor = newSettings.charNick || "匿名用户"; // [修改]
-          return { ...r, author: rAuthor };
-        });
-
-        return { ...p, author: newAuthor, replies: newReplies };
-      });
-      return { ...prev, posts: newPosts };
-    });
-    showToast("success", "ID已更新，历史记录已同步");
-  };
-
-  // 1. Initial Location Generation (Two-Step Logic)
   const initSmartWatch = async () => {
     if (!persona) return;
     setLoading((prev) => ({ ...prev, smartwatch: true }));
 
     try {
-      // --- STEP 1: Generate Locations (Blind to Images) ---
+      // --- 关键修复：补全占位符替换逻辑 ---
+      const effectiveUserName = userName || "User";
+      const cleanCharDesc = replacePlaceholders(
+        inputKey,
+        persona.name,
+        effectiveUserName,
+      );
+      const cleanWorldInfo = replacePlaceholders(
+        getWorldInfoString(),
+        persona.name,
+        effectiveUserName,
+      );
+
       const systemPrompt = prompts.system
         .replaceAll("{{NAME}}", persona.name)
-        .replaceAll("{{USER_NAME}}", userName || "User")
-        .replaceAll("{{WORLD_INFO}}", getWorldInfoString());
+        // 修复：添加角色描述和 Tracker 上下文
+        .replaceAll(
+          "{{CHAR_DESCRIPTION}}",
+          cleanCharDesc + "\n" + charTrackerContext,
+        )
+        // 修复：添加用户人设
+        .replaceAll("{{USER_PERSONA}}", userPersona + "\n" + trackerContext)
+        .replaceAll("{{USER_NAME}}", effectiveUserName)
+        // 修复：添加自定义规则
+        .replaceAll("{{CUSTOM_RULES}}", customRules)
+        .replaceAll("{{WORLD_INFO}}", cleanWorldInfo)
+        // 修复：添加长期记忆
+        .replaceAll("{{LONG_MEMORY}}", longMemory || "None");
 
       const genPrompt = prompts.smartwatch_step1_gen.replaceAll(
         "{{NAME}}",
@@ -5094,17 +3672,39 @@ ${recentHistory}
     const lastLog =
       smartWatchLogs.length > 0 ? JSON.stringify(smartWatchLogs[0]) : "None";
 
+    const effectiveUserName = userName || "User";
+    const cleanCharDesc = replacePlaceholders(
+      inputKey,
+      persona.name,
+      effectiveUserName,
+    );
+    const cleanWorldInfo = replacePlaceholders(
+      getWorldInfoString(),
+      persona.name,
+      effectiveUserName,
+    );
+
+    const systemPrompt = prompts.system
+      .replaceAll("{{NAME}}", persona.name)
+      .replaceAll(
+        "{{CHAR_DESCRIPTION}}",
+        cleanCharDesc + "\n" + charTrackerContext,
+      )
+      .replaceAll("{{USER_PERSONA}}", userPersona + "\n" + trackerContext)
+      .replaceAll("{{USER_NAME}}", effectiveUserName)
+      .replaceAll("{{CUSTOM_RULES}}", customRules)
+      .replaceAll("{{WORLD_INFO}}", cleanWorldInfo)
+      .replaceAll("{{LONG_MEMORY}}", longMemory || "None");
+
     const prompt = prompts.smartwatch_update
       .replaceAll("{{NAME}}", persona.name)
-      .replaceAll("{{HISTORY}}", getContextString(5))
+      .replaceAll("{{HISTORY}}", getContextString(chatHistory, 5))
       .replaceAll("{{LOCATIONS_LIST}}", locList)
       .replaceAll("{{LAST_LOG}}", lastLog);
 
-    const systemPrompt = prompts.system.replaceAll("{{NAME}}", persona.name);
-
     try {
       const data = await generateContent(
-        { prompt, systemInstruction: systemPrompt },
+        { prompt, systemInstruction: getFinalSystemPrompt() },
         apiConfig,
         (err) => showToast("error", err),
       );
@@ -5145,7 +3745,7 @@ ${recentHistory}
   );
   // 论坛昵称设置
   const [forumSettings, setForumSettings] = useStickyState(
-    { userNick: "匿名用户", smurfNick: "不是小号", charNick: "匿名用户" },
+    { userNick: "User本U", smurfNick: "不是小号", charNick: "匿名用户" },
     "echoes_forum_settings",
   );
   // 论坛引导提示词
@@ -5172,7 +3772,7 @@ ${recentHistory}
   /* --- MAIN RENDER --- */
   if (isLocked) {
     return (
-      <div className="h-screen w-full bg-[#F5F5F7] flex flex-col items-center justify-start pt-32 p-8 font-serif text-[#2C2C2C] relative overflow-hidden">
+      <div className="h-screen w-full bg-[#F5F5F7] flex flex-col items-center justify-start pt-32 p-8 text-[#2C2C2C] relative overflow-hidden">
         <div className="absolute -top-20 -left-20 w-96 h-96 bg-blue-50/50 rounded-full blur-3xl animate-pulse delay-1000 pointer-events-none"></div>
         <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-gray-100/60 rounded-full blur-3xl animate-pulse pointer-events-none"></div>
         {notification && (
@@ -5232,10 +3832,10 @@ ${recentHistory}
 
         <div className="max-w-md w-full space-y-8 z-10 flex flex-col items-center h-auto">
           <div className="text-center flex flex-col items-center space-y-2 mb-4">
-            <h1 className="text-7xl font-extralight text-[#1a1a1a] lock-time mb-3">
+            <h1 className="text-7xl font-serif font-extralight text-[#1a1a1a] lock-time mb-3">
               {formatTime(getCurrentTimeObj())}
             </h1>
-            <p className="text-sm font-sans uppercase tracking-widest text-gray-400">
+            <p className="text-sm uppercase tracking-widest text-gray-400">
               {formatDate(getCurrentTimeObj())}
             </p>
           </div>
@@ -5387,7 +3987,6 @@ ${recentHistory}
             <SettingsIcon size={18} strokeWidth={1.5} />
           </button>
         </div>
-        <style>{GLOBAL_STYLES}</style>
         {showCreationAssistant && (
           <CreationAssistantModal
             isOpen={showCreationAssistant}
@@ -5414,9 +4013,49 @@ ${recentHistory}
     );
   }
 
+  const generateSummary = async () => {
+    if (!persona) return;
+    setIsSummarizing(true);
+
+    const recentMsgs = getRecentTurns(chatHistory, memoryConfig.threshold);
+    const recentHistoryText = recentMsgs
+      .map((m) => getFormattedMessageText(m, userName, persona, chatStyle))
+      .join("\n");
+
+    if (!recentHistoryText.trim()) {
+      setIsSummarizing(false);
+      return;
+    }
+
+    const prompt = prompts.summary
+      .replaceAll("{{NAME}}", persona.name)
+      .replaceAll("{{EXISTING_MEMORY}}", longMemory || "None")
+      .replaceAll("{{RECENT_HISTORY}}", recentHistoryText);
+
+    const simpleSystem = "You are a text summarizer.";
+
+    try {
+      const summaryText = await generateContent(
+        { prompt, systemInstruction: simpleSystem, isJson: false },
+        apiConfig,
+        (err) => showToast("error", "总结失败: " + err),
+      );
+
+      if (summaryText) {
+        /* const timeStamp = new Date().toLocaleString("zh-CN", {hour12: false,month: "numeric",day: "numeric",hour: "2-digit",minute: "2-digit",});*/
+        const newEntry = `${summaryText}`;
+
+        setLongMemory((prev) => (prev ? prev + "\n\n" + newEntry : newEntry));
+        setMsgCountSinceSummary(0);
+        showToast("info", "记忆已追加");
+      }
+    } finally {
+      setIsSummarizing(false);
+    }
+  };
+
   return (
-    <div className="h-screen w-full bg-[#EBEBF0] flex items-center justify-center font-sans text-[#2C2C2C] overflow-hidden relative">
-      <style>{GLOBAL_STYLES}</style>
+    <div className="h-screen w-full bg-[#EBEBF0] flex items-center justify-center text-[#2C2C2C] overflow-hidden relative">
       <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] bg-blue-100/30 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-orange-50/40 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -5504,50 +4143,32 @@ ${recentHistory}
                   onClick={() => setActiveApp("persona")}
                 />
               </div>
-              <AppIcon
-                icon={<Hash strokeWidth={1.5} />}
-                label="生活圈"
-                onClick={() => setActiveApp("forum")}
-              />
-              <AppIcon
-                icon={<ScanEye strokeWidth={1.5} />}
-                label="智能家"
-                onClick={() => setActiveApp("smartwatch")}
-              />
-              <AppIcon
-                icon={<Globe strokeWidth={1.5} />}
-                label="浏览器"
-                onClick={() => setActiveApp("browser")}
-              />
-              <AppIcon
-                icon={<Book strokeWidth={1.5} />}
-                label="日记"
-                onClick={() => setActiveApp("journal")}
-              />
-              <AppIcon
-                icon={<Receipt strokeWidth={1.5} />}
-                label="生活痕迹"
-                onClick={() => setActiveApp("traces")}
-              />
-              <AppIcon
-                icon={<Disc3 strokeWidth={1.5} />}
-                label="共鸣旋律"
-                onClick={() => setActiveApp("music")}
-              />
-              <AppIcon
-                icon={<BookOpen strokeWidth={1.5} />}
-                label="世界书"
-                onClick={() => setActiveApp("worldbook")}
-              />
-              <AppIcon
-                icon={<SlidersHorizontal strokeWidth={1.5} />}
-                label="系统设置"
-                onClick={() => {
-                  setPreviousApp(null);
-                  setActiveApp("settings");
-                }}
-              />
+              {/* --- 动态应用列表 (支持自定义图标) --- */}
+              {APP_LIST.map((app) => (
+                <AppIcon
+                  key={app.id}
+                  label={app.label}
+                  // 核心逻辑：如果有自定义图标，显示图片；否则显示默认 Lucide 图标
+                  icon={
+                    customIcons[app.id] ? (
+                      <img
+                        src={customIcons[app.id]}
+                        alt={app.label}
+                        className="w-full h-full object-cover rounded-[18px]" // 圆角调整以匹配整体风格
+                      />
+                    ) : (
+                      <app.icon strokeWidth={1.5} />
+                    )
+                  }
+                  onClick={() => {
+                    // 特殊处理：如果是设置，重置 previousApp
+                    if (app.id === "settings") setPreviousApp(null);
+                    setActiveApp(app.id);
+                  }}
+                />
+              ))}
 
+              {/* --- 登出按钮 (保持不变，放在列表最下方) --- */}
               <div className="col-span-4 mt-2">
                 <AppIcon
                   icon={<LogOut strokeWidth={1.5} className="text-red-500" />}
@@ -5587,7 +4208,7 @@ ${recentHistory}
                   {avatar ? (
                     <img src={avatar} className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-4xl text-gray-300 font-serif italic">
+                    <span className="text-4xl text-gray-300 italic">
                       {persona.name[0]}
                     </span>
                   )}
@@ -5629,7 +4250,7 @@ ${recentHistory}
                     <textarea
                       id="raw-json-edit"
                       name="raw-json-edit"
-                      className="w-full h-48 bg-transparent text-xs font-mono text-gray-600 resize-none outline-none custom-scrollbar"
+                      className="w-full h-48 bg-transparent text-xs text-gray-600 resize-none outline-none custom-scrollbar"
                       value={inputKey}
                       onChange={(e) => setInputKey(e.target.value)}
                       placeholder="在此粘贴或修改人物设定..."
@@ -5648,9 +4269,7 @@ ${recentHistory}
                   /* 2. 查看模式 (View Mode) - 已修改为显示 Raw Prompt */
                   <>
                     <div className="text-center">
-                      <h2 className="text-3xl font-serif text-gray-900">
-                        {persona.name}
-                      </h2>
+                      <h2 className="text-3xl text-gray-900">{persona.name}</h2>
                       {/* 仅当有英文名时显示 */}
                       {persona.enName && (
                         <p className="text-xs uppercase tracking-[0.2em] text-gray-400 mt-2">
@@ -5678,7 +4297,7 @@ ${recentHistory}
                         onClick={() => setShowEditPersona(true)} // 点击卡片也能直接编辑
                         title="点击编辑"
                       >
-                        <p className="font-mono text-[10px] leading-relaxed text-gray-600 whitespace-pre-wrap">
+                        <p className="text-[10px] leading-relaxed text-gray-600 whitespace-pre-wrap">
                           {inputKey ||
                             "暂无设定数据... 请点击编辑手动输入或上传 JSON"}
                         </p>
@@ -5903,62 +4522,14 @@ ${recentHistory}
           </AppWindow>
 
           {/* APP: WORLDBOOK (Grouped) */}
-          <AppWindow
+          <WorldBook
             isOpen={activeApp === "worldbook"}
-            title="世界书"
             onClose={() => setActiveApp(null)}
-          >
-            <div className="space-y-6 pt-4 pb-20">
-              {/* 操作栏 */}
-              <div className="grid grid-cols-2 gap-3">
-                <label className="py-3 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-black transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm">
-                  <Upload size={14} />
-                  导入JSON
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept=".json"
-                    onChange={handleWorldBookUpload}
-                  />
-                </label>
-                <button
-                  onClick={async () => {
-                    const name = await customPrompt(
-                      "请输入新分组名称 (将创建一个空条目):",
-                    );
-                    if (name) {
-                      setWorldBook([
-                        {
-                          id: Date.now(),
-                          name: "新条目",
-                          content: "",
-                          group: name,
-                          enabled: true,
-                        },
-                        ...worldBook,
-                      ]);
-                    }
-                  }}
-                  className="py-3 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-black transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm"
-                >
-                  <Plus size={14} />
-                  新建分组
-                </button>
-              </div>
-              {getGroups(worldBook).map((group) => (
-                <WorldBookGroup
-                  key={group}
-                  group={group}
-                  worldBook={worldBook}
-                  setWorldBook={setWorldBook}
-                  moveWorldBookEntry={moveWorldBookEntry}
-                  renameWorldBookGroup={renameWorldBookGroup}
-                  deleteWorldBookGroup={deleteWorldBookGroup}
-                  toggleWorldBookEntry={toggleWorldBookEntry}
-                />
-              ))}
-            </div>
-          </AppWindow>
+            showToast={showToast}
+            customPrompt={customPrompt}
+            worldBook={worldBook}
+            setWorldBook={setWorldBook}
+          />
 
           {/* APP: CHAT */}
           <AppWindow
@@ -6472,7 +5043,7 @@ ${recentHistory}
                               : "ml-12 pl-1 flex-row"
                           }`}
                         >
-                          <span className="text-[9px] text-gray-300 font-mono">
+                          <span className="text-[9px] text-gray-300">
                             {msg.time}
                           </span>
                           {msg.sender === "char" && !msg.isTransfer && (
@@ -6515,7 +5086,7 @@ ${recentHistory}
                                 size={10}
                                 className="mt-0.5 text-blue-400 shrink-0"
                               />
-                              <span className="text-[10px] text-blue-800 font-serif italic leading-tight">
+                              <span className="text-[10px] text-blue-800 italic leading-tight">
                                 "{msg.status.thought}"
                               </span>
                             </div>
@@ -6524,7 +5095,7 @@ ${recentHistory}
                                 size={10}
                                 className="mt-0.5 text-red-400 shrink-0"
                               />
-                              <span className="text-[10px] text-red-800 font-serif italic leading-tight">
+                              <span className="text-[10px] text-red-800 italic leading-tight">
                                 "{msg.status.desire}"
                               </span>
                             </div>
@@ -6798,7 +5369,7 @@ ${recentHistory}
                             }
                             rows={1}
                             // 注意：这里加了 w-full 和 pr-10 (右侧留白给按钮)，去掉了 flex-grow (因为父容器已经是 flex-grow)
-                            className={`w-full min-w-0 border rounded-2xl py-2.5 pl-4 pr-10 text-sm focus:outline-none transition-all font-sans shadow-inner resize-none custom-scrollbar ${
+                            className={`w-full min-w-0 border rounded-2xl py-2.5 pl-4 pr-10 text-sm focus:outline-none transition-all shadow-inner resize-none custom-scrollbar ${
                               isVoiceMode
                                 ? "bg-[#7A2A3A]/10 border-[#7A2A3A]/30 text-[#7A2A3A] placeholder:text-[#7A2A3A]/50"
                                 : "bg-white/60 border-gray-200 text-gray-800 focus:border-gray-400"
@@ -6911,6 +5482,11 @@ ${recentHistory}
                 handleResetFont={handleResetFont}
                 inputUrl={inputUrl}
                 setInputUrl={setInputUrl}
+                // 图标
+                appList={APP_LIST}
+                customIcons={customIcons}
+                handleAppIconUpload={handleAppIconUpload}
+                handleResetIcon={handleResetIcon}
                 // 导入导出
                 onExportChat={exportChatData}
                 onImportChat={importChatData}
@@ -7069,7 +5645,7 @@ ${recentHistory}
                         />
                       </div>
                       <div
-                        className="font-serif text-sm leading-loose text-gray-700 whitespace-pre-line diary-content"
+                        className="text-sm leading-loose text-gray-700 whitespace-pre-line diary-content"
                         dangerouslySetInnerHTML={{ __html: d.content }}
                       />
                       {d.quote && (
@@ -7078,7 +5654,7 @@ ${recentHistory}
                             size={12}
                             className="text-gray-400 flex-shrink-0 mt-0.5"
                           />
-                          <p className="font-serif italic text-gray-500 text-xs">
+                          <p className="italic text-gray-500 text-xs">
                             {d.quote}
                           </p>
                         </div>
@@ -7112,7 +5688,7 @@ ${recentHistory}
               {receipts.map((r, i) => (
                 <div
                   key={i}
-                  className="bg-white p-6 shadow-md font-mono text-xs relative group rotate-1 hover:rotate-0 transition-transform duration-300"
+                  className="bg-white p-6 shadow-md text-xs relative group rotate-1 hover:rotate-0 transition-transform duration-300"
                 >
                   <div className="flex justify-between mb-4 border-b border-dashed pb-2">
                     <span className="font-bold text-sm">{r.store}</span>
@@ -7149,618 +5725,29 @@ ${recentHistory}
             </div>
           </AppWindow>
           {/* APP: FORUM */}
-          <AppWindow
+          <Forum
             isOpen={activeApp === "forum"}
-            title={activeThreadId ? "帖子详情" : forumData.name || "本地论坛"}
-            onClose={() => {
-              if (activeThreadId) setActiveThreadId(null);
-              else setActiveApp(null);
-            }}
-            actions={
-              /* 只有在已初始化 且 在列表页时 显示设置和发帖按钮 */
-              forumData.isInitialized &&
-              !activeThreadId && (
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setShowForumSettings(true)}
-                    className="bg-gray-200 text-gray-600 p-1.5 rounded-full hover:bg-gray-300 transition-colors"
-                    title="设置ID"
-                  >
-                    <UserRound size={16} />
-                  </button>
-                  <button
-                    onClick={() => setShowPostModal(true)}
-                    className="bg-black text-white p-1.5 rounded-full hover:scale-105 transition-transform shadow-md"
-                    title="发帖"
-                  >
-                    <Plus size={16} />
-                  </button>
-                </div>
-              )
-            }
-          >
-            {/* 状态 0: 未初始化 (黑底大按钮) */}
-            {!forumData.isInitialized ? (
-              <div className="flex flex-col items-center justify-center h-full pb-20 px-6 animate-in fade-in">
-                <h2 className="text-xl font-bold text-gray-800 mb-2">
-                  本地生活圈
-                </h2>
-                <p className="text-xs text-gray-500 text-center mb-8 leading-relaxed max-w-[240px]">
-                  连接城市脉搏，发现角色身边的真实世界。
-                  <br />
-                  初始化将生成随机的本地话题和网友讨论。
-                </p>
-                <button
-                  onClick={initForum}
-                  disabled={loading.forum}
-                  className="w-full max-w-xs py-4 bg-black text-white rounded-2xl text-sm font-bold uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl flex items-center justify-center gap-2"
-                >
-                  {loading.forum ? (
-                    <RefreshCw className="animate-spin" size={16} />
-                  ) : (
-                    <Hash size={16} />
-                  )}
-                  {loading.forum ? "生活圈加载中..." : "初始化生活圈"}
-                </button>
-              </div>
-            ) : activeThreadId ? (
-              /* 状态 1: 帖子详情页 (Level 2) */
-              (() => {
-                const thread = forumData.posts.find(
-                  (p) => p.id === activeThreadId,
-                );
-                if (!thread) return <div>帖子不存在</div>;
-                return (
-                  <div className="pb-20 pt-2 animate-in slide-in-from-right-4">
-                    {/* 楼主 */}
-                    <div className="bg-white p-5 rounded-xl shadow-sm mb-4 relative group">
-                      {/* --- 新增：楼主贴转发按钮 --- */}
-                      <div className="absolute top-4 right-4 flex gap-2">
-                        <button
-                          onClick={() => handleForwardToChat(thread, "post")}
-                          className="p-1.5 bg-gray-100 rounded-full text-gray-400 hover:text-black hover:bg-gray-200 transition-colors"
-                          title="转发给角色"
-                        >
-                          <Share size={14} />
-                        </button>
-                      </div>
-
-                      <h2 className="text-lg font-bold mb-2 text-gray-900 leading-snug pr-8">
-                        {thread.title}
-                      </h2>
-                      <div className="flex items-center gap-2 text-xs text-gray-400 mb-4 border-b border-gray-100 pb-3">
-                        <div
-                          className={`font-bold ${
-                            thread.authorType === "char" ||
-                            thread.author === persona?.name
-                              ? "text-[#7A2A3A]"
-                              : "text-gray-600"
-                          }`}
-                        >
-                          {thread.author}
-                        </div>
-                        <span>·</span>
-                        <span>{thread.time}</span>
-                        {(thread.isUserCreated ||
-                          thread.authorType === "char") && (
-                          <button
-                            onClick={() => handleDeletePost(thread.id)}
-                            className="ml-auto text-gray-300 hover:text-red-400 flex items-center gap-1"
-                          >
-                            <Trash2 size={12} /> 删除
-                          </button>
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
-                        {thread.content}
-                      </p>
-                    </div>
-
-                    {/* 评论区 */}
-                    <div className="space-y-3 px-1">
-                      <div className="flex justify-between items-center px-1 mb-2">
-                        <span className="text-xs font-bold text-gray-400">
-                          回复 ({thread.replyCount || 0})
-                        </span>
-
-                        <div className="flex gap-2">
-                          {/* 手动让角色回复 (仅当楼主不是角色本人时显示) */}
-                          {!(
-                            thread.authorType === "char" ||
-                            thread.author === persona?.name
-                          ) && (
-                            <button
-                              onClick={() =>
-                                generateForumReplies(thread.id, "Manual")
-                              }
-                              disabled={loading.forum_char_reply}
-                              className="text-[10px] bg-[#7A2A3A] text-white px-2 py-1 rounded-lg flex items-center gap-1 disabled:opacity-50 shadow-sm"
-                            >
-                              {loading.forum_char_reply ? (
-                                <RefreshCw size={10} className="animate-spin" />
-                              ) : (
-                                <Sparkle size={12} />
-                              )}
-                              {loading.forum_char_reply ? "正在输入" : "让TA回"}
-                            </button>
-                          )}
-
-                          {/* 2. 刷新路人回复 */}
-                          <button
-                            onClick={() =>
-                              generateForumReplies(thread.id, "Auto")
-                            }
-                            disabled={loading.forum_reply}
-                            className="text-[10px] bg-white border border-gray-200 text-gray-600 px-2 py-1 rounded-lg flex items-center gap-1 disabled:opacity-50 shadow-sm"
-                          >
-                            <RefreshCcw
-                              size={10}
-                              className={
-                                loading.forum_reply ? "animate-spin" : ""
-                              }
-                            />
-                            刷新
-                          </button>
-                        </div>
-                      </div>
-
-                      {(thread.replies || []).map((reply, idx) => (
-                        <div
-                          key={reply.id || idx}
-                          className={`p-3 rounded-xl text-sm relative group ${
-                            reply.isUser
-                              ? "bg-blue-50 ml-8"
-                              : reply.isCharacter
-                                ? "bg-[#7A2A3A]/5 border border-[#7A2A3A]/20"
-                                : "bg-white/60"
-                          }`}
-                        >
-                          {/* --- 头部信息行：包含名字、操作按钮、楼层号 --- */}
-                          <div className="flex justify-between items-center mb-1 min-h-[18px]">
-                            {/* 左侧：名字 + 楼主标识 */}
-                            <span
-                              className={`text-xs font-bold flex items-center gap-1 ${
-                                reply.isCharacter
-                                  ? "text-[#7A2A3A]"
-                                  : "text-gray-600"
-                              }`}
-                            >
-                              {reply.author}
-                              {reply.author === thread.author && (
-                                <span className="px-1.5 py-0.5 bg-gray-200 text-gray-500 text-[8px] rounded-md scale-90 origin-left">
-                                  楼主
-                                </span>
-                              )}
-                            </span>
-
-                            {/* 右侧区域：操作按钮组 + 楼层号 */}
-                            <div className="flex items-center gap-2">
-                              {/* 按钮组：默认隐藏，悬停显示 (放入 Flex 流中，不再遮挡名字) */}
-                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                {/* 1. 删除按钮 (在分享左边) */}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteReply(thread.id, reply.id);
-                                  }}
-                                  className="p-1 text-gray-300 hover:text-red-500 transition-colors"
-                                  title="删除此楼"
-                                >
-                                  <Trash2 size={12} />
-                                </button>
-
-                                {/* 2. 分享按钮 */}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleForwardToChat(
-                                      reply,
-                                      "comment",
-                                      thread.title,
-                                    );
-                                  }}
-                                  className="p-1 text-gray-300 hover:text-black transition-colors"
-                                  title="转发这条评论"
-                                >
-                                  <Share size={12} />
-                                </button>
-                              </div>
-
-                              {/* 3. 楼层号 */}
-                              <span className="text-[9px] text-gray-300 min-w-[20px] text-right">
-                                #{idx + 1}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* 评论内容 */}
-                          <p className="text-gray-800 leading-relaxed break-words">
-                            {reply.content}
-                          </p>
-                        </div>
-                      ))}
-
-                      {/* 用户回复框 - [修改] 增加身份切换和发送按钮 */}
-                      <div className="mt-6 flex flex-col gap-2 sticky bottom-4 z-20">
-                        {/* 身份指示条 */}
-                        <div className="flex justify-end px-2">
-                          <div className="bg-black/80 backdrop-blur-md text-white text-[10px] p-1 pl-1 pr-1 rounded-lg flex items-center gap-1 shadow-lg">
-                            <span className="opacity-60 ml-1">身份:</span>
-                            <select
-                              value={replyIdentity}
-                              onChange={(e) => setReplyIdentity(e.target.value)}
-                              className="bg-transparent font-bold outline-none text-white appearance-none cursor-pointer text-center min-w-[60px]"
-                            >
-                              <option value="me" className="text-black">
-                                大号 ({forumSettings.userNick || "我"})
-                              </option>
-                              <option value="smurf" className="text-black">
-                                小号 ({forumSettings.smurfNick || "马甲"})
-                              </option>
-                            </select>
-                            <ChevronDown
-                              size={10}
-                              className="opacity-60 mr-1"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="flex gap-2 items-center">
-                          <input
-                            id="forum-reply-input"
-                            type="text"
-                            placeholder={
-                              replyIdentity === "me"
-                                ? `以 ${forumSettings.userNick} 回复`
-                                : `以 ${forumSettings.smurfNick} 回复`
-                            }
-                            className={`flex-grow backdrop-blur shadow-lg p-3 rounded-full text-sm border outline-none transition-all ${
-                              replyIdentity === "me"
-                                ? "bg-white/90 border-gray-200 focus:border-black"
-                                : "bg-gray-100/90 border-gray-200 focus:border-gray-400 text-gray-600"
-                            }`}
-                            onKeyPress={(e) => {
-                              if (e.key === "Enter") {
-                                handleUserReply(
-                                  thread.id,
-                                  e.target.value,
-                                  replyIdentity,
-                                );
-                                e.target.value = "";
-                              }
-                            }}
-                          />
-                          <button
-                            onClick={() => {
-                              const input =
-                                document.getElementById("forum-reply-input");
-                              if (input && input.value) {
-                                handleUserReply(
-                                  thread.id,
-                                  input.value,
-                                  replyIdentity,
-                                );
-                                input.value = "";
-                              }
-                            }}
-                            className={`p-3 rounded-full shadow-lg text-white transition-all active:scale-95 ${
-                              replyIdentity === "me"
-                                ? "bg-black hover:bg-gray-800"
-                                : "bg-gray-500 hover:bg-gray-600"
-                            }`}
-                          >
-                            <Send size={16} />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()
-            ) : (
-              /* 状态 2: 帖子列表页 (Level 1) - 已初始化 */
-              <div className="space-y-4 pt-2 pb-20 animate-in fade-in">
-                {/* Header Controls */}
-                <div className="glass-card p-3 rounded-xl space-y-3">
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={forumGuidance}
-                      onChange={(e) => setForumGuidance(e.target.value)}
-                      placeholder="讨论方向（例如：讨论最近的都市传说）"
-                      className="flex-grow bg-white/50 text-xs p-2 rounded-lg outline-none border border-transparent focus:bg-white focus:border-gray-200 transition-colors"
-                    />
-                    {forumGuidance && (
-                      <button
-                        onClick={() => setForumGuidance("")}
-                        className="text-gray-400 hover:text-black"
-                      >
-                        <X size={14} />
-                      </button>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={generateForumPosts}
-                      disabled={loading.forum_new}
-                      className="bg-black text-white py-2.5 rounded-lg text-xs font-bold hover:bg-gray-800 disabled:opacity-50 shadow-md flex items-center justify-center gap-2"
-                    >
-                      {loading.forum_new ? (
-                        <RefreshCw className="animate-spin" size={12} />
-                      ) : (
-                        <Plus size={12} />
-                      )}
-                      生成新帖
-                    </button>
-                    <button
-                      onClick={refreshAllForumReplies}
-                      disabled={loading.forum_refresh_all}
-                      className="bg-white text-gray-700 border border-gray-200 py-2.5 rounded-lg text-xs font-bold hover:bg-gray-50 disabled:opacity-50 shadow-sm flex items-center justify-center gap-2"
-                    >
-                      {loading.forum_refresh_all ? (
-                        <RefreshCw className="animate-spin" size={12} />
-                      ) : (
-                        <RefreshCcw size={12} />
-                      )}
-                      更新回复
-                    </button>
-                  </div>
-                </div>
-
-                {/* Post List */}
-                {forumData.posts.map((post) => (
-                  <div
-                    key={post.id}
-                    onClick={() => {
-                      if (
-                        (!post.replies || post.replies.length === 0) &&
-                        !post.isUserCreated
-                      ) {
-                        generateForumReplies(post.id);
-                      }
-                      setActiveThreadId(post.id);
-                    }}
-                    className="bg-white p-4 rounded-xl shadow-sm active:scale-98 transition-transform cursor-pointer border border-gray-100 hover:border-gray-300 relative group"
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-bold text-sm text-gray-900 line-clamp-1 pr-4">
-                        {post.title}
-                      </h3>
-                    </div>
-                    <p className="text-xs text-gray-500 line-clamp-2 mb-3 h-8 leading-relaxed">
-                      {post.content}
-                    </p>
-                    <div className="flex justify-between items-center text-[10px] text-gray-400">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`font-bold max-w-[100px] truncate ${
-                            post.authorType === "char" ||
-                            post.author === persona?.name
-                              ? "text-[#7A2A3A]"
-                              : ""
-                          }`}
-                        >
-                          {post.author}
-                        </span>
-                        <span>{post.time}</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="flex items-center gap-1">
-                          <CommentIcon size={12} /> {post.replyCount || 0}
-                        </span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation(); // 防止触发进入详情
-                            handleDeletePost(post.id);
-                          }}
-                          className="text-gray-300 hover:text-red-400 p-1"
-                          title="删除帖子"
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      </div>
-                    </div>
-                    {post.authorType === "char" && (
-                      <div className="absolute top-2 right-2 w-2 h-2 bg-[#7A2A3A] rounded-full"></div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* 设置 ID 弹窗 */}
-            {showForumSettings && (
-              <div className="absolute inset-0 z-[60] bg-black/50 flex items-center justify-center p-6 animate-in fade-in">
-                <div className="bg-white w-full max-w-sm rounded-2xl p-5 shadow-2xl flex flex-col gap-4">
-                  <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
-                    <User size={16} /> 设置ID
-                  </h3>
-                  <p className="text-[10px] text-gray-400">
-                    修改ID将同步更新历史发帖记录。
-                  </p>
-
-                  <div>
-                    <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">
-                      我的网名
-                    </label>
-                    <input
-                      value={forumSettings.userNick}
-                      onChange={(e) =>
-                        setForumSettings((p) => ({
-                          ...p,
-                          userNick: e.target.value,
-                        }))
-                      }
-                      className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-xs outline-none focus:border-black mb-3"
-                      placeholder="匿名用户"
-                    />
-
-                    {/* [新增] 小号设置 */}
-                    <label className="text-[10px] font-bold uppercase text-gray-400 mb-1 block">
-                      我的马甲 (小号)
-                    </label>
-                    <input
-                      value={forumSettings.smurfNick}
-                      onChange={(e) =>
-                        setForumSettings((p) => ({
-                          ...p,
-                          smurfNick: e.target.value,
-                        }))
-                      }
-                      className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-xs outline-none focus:border-gray-400"
-                      placeholder="不是小号"
-                    />
-                    <p className="text-[9px] text-gray-400 mt-1 mb-2">
-                      *用小号回复时，角色不会知道是你。
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold uppercase text-[#7A2A3A] mb-1 block">
-                      角色网名
-                    </label>
-                    <input
-                      value={forumSettings.charNick}
-                      onChange={(e) =>
-                        setForumSettings((p) => ({
-                          ...p,
-                          charNick: e.target.value,
-                        }))
-                      }
-                      className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-xs outline-none focus:border-[#7A2A3A]"
-                      placeholder="匿名用户"
-                    />
-                  </div>
-
-                  <div className="flex gap-2 mt-2">
-                    <button
-                      onClick={() => setShowForumSettings(false)}
-                      className="flex-1 py-2 bg-gray-100 text-gray-600 rounded-lg text-xs font-bold"
-                    >
-                      取消
-                    </button>
-                    <button
-                      onClick={() => updateForumSettings(forumSettings)}
-                      className="flex-1 py-2 bg-black text-white rounded-lg text-xs font-bold"
-                    >
-                      保存并更新
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* 发帖 Modal (已修复草稿串台问题) */}
-            {showPostModal && (
-              <div className="absolute inset-0 z-50 bg-[#F2F2F7] flex flex-col animate-in slide-in-from-bottom-10">
-                <div className="h-14 px-4 flex items-center justify-between bg-white border-b border-gray-200/50">
-                  <button
-                    onClick={() => setShowPostModal(false)}
-                    className="text-gray-500 font-bold text-xs"
-                  >
-                    取消
-                  </button>
-                  <h3 className="font-bold text-sm">发布新帖</h3>
-                  <button
-                    onClick={handleCreatePost}
-                    disabled={
-                      !postDrafts[postTab].title || !postDrafts[postTab].content
-                    }
-                    className="bg-black text-white px-4 py-1.5 rounded-full font-bold text-xs disabled:opacity-50"
-                  >
-                    发布
-                  </button>
-                </div>
-
-                <div className="p-4 space-y-4">
-                  {/* Tab Switch */}
-                  <div className="bg-gray-200/50 p-1 rounded-xl flex">
-                    <button
-                      className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
-                        postTab === "me"
-                          ? "bg-white shadow-sm text-black"
-                          : "text-gray-400"
-                      }`}
-                      onClick={() => setPostTab("me")}
-                    >
-                      我的身份 ({getForumName("me")})
-                    </button>
-                    <button
-                      className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
-                        postTab === "char"
-                          ? "bg-[#7A2A3A] text-white shadow-sm"
-                          : "text-gray-400"
-                      }`}
-                      onClick={() => setPostTab("char")}
-                    >
-                      角色身份 ({getForumName("char")})
-                    </button>
-                  </div>
-
-                  {/* Input Area */}
-                  <div className="space-y-4">
-                    {postTab === "char" && (
-                      <div className="bg-[#7A2A3A]/5 p-3 rounded-xl border border-[#7A2A3A]/10 animate-in fade-in">
-                        <div className="flex justify-between items-center mb-2">
-                          <label className="text-[10px] font-bold text-[#7A2A3A] uppercase flex items-center gap-1">
-                            <Ghost size={10} /> AI 代写 (角色视角)
-                          </label>
-                        </div>
-                        <div className="flex gap-2">
-                          <input
-                            value={postDrafts.char.topic}
-                            onChange={(e) =>
-                              setPostDrafts((p) => ({
-                                ...p,
-                                char: { ...p.char, topic: e.target.value },
-                              }))
-                            }
-                            placeholder="输入主题，例如: 吐槽加班..."
-                            className="flex-grow bg-white text-xs p-2.5 rounded-lg outline-none border border-transparent focus:border-[#7A2A3A]/30"
-                          />
-                          <button
-                            onClick={generateCharacterPost}
-                            disabled={loading.forum_char}
-                            className="px-4 bg-[#7A2A3A] text-white rounded-lg text-xs font-bold disabled:opacity-50 whitespace-nowrap shadow-sm"
-                          >
-                            {loading.forum_char ? "..." : "生成"}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="bg-white rounded-xl p-4 shadow-sm space-y-3">
-                      <input
-                        type="text"
-                        value={postDrafts[postTab].title}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setPostDrafts((p) => ({
-                            ...p,
-                            [postTab]: { ...p[postTab], title: val },
-                          }));
-                        }}
-                        placeholder="添加标题"
-                        className="w-full text-base font-bold outline-none bg-transparent placeholder:text-gray-300"
-                      />
-                      <div className="h-[1px] bg-gray-100 w-full"></div>
-                      <textarea
-                        value={postDrafts[postTab].content}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setPostDrafts((p) => ({
-                            ...p,
-                            [postTab]: { ...p[postTab], content: val },
-                          }));
-                        }}
-                        placeholder="分享你的新鲜事..."
-                        className="w-full h-48 text-sm resize-none outline-none bg-transparent custom-scrollbar leading-relaxed placeholder:text-gray-300"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </AppWindow>
+            onClose={() => setActiveApp(null)}
+            persona={persona}
+            userName={userName}
+            userPersona={inputKey} // 或者是你的 charDescription 变量名
+            apiConfig={apiConfig}
+            prompts={prompts}
+            generateContent={generateContent}
+            showToast={showToast}
+            worldInfoString={currentWorldInfoString} // 传字符串进去
+            getCurrentTimeObj={getCurrentTimeObj}
+            getContextString={getContextString}
+            customConfirm={customConfirm}
+            customRules={customRules}
+            getFinalSystemPrompt={getFinalSystemPrompt}
+            charTrackerContext={charTrackerContext}
+            trackerContext={trackerContext}
+            setChatHistory={setChatHistory}
+            setMsgCountSinceSummary={setMsgCountSinceSummary}
+            setForwardContext={setForwardContext}
+            setActiveApp={setActiveApp}
+          />
           {/* APP: SMART WATCH (智能看看) */}
           <AppWindow
             isOpen={activeApp === "smartwatch"}
@@ -7772,7 +5759,7 @@ ${recentHistory}
               <div className="flex justify-between items-center px-4 pt-4 mb-4">
                 <button
                   onClick={() => setIsEditingMap(!isEditingMap)}
-                  className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border ${
+                  className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border transition-all ${
                     isEditingMap
                       ? "bg-black text-white border-black"
                       : "text-gray-400 border-gray-200"
@@ -7798,24 +5785,22 @@ ${recentHistory}
 
               {/* MAP AREA */}
               <div className="relative w-full h-[550px] bg-[#F5F5F7] border-y border-gray-200 overflow-y-auto custom-scrollbar mb-6">
-                <div className="absolute top-0 w-full h-8 pointer-events-none"></div>
                 {smartWatchLocations.length === 0 ? (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center px-6">
                     <p className="text-xs text-gray-400">暂无监控数据</p>
-                    <p className="text-xs text-gray-400">
-                      请确认已正确开启世界书后，再点击下方按钮
+                    <p className="text-[10px] text-gray-300">
+                      请确认已开启世界书，然后初始化系统
                     </p>
                     <button
                       onClick={initSmartWatch}
                       disabled={loading.smartwatch}
-                      className="px-4 py-2 bg-black text-white text-xs rounded-lg"
+                      className="px-6 py-2 bg-black text-white text-xs rounded-lg active:scale-95 transition-transform disabled:bg-gray-400"
                     >
-                      {loading.smartwatch ? "初始化中..." : "初始化系统"}
+                      {loading.smartwatch ? "初始化中..." : "初始化监控系统"}
                     </button>
                   </div>
                 ) : (
                   <>
-                    {/* Map Visualization */}
                     <div className="map-line"></div>
                     {smartWatchLocations.map((loc, idx) => {
                       const isActive = smartWatchLogs[0]?.locationId === loc.id;
@@ -7823,9 +5808,8 @@ ${recentHistory}
                         Math.max(smartWatchLocations.length, 4),
                         6,
                       );
-                      const layout = MAP_LAYOUTS[count]
-                        ? MAP_LAYOUTS[count][idx]
-                        : MAP_LAYOUTS[4][idx];
+                      const layout =
+                        MAP_LAYOUTS[count][idx] || MAP_LAYOUTS[4][idx];
                       const isLeft = layout.side === "left";
 
                       return (
@@ -7836,13 +5820,10 @@ ${recentHistory}
                         >
                           {/* Dot */}
                           <div
-                            className={`map-node-dot ${
-                              isActive ? "active" : ""
-                            }`}
+                            className={`map-node-dot ${isActive ? "active" : ""}`}
                             onClick={() =>
                               setSwFilter(swFilter === loc.id ? "all" : loc.id)
                             }
-                            title="点击筛选此地点日志"
                           ></div>
 
                           {/* Connector */}
@@ -7869,8 +5850,7 @@ ${recentHistory}
                                 : "1px solid #d1d5db",
                             }}
                           >
-                            {/* Image Upload / Display */}
-                            <div className="relative w-full h-[50px] bg-gray-300 mb-2 overflow-hidden flex items-center justify-center">
+                            <div className="relative w-full h-[50px] bg-gray-200 mb-2 overflow-hidden flex items-center justify-center rounded-sm">
                               {loc.img ? (
                                 <img
                                   src={loc.img}
@@ -7880,7 +5860,6 @@ ${recentHistory}
                               ) : (
                                 <MapPin size={16} className="text-gray-400" />
                               )}
-                              {/* Upload Overlay */}
                               {isEditingMap && (
                                 <div
                                   className="absolute inset-0 bg-black/40 flex items-center justify-center cursor-pointer"
@@ -7915,7 +5894,7 @@ ${recentHistory}
 
                             {isEditingMap ? (
                               <input
-                                className="w-full text-[10px] font-bold bg-white border border-gray-300 px-1"
+                                className="w-full text-[10px] font-bold bg-white border border-gray-300 px-1 outline-none focus:border-blue-500"
                                 value={loc.name}
                                 onChange={(e) => {
                                   const newLocs = [...smartWatchLocations];
@@ -7924,7 +5903,7 @@ ${recentHistory}
                                 }}
                               />
                             ) : (
-                              <div className="font-bold truncate">
+                              <div className="font-bold truncate text-[10px]">
                                 {loc.name}
                               </div>
                             )}
@@ -7933,19 +5912,16 @@ ${recentHistory}
                               {loc.desc}
                             </div>
 
-                            {/* Delete Button (Editing) */}
                             {isEditingMap && (
                               <button
-                                className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full"
+                                className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
                                 onClick={() => {
                                   if (smartWatchLocations.length > 4) {
-                                    const newLocs = smartWatchLocations.filter(
-                                      (_, i) => i !== idx,
+                                    setSmartWatchLocations(
+                                      smartWatchLocations.filter(
+                                        (_, i) => i !== idx,
+                                      ),
                                     );
-                                    // Re-calculate layout to keep valid shapes?
-                                    // For simplicity, we just filter. Ideally we re-assign layout from MAP_LAYOUTS
-                                    // But let's just let it be strictly 4-6 via logic
-                                    setSmartWatchLocations(newLocs);
                                   } else {
                                     showToast("error", "最少保留4个地点");
                                   }
@@ -7959,7 +5935,6 @@ ${recentHistory}
                       );
                     })}
 
-                    {/* Current Status Text if Unknown */}
                     {!smartWatchLogs[0]?.locationId &&
                       smartWatchLogs.length > 0 && (
                         <div className="absolute bottom-4 left-0 right-0 text-center">
@@ -7981,7 +5956,7 @@ ${recentHistory}
                   {swFilter !== "all" && (
                     <button
                       onClick={() => setSwFilter("all")}
-                      className="text-[9px] text-blue-500 flex items-center"
+                      className="text-[9px] text-blue-500 flex items-center hover:underline"
                     >
                       <X size={10} className="mr-1" /> 清除筛选
                     </button>
@@ -7997,17 +5972,12 @@ ${recentHistory}
                     .map((log, i) => (
                       <div
                         key={log.id}
-                        className="glass-card p-4 rounded-xl relative group"
+                        className="glass-card p-4 rounded-xl relative group border border-gray-100 shadow-sm"
                       >
-                        {/* Header */}
                         <div className="flex justify-between items-start mb-2">
                           <div className="flex items-center gap-2">
                             <div
-                              className={`w-2 h-2 rounded-full ${
-                                i === 0
-                                  ? "bg-green-500 animate-pulse"
-                                  : "bg-gray-300"
-                              }`}
+                              className={`w-2 h-2 rounded-full ${i === 0 ? "bg-green-500 animate-pulse" : "bg-gray-300"}`}
                             ></div>
                             <span className="text-xs font-bold text-gray-800">
                               {log.locationName}
@@ -8018,31 +5988,34 @@ ${recentHistory}
                           </span>
                         </div>
 
-                        {/* Action */}
-                        <div className="text-xs text-gray-600 mb-3 bg-white/50 p-2 rounded-lg">
-                          <span className="font-bold mr-1">状态:</span>{" "}
+                        <div className="text-xs text-gray-600 mb-3 bg-white/60 p-2 rounded-lg border border-white/50">
+                          <span className="font-bold mr-1 text-gray-400">
+                            状态:
+                          </span>{" "}
                           {log.action}
                         </div>
 
-                        {/* Collapsible Sections */}
                         <div className="space-y-2">
                           <CollapsibleThought
                             text={log.thought}
                             label="查看心声"
                           />
-
-                          {/* AV Data */}
                           {log.avData && (
                             <details className="group/details">
-                              <summary className="list-none cursor-pointer flex items-center gap-1 text-[10px] uppercase font-bold text-gray-400 hover:text-[#7A2A3A] transition-colors mt-2">
-                                <span className="group-open/details:hidden flex items-center gap-1">
-                                  <Video size={12} /> 查看音视频数据
-                                </span>
-                                <span className="hidden group-open/details:flex items-center gap-1">
-                                  <ChevronUp size={12} /> 收起数据
+                              <summary className="list-none cursor-pointer flex items-center gap-1 text-[10px] uppercase font-bold text-gray-400 hover:text-red-500 transition-colors mt-2">
+                                <Video
+                                  size={12}
+                                  className="group-open/details:hidden"
+                                />
+                                <ChevronUp
+                                  size={12}
+                                  className="hidden group-open/details:block"
+                                />
+                                <span>
+                                  {log.avData ? "音视频数据" : "无信号"}
                                 </span>
                               </summary>
-                              <div className="mt-2 p-3 bg-black/5 rounded-lg border border-black/10 text-[10px] leading-relaxed font-mono text-gray-600 animate-in slide-in-from-top-1">
+                              <div className="mt-2 p-3 bg-black/5 rounded-lg border border-black/10 text-[10px] leading-relaxed text-gray-600 animate-in slide-in-from-top-1">
                                 <div className="flex items-center gap-1 text-red-500 mb-1 font-bold animate-pulse">
                                   <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>{" "}
                                   REC
@@ -8053,7 +6026,6 @@ ${recentHistory}
                           )}
                         </div>
 
-                        {/* Delete */}
                         <button
                           onClick={() =>
                             setSmartWatchLogs((prev) =>
@@ -8067,7 +6039,7 @@ ${recentHistory}
                       </div>
                     ))}
                   {smartWatchLogs.length === 0 && (
-                    <div className="text-center text-gray-400 text-xs py-4">
+                    <div className="text-center text-gray-400 text-xs py-8">
                       暂无日志记录
                     </div>
                   )}
@@ -8191,14 +6163,14 @@ ${recentHistory}
               </div>
               {music.length > 0 ? (
                 <div className="text-center w-full px-6">
-                  <h2 className="text-2xl font-serif truncate text-gray-900">
+                  <h2 className="text-2xl truncate text-gray-900">
                     {music[0].title}
                   </h2>
                   <p className="text-xs uppercase font-bold text-gray-400 mb-6 mt-1">
                     {music[0].artist}
                   </p>
                   <div className="glass-card p-4 rounded-xl mb-4 border-none bg-white/40">
-                    <p className="font-serif italic text-gray-600 text-sm">
+                    <p className="italic text-gray-600 text-sm">
                       "{music[0].lyric}"
                     </p>
                   </div>
@@ -8255,14 +6227,14 @@ ${recentHistory}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 overflow-hidden">
-                          <span className="text-[10px] font-mono text-gray-300 w-4">
+                          <span className="text-[10px] text-gray-300 w-4">
                             0{idx + 1}
                           </span>
                           <div className="flex flex-col overflow-hidden">
-                            <span className="font-serif text-sm text-gray-800 truncate">
+                            <span className="text-sm text-gray-800 truncate">
                               {track.title}
                             </span>
-                            <span className="text-[9px] font-sans uppercase text-gray-400 truncate">
+                            <span className="text-[9px] uppercase text-gray-400 truncate">
                               {track.artist}
                             </span>
                           </div>
@@ -8287,7 +6259,7 @@ ${recentHistory}
                       </div>
                       {expandedMusicHistory === idx && (
                         <div className="mt-3 pt-3 border-t border-gray-100 animate-in slide-in-from-top-2">
-                          <p className="font-serif italic text-gray-600 text-xs mb-2">
+                          <p className="italic text-gray-600 text-xs mb-2">
                             "{track.lyric}"
                           </p>
                           {track.thought && (
@@ -8311,6 +6283,29 @@ ${recentHistory}
             <StatusPanel
               statusHistory={statusHistory}
               onDelete={handleDeleteStatus}
+            />
+          </AppWindow>
+          {/* APP: PERSONALIZATION (个性化) */}
+          <AppWindow
+            isOpen={activeApp === "personalization"}
+            title="个性化"
+            onClose={() => setActiveApp(null)}
+          >
+            <PersonalizationPanel
+              // 显示
+              isFullscreen={isFullscreen}
+              toggleFullScreen={toggleFullScreen}
+              // 字体
+              fontName={fontName}
+              handleResetFont={handleResetFont}
+              handleFontUrlSubmit={handleFontUrlSubmit}
+              inputUrl={inputUrl}
+              setInputUrl={setInputUrl}
+              // 图标
+              appList={APP_LIST}
+              customIcons={customIcons}
+              handleAppIconUpload={handleAppIconUpload}
+              handleResetIcon={handleResetIcon}
             />
           </AppWindow>
         </div>
@@ -8474,248 +6469,7 @@ const SoulLink = () => (
   </div>
 );
 
-const AppWindow = ({ isOpen, title, children, onClose, isChat, actions }) => {
-  if (!isOpen) return null;
-  return (
-    <div className="absolute inset-0 bg-[#F2F2F7]/60 backdrop-blur-2xl z-30 flex flex-col animate-in slide-in-from-bottom-[5%] duration-300">
-      <div className="h-14 px-4 flex items-center justify-between border-b border-gray-200/50 bg-white/40 backdrop-blur-md shrink-0 sticky top-0 z-50">
-        <button
-          onClick={onClose}
-          className="flex items-center text-gray-600 hover:text-black transition-colors"
-        >
-          <ChevronLeft size={22} strokeWidth={1.5} />
-          <span className="text-sm font-medium ml-0.5">返回</span>
-        </button>
-        <span className="text-sm font-bold text-gray-800">{title}</span>
-        <div className="flex items-center gap-2">
-          {actions ? actions : <div className="w-8"></div>}
-        </div>
-      </div>
-      <div
-        className={`flex-grow overflow-y-auto custom-scrollbar ${
-          !isChat ? "p-6" : ""
-        }`}
-      >
-        {children}
-      </div>
-    </div>
-  );
-};
-
 export default App;
-
-// 世界书分组组件 (按钮已移至顶部)
-const WorldBookGroup = ({
-  group,
-  worldBook,
-  setWorldBook,
-  moveWorldBookEntry,
-  renameWorldBookGroup,
-  deleteWorldBookGroup,
-  toggleWorldBookEntry,
-}) => {
-  const [isExpanded, setIsExpanded] = React.useState(true);
-  const groupEntries = worldBook.filter((w) => w.group === group);
-
-  return (
-    <div className="bg-white/50 border border-gray-100 rounded-xl overflow-hidden mb-4 transition-all duration-300">
-      {/* 分组标题栏 (点击切换折叠) */}
-      <div
-        className="bg-gray-100/50 p-3 flex justify-between items-center border-b border-gray-100 cursor-pointer hover:bg-gray-100"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        <div className="flex items-center gap-2">
-          <div
-            className={`transition-transform duration-300 ${
-              isExpanded ? "rotate-180" : "rotate-0"
-            }`}
-          >
-            <ChevronDown size={14} className="text-gray-500" />
-          </div>
-          <h3 className="text-xs font-bold text-gray-700">{group}</h3>
-          <span className="text-[9px] bg-gray-200 text-gray-500 px-1.5 rounded-md">
-            {groupEntries.length}
-          </span>
-        </div>
-
-        <div
-          className="flex items-center gap-2"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* 新建条目按钮 */}
-          <button
-            onClick={() => {
-              setWorldBook((prev) => [
-                {
-                  // 使用安全 ID 防止冲突
-                  id: `wb_${Date.now()}_${Math.random()
-                    .toString(36)
-                    .substr(2, 9)}`,
-                  name: "新条目",
-                  content: "",
-                  group: group,
-                  enabled: true,
-                },
-                ...prev,
-              ]);
-              setIsExpanded(true); // 添加后自动展开，确保用户能看到
-            }}
-            className="text-gray-400 hover:text-[#7A2A3A] p-1 transition-colors"
-            title="新建条目"
-          >
-            <Plus size={14} />
-          </button>
-          {/* 重命名分组按钮 */}
-          <button
-            onClick={() => renameWorldBookGroup(group)}
-            className="text-gray-400 hover:text-blue-500 p-1"
-            title="重命名分组"
-          >
-            <Edit2 size={12} />
-          </button>
-          <button
-            onClick={() => deleteWorldBookGroup(group)}
-            className="text-gray-400 hover:text-red-500 p-1"
-            title="删除分组"
-          >
-            <Trash2 size={12} />
-          </button>
-        </div>
-      </div>
-
-      {/* 展开后的内容区域 */}
-      {isExpanded && (
-        <div className="p-2 space-y-2 animate-in slide-in-from-top-2 duration-200">
-          {/* 条目列表 */}
-          {groupEntries.map((entry) => (
-            <WorldBookEntryItem
-              key={entry.id}
-              entry={entry}
-              worldBook={worldBook}
-              setWorldBook={setWorldBook}
-              moveWorldBookEntry={moveWorldBookEntry}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-const WorldBookEntryItem = ({
-  entry,
-  worldBook,
-  setWorldBook,
-  moveWorldBookEntry,
-  toggleWorldBookEntry,
-}) => {
-  const [showContent, setShowContent] = React.useState(false);
-
-  // 获取所有分组名 (去重)
-  const allGroups = Array.from(
-    new Set(worldBook.map((i) => i.group || "未分组")),
-  );
-
-  return (
-    <div className="glass-card p-3 rounded-lg flex flex-col gap-2">
-      <div className="flex justify-between items-center">
-        {/* 1. 点击名字展开/折叠内容 - 图标替换 */}
-        <div
-          className="flex items-center gap-2 flex-1 cursor-pointer group/book"
-          onClick={() => setShowContent(!showContent)}
-        >
-          <div className="flex items-center justify-center w-4 h-4 text-gray-400 group-hover/book:text-[#7A2A3A] transition-colors">
-            {/* [修改] 使用书本图标：展开显示 BookOpen，折叠显示 Book */}
-            {showContent ? <BookOpen size={14} /> : <Book size={14} />}
-          </div>
-          <input
-            className="text-xs font-bold bg-transparent border-none outline-none text-gray-700 w-full cursor-text"
-            value={entry.name}
-            onClick={(e) => e.stopPropagation()} // 防止触发折叠
-            onChange={(e) => {
-              // [修复] 使用 prev 确保数据最新
-              setWorldBook((prev) =>
-                prev.map((w) =>
-                  w.id === entry.id ? { ...w, name: e.target.value } : w,
-                ),
-              );
-            }}
-          />
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* 2. 移动分组下拉框 */}
-          <div className="relative group/move">
-            <button className="text-gray-300 hover:text-blue-500">
-              <ArrowRightToLine size={12} />
-            </button>
-            <select
-              className="absolute inset-0 opacity-0 cursor-pointer"
-              value={entry.group}
-              onChange={(e) => moveWorldBookEntry(entry.id, e.target.value)}
-            >
-              {allGroups.map((g) => (
-                <option key={g} value={g}>
-                  {g}
-                </option>
-              ))}
-              <option value="未分组">移至未分组</option>
-              <option value="NEW_GROUP_TRIGGER">新建分组...</option>
-            </select>
-          </div>
-
-          {/* 3. 启用/禁用开关 ([重点修复]: 使用 toggleWorldBookEntry 或安全更新) */}
-          <button
-            onClick={() => {
-              if (toggleWorldBookEntry) {
-                toggleWorldBookEntry(entry.id);
-              } else {
-                // 兜底逻辑：如果没传函数，使用安全更新
-                setWorldBook((prev) =>
-                  prev.map((w) =>
-                    w.id === entry.id ? { ...w, enabled: !w.enabled } : w,
-                  ),
-                );
-              }
-            }}
-            className={entry.enabled ? "text-[#7A2A3A]" : "text-gray-300"}
-          >
-            {entry.enabled ? (
-              <ToggleRight size={16} />
-            ) : (
-              <ToggleLeft size={16} />
-            )}
-          </button>
-
-          {/* 4. 删除按钮 */}
-          <Trash2
-            size={12}
-            className="text-gray-300 hover:text-red-500 cursor-pointer"
-            onClick={() =>
-              setWorldBook((prev) => prev.filter((w) => w.id !== entry.id))
-            }
-          />
-        </div>
-      </div>
-
-      {/* 5. 展开的内容区域 */}
-      {showContent && (
-        <textarea
-          className="w-full text-[10px] text-gray-500 bg-white/40 p-2 rounded-md resize-none h-24 outline-none animate-in fade-in"
-          value={entry.content}
-          onChange={(e) => {
-            // [修复] 使用 prev 确保输入不跳变
-            setWorldBook((prev) =>
-              prev.map((w) =>
-                w.id === entry.id ? { ...w, content: e.target.value } : w,
-              ),
-            );
-          }}
-        />
-      )}
-    </div>
-  );
-};
 
 // ==========================================
 // [修改后] 表情包分组组件 (功能增强 + 视觉优化)

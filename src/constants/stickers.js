@@ -3,180 +3,210 @@
 export const DEFAULT_CHAR_STICKERS = [
   {
     id: "s1",
-    url: "https://github.com/user-attachments/assets/9bf51e00-07d1-42c4-8cb8-3122b5a6f379",
+    url: "https://files.catbox.moe/yxozv0.jpg",
     desc: "一只流泪的小狗，好像在说“你欺负我，我要把你告到小狗法庭！”",
   },
   {
     id: "s2",
-    url: "https://github.com/user-attachments/assets/424d49ef-24af-4f6b-827e-1189fedf63c0",
+    url: "https://files.catbox.moe/6bxk4e.jpg",
     desc: "一只小狗，眼睛亮亮的，好像在说“女神，我只追随你！”",
   },
   {
     id: "s3",
-    url: "https://github.com/user-attachments/assets/64a2bb11-4b09-490f-9387-03aab0ccd5c0",
+    url: "https://files.catbox.moe/sudj5g.jpg",
     desc: "一只主动张开怀抱的小狗，眼睛亮亮的，好像在说“菩萨抱抱！”",
   },
   {
     id: "s4",
-    url: "https://github.com/user-attachments/assets/3ea49e80-c7d8-4d05-9c80-25038bf37f47",
+    url: "https://files.catbox.moe/sjjb09.jpg",
     desc: "一只正在上班、表情平静中带着崩溃的小狗，好像在说“上个屁班。”",
   },
   {
     id: "s5",
-    url: "https://github.com/user-attachments/assets/8c1f3c7b-d384-4c48-8243-598c8ce2a505",
+    url: "https://files.catbox.moe/g6b1dm.jpg",
     desc: "一只表情得意、竖中指的小狗，好像在说“我就这个态度！”",
   },
   {
     id: "s6",
-    url: "https://github.com/user-attachments/assets/3dc9ee08-5318-404e-b79a-82ca644f9c11",
+    url: "https://files.catbox.moe/2inse5.jpg",
     desc: "一只趴在地上耍赖撒娇的小狗，好像在说“你说我什么都特别好！你快说呀！”",
   },
   {
     id: "s7",
-    url: "https://github.com/user-attachments/assets/6e19082d-554a-4e32-be5f-cdcc1799de41",
+    url: "https://files.catbox.moe/ujdp7c.jpg",
     desc: "一只躺在床上颓废地抽烟的小狗，好像在说“咋活。”",
   },
   {
     id: "s8",
-    url: "https://github.com/user-attachments/assets/43b158b3-1582-4001-acb3-1c0dcdf66937",
+    url: "https://files.catbox.moe/ajyhc5.jpg",
     desc: "一只抱着手臂、眼神狡黠的小狗，好像在酝酿着什么坏心思。",
   },
   {
     id: "s9",
-    url: "https://github.com/user-attachments/assets/629b7350-f4c1-4540-a311-68498c676a78",
+    url: "https://files.catbox.moe/9rbsvv.jpg",
     desc: "一只低着头流泪的小狗，看起来很委屈",
   },
   {
     id: "s10",
-    url: "https://github.com/user-attachments/assets/4488e0d9-8bbc-494e-a117-5fe12d96a374",
+    url: "https://files.catbox.moe/tvemyi.jpg",
     desc: "一只头顶问号的小狗，好像感到非常迷惑",
   },
   {
     id: "s11",
-    url: "https://github.com/user-attachments/assets/efe5c295-d664-4d2b-ab2b-25b052de6c48",
+    url: "https://files.catbox.moe/3159dw.jpg",
     desc: "一只瞪大眼睛、疑惑又生气的小狗，似乎觉得非常荒谬",
   },
   {
     id: "s12",
-    url: "https://github.com/user-attachments/assets/0fbef434-69a7-4acb-b7ec-08416bef173e",
+    url: "https://files.catbox.moe/nfpz00.jpg",
     desc: "一只捂着嘴、含蓄地表达开心的小狗，眼睛很亮",
   },
   {
     id: "s13",
-    url: "https://github.com/user-attachments/assets/2f082f28-fde1-4222-b8c8-d852d7ffea2c",
+    url: "https://files.catbox.moe/io3hg4.jpg",
     desc: "一只双手环抱着自己、看起来很开心的小狗，好像幸福得要上天堂了",
   },
   {
     id: "s14",
-    url: "https://github.com/user-attachments/assets/2cf9f64a-3487-45a3-bd64-887c883b068e",
+    url: "https://files.catbox.moe/epavgj.jpg",
     desc: "一只穿着龙袍、威风凛凛的皇帝小狗，好像在说“皇帝驾到，你们都跪下！”",
   },
   {
     id: "s15",
-    url: "https://github.com/user-attachments/assets/5da4ddec-6fa2-4211-88b0-35d2dcae4842",
+    url: "https://files.catbox.moe/h6xhyk.jpg",
     desc: "一只头顶冒爱心的小狗，好像在说“好喜欢！”",
   },
   {
     id: "s16",
-    url: "https://github.com/user-attachments/assets/d40024fb-694b-40a1-a7d8-c27dc93bcd26",
+    url: "https://files.catbox.moe/n8it3y.jpg",
     desc: "一个幽默又命苦的打工人上班表情包，好像在说“当牛做马中......”",
   },
   {
     id: "s17",
-    url: "https://github.com/user-attachments/assets/d37aef76-9a04-44b0-9a6c-36c1e687caeb",
+    url: "https://files.catbox.moe/34dlfr.jpg",
     desc: "一个幽默搞笑、厚脸皮的表情包，好像在说“那咋了，枪毙我？”",
   },
   {
     id: "s18",
-    url: "https://github.com/user-attachments/assets/4144d85e-d454-4311-83ac-c808dfddfffd",
+    url: "https://files.catbox.moe/q9w2zq.jpg",
     desc: "一只面色阴沉、又有点像撒娇的小熊表情包，好像在说“我要向你施压”",
   },
   {
     id: "s19",
-    url: "https://github.com/user-attachments/assets/acac8a85-47dd-4cfb-8380-343bc5571b00",
+    url: "https://files.catbox.moe/tho7pf.jpg",
     desc: "一个幽默搞笑、可以用于调情的表情包，好像在说“我要插死你”",
   },
   {
     id: "s20",
-    url: "https://github.com/user-attachments/assets/7ae22a48-92c2-41ae-8428-111c8e48110f",
+    url: "https://files.catbox.moe/fvvjvj.jpg",
     desc: "一个幽默搞笑、可以用于调情的表情包，一只企鹅拿着望远镜观察，好像在说“我正在视奸你”",
   },
   {
     id: "s21",
-    url: "https://github.com/user-attachments/assets/3e5f4480-ed7d-4634-b092-5ef48937d16a",
+    url: "https://files.catbox.moe/9j9zyj.jpg",
     desc: "一个温馨可爱、可以用于撒娇或调情的表情包，一只小熊抱着膝盖坐在门口，好像在说“我会在这里等到你来为止！”",
   },
   {
     id: "s22",
-    url: "https://github.com/user-attachments/assets/ba0d2580-a9e1-41a2-9b1b-0f24263b3ba4",
-    desc: "一个幽默情色、可以用于调情的表情包，一只小兔子正看着手机，好像在说“你让我勃起了”",
+    url: "https://files.catbox.moe/hgdxtz.jpg",
+    desc: "一个幽默情色、可以用于调情的表情包，一只小兔子正处于勃起的状态看着手机，好像在说“你让我勃起了”",
   },
   {
-    id: "s24",
-    url: "https://github.com/user-attachments/assets/e40af61e-1730-4b25-9ec0-cc9653ad9802",
+    id: "s23",
+    url: "https://files.catbox.moe/4aozpj.jpg",
     desc: "一只躺在地上撒娇打滚耍赖的小熊，好像在说“讨厌讨厌讨厌讨厌！”",
   },
   {
-    id: "s25",
-    url: "https://github.com/user-attachments/assets/3f2eb262-8274-4e7a-91b8-59187aad8287",
+    id: "s24",
+    url: "https://files.catbox.moe/xg5hbp.jpg",
     desc: "一个幽默搞笑、可以用于调情的表情包，用直白的纯文字写着“诶，我不是你的狗吗？”",
   },
   {
-    id: "s26",
-    url: "https://github.com/user-attachments/assets/d0801b58-09c4-4ee1-8860-ca1d37a95c56",
+    id: "s25",
+    url: "https://files.catbox.moe/m1zg0s.jpg",
     desc: "一个有些调情意味的表情包，一只企鹅专注地盯着眼前的人，好像在说“我现在立马要了你”",
   },
   {
-    id: "s27",
-    url: "https://github.com/user-attachments/assets/588e29d8-733a-4ee7-911e-9f071be3c36e",
+    id: "s26",
+    url: "https://files.catbox.moe/aa1qnf.jpg",
     desc: "一个可爱的、富有同情心的小狗表情包，似乎在说“别难过了，让我抱抱你”",
   },
   {
-    id: "s28",
-    url: "https://github.com/user-attachments/assets/4cca27fd-1441-49c3-96ae-feadd12309fb",
+    id: "s27",
+    url: "https://files.catbox.moe/fpyhtf.jpg",
     desc: "一只小狗表情坏坏地站在危险环境下抽烟的表情包，好像在说“我很牛，我不在乎，天塌下来我也无所谓”",
   },
   {
-    id: "s29",
-    url: "https://github.com/user-attachments/assets/cb97527f-988c-4d03-a5cb-0853adbf2303",
+    id: "s28",
+    url: "https://files.catbox.moe/4iy2nj.jpg",
     desc: "一只凌乱、颓废、潦草、骨瘦如柴的小狗表情包，好像在说“网络把我毁了”",
   },
   {
-    id: "s30",
-    url: "https://github.com/user-attachments/assets/f5e1ae53-07d5-4149-9c3d-517a3c2cc19d",
+    id: "s29",
+    url: "https://files.catbox.moe/bi1v6f.jpg",
     desc: "一个幽默可爱、可以用于调情的表情包，用直白的邀请函写着“上线了，泡我^^！”",
   },
   {
-    id: "s31",
-    url: "https://github.com/user-attachments/assets/070efa3c-5043-44cd-b702-0d2d3780c815",
+    id: "s30",
+    url: "https://files.catbox.moe/2rdd4h.jpg",
     desc: "一张复古像素风格的电脑屏幕许愿图，写着“请只让姐姐和我过得好吧”，表达了一种占有欲极强、只在乎特定对象的自私又可爱的祈祷",
   },
   {
-    id: "s32",
-    url: "https://github.com/user-attachments/assets/b61ca1bf-8eed-4559-b420-76867047a5e9",
+    id: "s31",
+    url: "https://files.catbox.moe/f6ypb5.jpg",
     desc: "一只流着泪灰溜溜跑掉的小狗，配文“就这样狗溜溜地逃离”",
+  },
+  {
+    id: "s32",
+    url: "https://files.catbox.moe/ij8isj.png",
+    desc: "一只乖巧地躺在被窝里只露出脑袋的小猫，配文“想你了”，看起来很温顺，被子却鼓起一个弧度，暗示自己勃起了。幽默情色、可以用于调情",
+  },
+  {
+    id: "s33",
+    url: "https://files.catbox.moe/elvjxb.jpg",
+    desc: "一只伸出舌头的简笔画小狗，客气又带点试探地问“哈喽可以聊？”，是一个礼貌、幽默的开场表情、用于以“舔狗”的姿态向对方示好",
+  },
+  {
+    id: "s34",
+    url: "https://files.catbox.moe/6h8psb.jpg",
+    desc: "一只眼神躲闪、不敢直视前方的小狗，配文“目移”，好像因为心虚或者尴尬而强行避开视线",
+  },
+  {
+    id: "s35",
+    url: "https://files.catbox.moe/nci514.jpg",
+    desc: "一个简笔画小狗表情包，头顶“败犬”二字，带有一种幽默的自嘲感",
+  },
+  {
+    id: "s36",
+    url: "https://github.com/user-attachments/assets/d70c0473-5325-4a36-b751-7345a9ee8db0",
+    desc: "一只拿着酒瓶、醉醺醺躺倒的小仓鼠，满脸的不服气，好像在喊“凭啥啊！我不服！”",
+  },
+  {
+    id: "s37",
+    url: "https://github.com/user-attachments/assets/ad7eef70-56ae-45d7-9e98-bc653b92a28f",
+    desc: "一个头顶巨大红问号、摊手表示疑惑的3D小白人，配文谐音梗“邮寄吧咋滴了”，透着一股混不吝的劲头",
   },
 ];
 
 export const DEFAULT_USER_STICKERS = [
   {
     id: "us1", // 新增 ID
-    url: "https://github.com/user-attachments/assets/f426b3f8-f4c3-4337-8dc8-ec1a0fa38bf8",
+    url: "https://files.catbox.moe/58udeq.jpg",
     desc: "一只用力踩着地面、生气地目视前方的小熊，好像在说“我现在很不爽！”",
   },
   {
     id: "us2", // 新增 ID
-    url: "https://github.com/user-attachments/assets/6f87cffb-8514-4add-a390-5ec98f7b5e43",
+    url: "https://files.catbox.moe/kxsnac.jpg",
     desc: "一只蹦蹦跳跳、欢天喜地的小熊，好像在说“我现在很期待！”",
   },
   {
     id: "us3",
-    url: "https://github.com/user-attachments/assets/92ea2814-ad8f-4ef5-9811-720b19583817",
+    url: "https://files.catbox.moe/6rc7df.jpg",
     desc: "两只粉色外套的小熊拿着小心心坐在一起，好像在说“好幸福——”",
   },
   {
     id: "us4",
-    url: "https://github.com/user-attachments/assets/4a532ae5-5342-4fcc-bf36-d530fd0a5c2e",
+    url: "https://files.catbox.moe/efdxos.jpg",
     desc: "一边抚摸着小狗，一边说“好乖喔好乖喔”",
   },
   {
@@ -201,7 +231,7 @@ export const DEFAULT_USER_STICKERS = [
   },
   {
     id: "us9",
-    url: "https://github.com/user-attachments/assets/d40024fb-694b-40a1-a7d8-c27dc93bcd26",
+    url: "https://files.catbox.moe/n8it3y.jpg",
     desc: "一个幽默又命苦的打工人上班表情包，好像在说“当牛做马中......”",
   },
   {
@@ -281,7 +311,7 @@ export const DEFAULT_USER_STICKERS = [
   },
   {
     id: "us25",
-    url: "https://github.com/user-attachments/assets/0e3963a8-5b8e-41bc-8da9-af367526ee05",
+    url: "https://files.catbox.moe/oxlutp.jpg",
     desc: "一个长着真人脸的黄豆表情比着大拇指，配了一句谐音梗“这大厦避风了”（这大傻逼疯了）",
   },
   {
@@ -336,12 +366,12 @@ export const DEFAULT_USER_STICKERS = [
   },
   {
     id: "us36",
-    url: "https://github.com/user-attachments/assets/50c83362-fabf-4937-92c1-853453866904",
+    url: "https://files.catbox.moe/0xfsim.jpg",
     desc: "一只眼泪汪汪的幼猫大头特写，发出弱弱的一声“咪”，看起来楚楚可怜，好像在乞求怜爱",
   },
   {
     id: "us37",
-    url: "https://github.com/user-attachments/assets/481fc84b-16f3-4938-a20c-cba5b12e4a68",
+    url: "https://files.catbox.moe/rc3p0w.jpg",
     desc: "一只伸出手掌表示拒绝的小兔子，配着韩语和中文双语的“够了”，一脸麻木地要求对方停止",
   },
   {
@@ -371,12 +401,12 @@ export const DEFAULT_USER_STICKERS = [
   },
   {
     id: "us43",
-    url: "https://github.com/user-attachments/assets/73f33424-5fe5-4f57-b0ef-7617a4965811",
+    url: "https://files.catbox.moe/y27qa4.jpg",
     desc: "一张黑白漫画对话框截图，写着“像小狗一样好可爱...”，形容对方有着小狗般让人无法抗拒的天然萌感",
   },
   {
     id: "us44",
-    url: "https://github.com/user-attachments/assets/29d77452-f2e7-44cb-b42b-5efb3e5218ce",
+    url: "https://files.catbox.moe/w803z4.jpg",
     desc: "一只脸颊微红的小仓鼠，双手奉上一颗粉色爱心，配文“请收下”，非常直球、可爱又真诚的表白",
   },
   {
@@ -386,27 +416,127 @@ export const DEFAULT_USER_STICKERS = [
   },
   {
     id: "us46",
-    url: "https://github.com/user-attachments/assets/31248491-0008-4999-b611-0573c56a9ccb",
+    url: "https://files.catbox.moe/f3ferx.jpg",
     desc: "小狗竖起大拇指的表情包，配文“人，很棒”",
   },
   {
     id: "us47",
-    url: "https://github.com/user-attachments/assets/b74c7b43-33f7-4648-815c-8ab9e7e368c0",
+    url: "https://files.catbox.moe/ygti0n.jpg",
     desc: "一只头顶问号的小猫，好像感到非常迷惑",
   },
   {
     id: "us48",
-    url: "https://github.com/user-attachments/assets/b61ca1bf-8eed-4559-b420-76867047a5e9",
+    url: "https://files.catbox.moe/f6ypb5.jpg",
     desc: "一只流着泪灰溜溜跑掉的小狗，配文“就这样狗溜溜地逃离”",
   },
   {
     id: "us49",
-    url: "https://github.com/user-attachments/assets/43709720-1273-4336-8af7-f72617758f70",
+    url: "https://files.catbox.moe/g27ono.jpg",
     desc: "一个躺在床上看手机的人，配文“聊几句又不回了，我是小三吗”",
   },
   {
     id: "us50",
-    url: "https://github.com/user-attachments/assets/c4945484-f603-44a0-8792-93194454ccc5",
+    url: "https://files.catbox.moe/cvyu4i.jpg",
     desc: "一只震惊地大张着嘴的青蛙，配文“我操，恶俗啊”",
+  },
+  {
+    id: "us51",
+    url: "https://files.catbox.moe/dqtyu6.webp",
+    desc: "一只表面乖巧的小兔子（乌萨奇），灵魂却演示着“左耳进右耳出”，配文“你说吧我在听”，主打一个“我在听但完全没过脑子”的敷衍态度",
+  },
+  {
+    id: "us52",
+    url: "https://files.catbox.moe/vgb3pw.jpg",
+    desc: "一只被埋在沙子里只露出脑袋的小兔子（乌萨奇），配文带括弧的“嗯。（哽咽）”，表现出一种弱小无助、被迫接受现实的委屈感",
+  },
+  {
+    id: "us53",
+    url: "https://files.catbox.moe/alw21y.png",
+    desc: "一只欢快奔跑的小兔子（乌萨奇），配文却是致郁的“如果是去死的路上 我会用跑的”，用最积极的动作表达最消极的求死欲望",
+  },
+  {
+    id: "us54",
+    url: "https://files.catbox.moe/619gna.jpg",
+    desc: "一只心碎流泪的小熊（吉伊），发出灵魂拷问“伤心能走医保吗”，幽默地表达了悲伤过度需要治疗的心情",
+  },
+  {
+    id: "us55",
+    url: "https://files.catbox.moe/m22uii.jpg",
+    desc: "一只比着大拇指、笑容灿烂的小猫（小八），配文却是“大失败”，用一种乐观积极的态度来面对惨败的现实",
+  },
+  {
+    id: "us56",
+    url: "https://files.catbox.moe/6rgsme.jpg",
+    desc: "一只低着头、表情羞涩又窘迫的小猫（小八），配文“我……什么喜欢的东西都买不起”，表达了一种贫穷且自卑的可怜心态",
+  },
+  {
+    id: "us57",
+    url: "https://files.catbox.moe/8hdzxm.jpg",
+    desc: "一只昂首挺胸、自信满满的小兔子，配文“我牛牛的”，用最软萌的叠词夸自己最厉害",
+  },
+  {
+    id: "us58",
+    url: "https://files.catbox.moe/6a8163.jpg",
+    desc: "三只可爱的快递员小动物（Chiikawa），配文却是辛辣的谐音梗嘲讽“世界是一个巨大的菜鸟驿站，不是大件货就是小件货”，隐晦地在骂人",
+  },
+  {
+    id: "us59",
+    url: "https://files.catbox.moe/6xa1gh.jpeg",
+    desc: "一只穿着西装、竖起双手大拇指的黄豆表情，配文“你人还怪好的嘞”，用一种憨憨的语气称赞对方是好人，既真诚又带点幽默",
+  },
+  {
+    id: "us60",
+    url: "https://files.catbox.moe/yaed5l.webp",
+    desc: "一只流着冷汗、眼神呆滞的青蛙特写，配文“玩尬的？”，用来吐槽对方的行为让人尴尬或不知所措",
+  },
+  {
+    id: "us61",
+    url: "https://files.catbox.moe/kpsnsn.webp",
+    desc: "一张模仿宣传标语的表情包，写着“守好男德 人人有责”，用严肃的口号来搞笑地要求男性洁身自好",
+  },
+  {
+    id: "us62",
+    url: "https://files.catbox.moe/8bc081.jpg",
+    desc: "一只捏着鼻子、眼神鄙视的小猫，配文“很臭”，直白地表达嫌弃，好像闻到了什么不得了的味道",
+  },
+  {
+    id: "us63",
+    url: "https://files.catbox.moe/grwucb.jpg",
+    desc: "一个文字表情包，用极其嚣张的语气写着“我现在心情好到走在路上被人扇了一巴掌都笑得出来”，表达了一种无敌的好心情",
+  },
+  {
+    id: "us64",
+    url: "https://files.catbox.moe/92sang.jpg",
+    desc: "一只由于极度失望而瘫倒在地的小兔子，配文“绝望。”，生动刻画了心碎或破防的瞬间",
+  },
+  {
+    id: "us65",
+    url: "https://files.catbox.moe/5kgb59.jpg",
+    desc: "一只躺在病床上、眼神空洞的小白熊，配文“已无生命体征”，用来幽默地表达自己累瘫了或被气死了",
+  },
+  {
+    id: "us66",
+    url: "https://files.catbox.moe/wf74qt.jpg",
+    desc: "一只站在Windows经典草原背景上的小白熊，淡定地说着“好的。”，有一种荒诞又平静的超脱感",
+  },
+  {
+    id: "us67",
+    url: "https://files.catbox.moe/ylod3g.jpg",
+    desc: "一个纯文字表情包，粉红色的“完全神圣”字样在黑色背景下显得有些幽默的调情意味",
+  },
+  {
+    id: "us68",
+    url: "https://files.catbox.moe/smf0er.jpg",
+    desc: "一个眼神犀利的外星人，双手托着星云，配文“你已急哭”，充满了嘲讽和压迫感",
+  },
+  {
+    id: "us69",
+    url: "https://github.com/user-attachments/assets/3ec828ea-7c7b-42c1-ac9b-a9a7eec246aa",
+    desc: "一只浓眉大眼、表情极其认真的简笔画小狗，配文“收藏备孕”",
+  },
+  {
+    id: "us70",
+    url: "https://github.com/user-attachments/assets/0a3ff790-5ff6-4b12-aed8-7de7cd85b26c",
+    desc: "一只自带闪光特效、眼睛亮晶晶的小熊，看起来非常崇拜和期待",
   },
 ];
