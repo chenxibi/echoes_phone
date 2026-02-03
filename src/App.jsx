@@ -4877,7 +4877,9 @@ Requirements:
                                   return (
                                     <div
                                       className="cursor-pointer overflow-hidden rounded-xl border-2 border-white shadow-sm bg-white relative group/img transition-transform active:scale-95"
-                                      onClick={() => alert(imgDesc)}
+                                      onClick={() =>
+                                        customAlert(imgDesc, "图片内容")
+                                      }
                                     >
                                       <img
                                         src={PLACEHOLDER_IMG_BASE64} // 【改】：删掉那一长串 Base64，直接填这个变量名

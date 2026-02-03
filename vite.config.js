@@ -5,7 +5,7 @@ import { VitePWA } from "vite-plugin-pwa";
 // https://vitejs.dev/config/
 export default defineConfig({
   // 1. 【核心修改】这里必须设置仓库名，前后都要有斜杠
-  base: "/",
+  base: "/echoes_phone/",
 
   plugins: [
     react(),
@@ -14,7 +14,11 @@ export default defineConfig({
       registerType: "autoUpdate",
 
       // 3. 包含图标和 favicon
-      includeAssets: ["favicon.ico", "apple-touch-icon.png", "mask-icon.svg"],
+      includeAssets: [
+        "favicon.ico",
+        "apple-touch-icon_v3.png",
+        "mask-icon.svg",
+      ],
 
       // 4. Manifest 配置（手机安装后显示的信息）
       manifest: {
@@ -28,12 +32,12 @@ export default defineConfig({
         // 【关键】配置图标，Vite 会自动根据 base 路径处理
         icons: [
           {
-            src: "pwa-192x192.png",
+            src: "pwa-192x192_v3.png",
             sizes: "192x192",
             type: "image/png",
           },
           {
-            src: "pwa-512x512.png",
+            src: "pwa-512x512_v3.png",
             sizes: "512x512",
             type: "image/png",
           },
