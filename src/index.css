@@ -178,3 +178,28 @@ div {
   top: 50%;
   z-index: 0;
 }
+
+/* 唱片慢速旋转 */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-spin-slow {
+  animation: spin-slow 12s linear infinite;
+}
+
+@keyframes heartbeat-fine {
+  0% {
+    stroke-dashoffset: 100;
+  }
+  100% {
+    stroke-dashoffset: -100;
+  }
+}
+.animate-heartbeat-fine {
+  animation: heartbeat-fine 2.5s linear infinite;
+}

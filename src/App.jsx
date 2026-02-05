@@ -4,8 +4,10 @@ import { PRESET_LOCATION_IMAGES } from "./constants/assets";
 import Forum from "./components/Forum";
 import SettingsPanel from "./components/Settings";
 import WorldBook from "./components/WorldBook";
+import MusicApp from "./components/Music";
 import {
   showToast,
+  getFormattedMessageText,
   initNotification,
   getCurrentTimeObj,
   getContextString,
@@ -259,35 +261,105 @@ const formatDate = (date) =>
     weekday: "short",
   });
 
-// Enhanced Local Storage Helper to merge with defaults
+/* --- IndexedDB 核心工具 (模拟 localStorage) --- */
+const echoesDB = {
+  dbName: "EchoesOS_DB",
+  storeName: "kv_store",
+  db: null,
+
+  async init() {
+    if (this.db) return this.db;
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(this.dbName, 1);
+      request.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(this.storeName)) {
+          db.createObjectStore(this.storeName);
+        }
+      };
+      request.onsuccess = (e) => {
+        this.db = e.target.result;
+        resolve(this.db);
+      };
+      request.onerror = (e) => reject(e);
+    });
+  },
+
+  async getItem(key) {
+    const db = await this.init();
+    return new Promise((resolve) => {
+      const transaction = db.transaction(this.storeName, "readonly");
+      const store = transaction.objectStore(this.storeName);
+      const request = store.get(key);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => resolve(null);
+    });
+  },
+
+  async setItem(key, value) {
+    const db = await this.init();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(this.storeName, "readwrite");
+      const store = transaction.objectStore(this.storeName);
+      const request = store.put(value, key);
+      request.onsuccess = () => resolve();
+      request.onerror = (e) => reject(e);
+    });
+  },
+
+  async removeItem(key) {
+    const db = await this.init();
+    const transaction = db.transaction(this.storeName, "readwrite");
+    transaction.objectStore(this.storeName).delete(key);
+  },
+};
+
 const useStickyState = (defaultValue, key) => {
-  const [value, setValue] = useState(() => {
-    const stickyValue = localStorage.getItem(key);
-    if (stickyValue !== null) {
-      try {
-        const parsed = JSON.parse(stickyValue);
-        // If it's an object (like prompts), merge with default to ensure new keys exist
+  const [value, setValue] = useState(defaultValue);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    const loadAndMigrate = async () => {
+      let data = await echoesDB.getItem(key);
+
+      // 迁移逻辑：如果 IndexedDB 没数据，从 localStorage 搬家
+      if (data === undefined || data === null) {
+        const localData = localStorage.getItem(key);
+        if (localData !== null) {
+          try {
+            data = JSON.parse(localData);
+            await echoesDB.setItem(key, data);
+            // 迁移成功后可选：localStorage.removeItem(key);
+          } catch (e) {
+            console.error(`Migration error for ${key}`, e);
+          }
+        }
+      }
+
+      if (data !== undefined && data !== null) {
         if (
           typeof defaultValue === "object" &&
           !Array.isArray(defaultValue) &&
           defaultValue !== null
         ) {
-          return { ...defaultValue, ...parsed };
+          setValue({ ...defaultValue, ...data });
+        } else {
+          setValue(data);
         }
-        return parsed;
-      } catch (e) {
-        return defaultValue;
       }
-    }
-    return defaultValue;
-  });
+      setIsLoaded(true);
+    };
+    loadAndMigrate();
+  }, [key]);
 
   useEffect(() => {
-    localStorage.setItem(key, JSON.stringify(value));
-  }, [key, value]);
-  return [value, setValue];
-};
+    if (isLoaded) {
+      echoesDB.setItem(key, value);
+    }
+  }, [key, value, isLoaded]);
 
+  return [value, setValue, isLoaded];
+};
 const replacePlaceholders = (text, charName, userName) => {
   if (!text) return "";
   return text
@@ -1242,14 +1314,15 @@ const LocationBubble = ({ name, address }) => (
 
 /* --- MAIN COMPONENT --- */
 const App = () => {
-  const [charStickers, setCharStickers] = useStickyState(
+  const [charStickers, setCharStickers, charStickersLoaded] = useStickyState(
     DEFAULT_CHAR_STICKERS,
     "echoes_char_stickers",
   );
-  const [userStickers, setUserStickers] = useStickyState(
+  const [userStickers, setUserStickers, userStickersLoaded] = useStickyState(
     DEFAULT_USER_STICKERS,
     "echoes_user_stickers",
   );
+
   // 批量导入表情包函数
   const handleBulkImport = (
     text,
@@ -1293,14 +1366,26 @@ const App = () => {
     }
   };
   // -- PERSISTENT STATE --
-  const [apiConfig, setApiConfig] = useStickyState(
+  const [apiConfig, setApiConfig, apiConfigLoaded] = useStickyState(
     { useCustom: true, baseUrl: "", key: "", model: "" },
     "echoes_api_config",
   );
-  const [inputKey, setInputKey] = useStickyState("", "echoes_raw_json");
-  const [persona, setPersona] = useStickyState(null, "echoes_persona");
-  const [worldBook, setWorldBook] = useStickyState([], "echoes_worldbook");
-  const [fontName, setFontName] = useStickyState("", "echoes_custom_font_name");
+  const [inputKey, setInputKey, inputKeyLoaded] = useStickyState(
+    "",
+    "echoes_raw_json",
+  );
+  const [persona, setPersona, personaLoaded] = useStickyState(
+    null,
+    "echoes_persona",
+  );
+  const [worldBook, setWorldBook, worldBookLoaded] = useStickyState(
+    [],
+    "echoes_worldbook",
+  );
+  const [fontName, setFontName, fontNameLoaded] = useStickyState(
+    "",
+    "echoes_custom_font_name",
+  );
 
   const applyFont = (name, url) => {
     const styleId = "dynamic-user-font";
@@ -1319,76 +1404,63 @@ const App = () => {
   };
 
   useEffect(() => {
-    // 读取保存的字体链接
-    const savedFontUrl = localStorage.getItem("custom-font-url");
-    const savedFontName = localStorage.getItem("custom-font-name");
-
-    if (savedFontUrl) {
-      // 如果有保存的链接，直接应用
-      applyFont("UserCustomFont", savedFontUrl);
-      // 如果你想显示名字，可以设置，没有名字就显示为 "自定义字体"
-      setFontName(savedFontName || "自定义字体");
-    }
+    const loadFont = async () => {
+      const savedFontUrl = await echoesDB.getItem("custom-font-url");
+      const savedFontName = await echoesDB.getItem("custom-font-name");
+      if (savedFontUrl) {
+        applyFont("UserCustomFont", savedFontUrl);
+        setFontName(savedFontName || "自定义字体");
+      }
+    };
+    loadFont();
   }, []);
 
-  // 新增：处理字体链接提交
-  const handleFontUrlSubmit = (url) => {
-    if (!url) return;
-
-    // 1. 立即应用字体
-    applyFont("UserCustomFont", url);
-
-    // 2. 只需要保存短短的链接字符串，再也不会有容量限制了
-    localStorage.setItem("custom-font-url", url);
-    localStorage.setItem("custom-font-name", "自定义字体"); // 或者你可以让用户输入名字
-
-    // 3. 更新界面状态
-    setFontName("自定义字体");
-    showToast("success", "网络字体已应用");
+  const handleFontUrlSubmit = async () => {
+    // 加上 async
+    const url = fontUrlInput.trim();
+    if (url) {
+      applyFont("UserCustomFont", url);
+      setFontName("自定义字体");
+      await echoesDB.setItem("custom-font-url", url);
+      await echoesDB.setItem("custom-font-name", "自定义字体");
+      setShowFontInput(false);
+      showToast("success", "字体已应用并存入数据库");
+    }
   };
 
-  // 恢复默认
-  const handleResetFont = () => {
-    localStorage.removeItem("echoes_custom_font_data");
-    const styleTag = document.getElementById("dynamic-user-font");
-    if (styleTag) styleTag.remove();
-    setFontName("");
+  const handleResetFont = async () => {
+    // 加上 async
+    // 移除自定义字体
+    const styleElement = document.getElementById("UserCustomFont");
+    if (styleElement) styleElement.remove();
+    document.body.style.fontFamily = "";
+    setFontName("默认字体");
+    await echoesDB.removeItem("custom-font-url");
+    await echoesDB.removeItem("custom-font-name");
+    showToast("info", "已恢复默认字体");
   };
 
   // [新增] 自定义图标状态
-  const [customIcons, setCustomIcons] = useStickyState(
+  const [customIcons, setCustomIcons, customIconsLoaded] = useStickyState(
     {},
     "echoes_custom_icons",
   );
 
-  // [新增] 处理图标上传
-  // 1. 确保函数前面加了 async
-  const handleAppIconUpload = async (e, appId) => {
-    const file = e.target.files?.[0];
+  const handleAppIconUpload = async (e) => {
+    // 加上 async
+    const file = e.target.files[0];
     if (!file) return;
 
-    try {
-      const compressedIcon = await compressImage(file, 128, 0.7);
-
-      setCustomIcons((prev) => {
-        const newIcons = {
-          ...prev,
-          [appId]: compressedIcon, // 存入压缩后的 base64
-        };
-
-        // 4. 写入 localStorage 时增加错误捕获
-        try {
-          localStorage.setItem("my_custom_icons", JSON.stringify(newIcons));
-        } catch (storageError) {
-          console.error("存储空间已满:", storageError);
-          alert("浏览器存储空间将满，请注意备份数据");
-        }
-
-        return newIcons;
-      });
-    } catch (error) {
-      console.error("压缩图片失败:", error);
-    }
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      // 这里的匿名回调也要加 async
+      const base64 = event.target.result;
+      const newIcons = { ...customIcons, [activeApp]: base64 };
+      setCustomIcons(newIcons);
+      await echoesDB.setItem("my_custom_icons", newIcons);
+      showToast("success", "图标已更新");
+    };
+    reader.readAsDataURL(file);
   };
 
   // [新增] 重置图标
@@ -1428,59 +1500,79 @@ const App = () => {
   };
 
   // 1. Memory 相关的 State
-  const [memoryConfig, setMemoryConfig] = useStickyState(
+  const [memoryConfig, setMemoryConfig, memoryConfigLoaded] = useStickyState(
     {
       enabled: true,
       threshold: 10,
     },
     "echoes_memory_config",
   );
-  const [longMemory, setLongMemory] = useStickyState("", "echoes_long_memory");
-  const [msgCountSinceSummary, setMsgCountSinceSummary] = useStickyState(
-    0,
-    "echoes_msg_count",
+  const [longMemory, setLongMemory, longMemoryLoaded] = useStickyState(
+    "",
+    "echoes_long_memory",
   );
+  const [
+    msgCountSinceSummary,
+    setMsgCountSinceSummary,
+    msgCountSinceSummaryLoaded,
+  ] = useStickyState(0, "echoes_msg_count");
 
   // User Profile
-  const [userPersona, setUserPersona] = useStickyState(
+  const [userPersona, setUserPersona, userPersonaLoaded] = useStickyState(
     "",
     "echoes_user_persona",
   );
-  const [userName, setUserName] = useStickyState("", "echoes_user_name");
-  const [userAvatar, setUserAvatar] = useStickyState(
+  const [userName, setUserName, userNameLoaded] = useStickyState(
+    "",
+    "echoes_user_name",
+  );
+  const [userAvatar, setUserAvatar, userAvatarLoaded] = useStickyState(
     null,
     "echoes_user_avatar",
   );
-  const [avatar, setAvatar] = useStickyState(null, "echoes_char_avatar");
+  const [avatar, setAvatar, avatarLoaded] = useStickyState(
+    null,
+    "echoes_char_avatar",
+  );
 
   const [inputUrl, setInputUrl] = useState("");
 
   // Content
-  const [chatHistory, setChatHistory] = useStickyState(
+  const [chatHistory, setChatHistory, chatHistoryLoaded] = useStickyState(
     [],
     "echoes_chat_history",
   );
-  const [statusHistory, setStatusHistory] = useStickyState(
+  const [statusHistory, setStatusHistory, statusHistoryLoaded] = useStickyState(
     [],
     "echoes_status_history",
   );
-  const [diaries, setDiaries] = useStickyState([], "echoes_diaries");
-  const [receipts, setReceipts] = useStickyState([], "echoes_receipts");
-  const [music, setMusic] = useStickyState([], "echoes_music");
-  const [browserHistory, setBrowserHistory] = useStickyState(
+  const [diaries, setDiaries, diariesLoaded] = useStickyState(
     [],
-    "echoes_browser",
+    "echoes_diaries",
   );
+  const [receipts, setReceipts, receiptsLoaded] = useStickyState(
+    [],
+    "echoes_receipts",
+  );
+  const [music, setMusic, musicLoaded] = useStickyState([], "echoes_music");
+  const [browserHistory, setBrowserHistory, browserHistoryLoaded] =
+    useStickyState([], "echoes_browser");
 
   // 追踪器相关状态
-  const [userFacts, setUserFacts] = useStickyState([], "echoes_user_facts");
-  const [charFacts, setCharFacts] = useStickyState([], "echoes_char_facts");
-  const [sharedEvents, setSharedEvents] = useStickyState(
+  const [userFacts, setUserFacts, userFactsLoaded] = useStickyState(
+    [],
+    "echoes_user_facts",
+  );
+  const [charFacts, setCharFacts, charFactsLoaded] = useStickyState(
+    [],
+    "echoes_char_facts",
+  );
+  const [sharedEvents, setSharedEvents, sharedEventsLoaded] = useStickyState(
     [],
     "echoes_shared_events",
   );
   const [showEventsInDiary, setShowEventsInDiary] = useState(false);
-  const [trackerConfig, setTrackerConfig] = useStickyState(
+  const [trackerConfig, setTrackerConfig, trackerConfigLoaded] = useStickyState(
     { facts: true, events: true },
     "echoes_tracker_config",
   );
@@ -1488,22 +1580,20 @@ const App = () => {
   // Settings
   const prompts = DEFAULT_PROMPTS;
   // const [prompts, setPrompts] = useStickyState(DEFAULT_PROMPTS,"echoes_prompts");
-  const [customRules, setCustomRules] = useStickyState(
+  const [customRules, setCustomRules, customRulesLoaded] = useStickyState(
     "无特殊规则",
     "echoes_custom_rules",
   );
-  const [chatStyle, setChatStyle] = useStickyState(
+  const [chatStyle, setChatStyle, chatStyleLoaded] = useStickyState(
     "dialogue",
     "echoes_chat_style",
   );
 
-  const [stickersEnabled, setStickersEnabled] = useStickyState(
-    true,
-    "echoes_stickers_enabled",
-  );
+  const [stickersEnabled, setStickersEnabled, stickersEnabledLoaded] =
+    useStickyState(true, "echoes_stickers_enabled");
 
   // 上下文记忆条数
-  const [contextLimit, setContextLimit] = useStickyState(
+  const [contextLimit, setContextLimit, contextLimitLoaded] = useStickyState(
     10,
     "echoes_context_limit",
   );
@@ -1667,10 +1757,8 @@ const App = () => {
     customTime: "23:45",
   });
   const currentTime = getCurrentTimeObj(timeSettings);
-  const [interactionMode, setInteractionMode] = useStickyState(
-    "online",
-    "echoes_interaction_mode",
-  );
+  const [interactionMode, setInteractionMode, interactionModeLoaded] =
+    useStickyState("online", "echoes_interaction_mode");
   const [chatInput, setChatInput] = useState("");
   const [loading, setLoading] = useState({});
   const [isTyping, setIsTyping] = useState(false);
@@ -2905,39 +2993,54 @@ Requirements:
 
   // 2. 触发 AI 回复 (完整替换版)
   const triggerAIResponse = async (
-    regenIndex = null,
+    param1 = null, // 可以是重生成索引(number)，也可以是新消息内容(string)
     hint = "",
     overrideContext = null,
   ) => {
     if (!persona) return;
 
+    // --- 1. 参数智能解析与消息预处理 ---
+    const userContent = typeof param1 === "string" ? param1 : null;
+    const regenIndex = typeof param1 === "number" ? param1 : null;
+
     let finalHint = hint;
     if (!finalHint && pendingHint) {
       finalHint = pendingHint;
-      setPendingHint(null); // 消费掉，避免重复
+      setPendingHint(null);
     }
 
     const backupHistory = [...chatHistory];
-
-    // 如果是重生成 (regenIndex 不为 null)，则回滚历史
     let newHistory = [...chatHistory];
+
+    // 如果是重生成，回滚历史
     if (regenIndex !== null) {
       newHistory = chatHistory.slice(0, regenIndex);
-      // 立即更新状态，让UI反映回滚
-      setChatHistory(newHistory);
+    }
+    // 如果是带内容触发（来自音乐等界面），先插入用户消息
+    else if (userContent) {
+      const userMsg = {
+        id: `msg_${Date.now()}_u`,
+        sender: "me",
+        text: userContent,
+        time: formatTime(getCurrentTimeObj()),
+      };
+      newHistory = [...newHistory, userMsg];
     }
 
+    // 立即同步状态，确保 UI 和后续逻辑基于最新的历史记录
+    setChatHistory(newHistory);
+
     setLoading((prev) => ({ ...prev, chat: true }));
+    setIsTyping(true);
     setRegenerateTarget(null);
 
-    // Setup AbortController
     if (abortControllerRef.current) abortControllerRef.current.abort();
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
     const effectiveUserName = userName || "你";
 
-    // --- 格式化历史记录 ---
+    // --- 2. 格式化历史记录 (用于发送给 AI) ---
     const historyText = getRecentTurns(newHistory, contextLimit)
       .map((m) => {
         const senderName =
@@ -2947,21 +3050,15 @@ Requirements:
         if (m.isVoice) {
           content = `(发送了一条语音): ${m.text.replace("[语音消息] ", "")}`;
         }
-
         if (m.sticker) {
           if (!content || !content.trim()) {
             content = `[发送了表情包: ${m.sticker.desc}]`;
           }
         }
-
-        // 关键：如果是转发卡片，把转发内容也加进历史文本，让AI能看到之前的上下文
         if (m.isForward && m.forwardData) {
           const fwd = m.forwardData;
-          content += ` [转发了${
-            fwd.type === "post" ? "帖子" : "评论"
-          }: "${fwd.content.slice(0, 50)}..."]`;
+          content += ` [转发了${fwd.type === "post" ? "帖子" : "评论"}: "${fwd.content.slice(0, 50)}..."]`;
         }
-
         return `${senderName}: ${content}`;
       })
       .join("\n");
@@ -2978,11 +3075,10 @@ Requirements:
       currentUserName,
     );
 
-    // --- 构建 Prompt ---
-
+    // --- 3. 构建 Prompt ---
     const stickerInst = getStickerInstruction(charStickers, stickersEnabled);
-
     let styleInst = stylePrompts[chatStyle];
+
     const lastCharMsg = [...newHistory]
       .reverse()
       .find((m) => m.sender === "char");
@@ -2991,9 +3087,7 @@ Requirements:
     }
     if (finalHint) styleInst += `\n[Special Instruction]: ${finalHint}`;
 
-    // --- 动态构建转发上下文 ---
     const rawForwardContext = overrideContext || forwardContext;
-
     const finalForwardSection = rawForwardContext
       ? `\n**Forwarded Content Context**: ${rawForwardContext}`
       : "";
@@ -3040,7 +3134,7 @@ Requirements:
         longMemory || "No long-term memory established yet.",
       );
 
-    // --- 调用 API ---
+    // --- 4. 调用 API ---
     try {
       const responseData = await generateContent(
         { prompt, systemInstruction: systemPrompt, isJson: true },
@@ -3050,12 +3144,11 @@ Requirements:
       );
 
       if (responseData) {
-        // 成功生成回复后，清空转发上下文，避免影响后续对话
         setForwardContext(null);
 
+        // 处理转账逻辑
         if (responseData.transfer_action) {
-          // 寻找最近一条用户发出的、状态为 pending 的转账
-          const lastUserTransferIndex = [...chatHistory]
+          const lastUserTransferIndex = [...newHistory]
             .reverse()
             .findIndex(
               (m) =>
@@ -3065,10 +3158,7 @@ Requirements:
             );
 
           if (lastUserTransferIndex !== -1) {
-            // 因为是 reverse 找的索引，需要转换回原始索引
-            const realIndex = chatHistory.length - 1 - lastUserTransferIndex;
-
-            // 更新 React 状态
+            const realIndex = newHistory.length - 1 - lastUserTransferIndex;
             setChatHistory((prev) =>
               prev.map((m, i) => {
                 if (i === realIndex) {
@@ -3097,22 +3187,19 @@ Requirements:
           ]);
         }
 
-        // 处理返回的消息
+        // 处理 AI 返回的消息内容
         if (responseData.messages && Array.isArray(responseData.messages)) {
           const newMsgs = responseData.messages.map((item, index) => {
-            let actualText = "";
-            if (typeof item === "object" && item !== null && item.text) {
-              actualText = item.text;
-            } else {
-              actualText = String(item);
-            }
+            let actualText =
+              typeof item === "object" && item !== null && item.text
+                ? item.text
+                : String(item);
 
             return {
               sender: "char",
               text: actualText,
               time: formatTime(getCurrentTimeObj()),
               style: chatStyle,
-
               status:
                 index === responseData.messages.length - 1
                   ? responseData.status
@@ -3120,7 +3207,7 @@ Requirements:
             };
           });
 
-          // 如果 AI 决定发表情包
+          // 处理表情包
           if (responseData.stickerId) {
             const sticker = charStickers.find(
               (s) => s.id === responseData.stickerId,
@@ -3136,63 +3223,18 @@ Requirements:
             }
           }
 
-          if (responseData.transfer_action) {
-            // A. 更新历史记录中的状态
-            const lastUserTransferIndex = [...newHistory]
-              .reverse()
-              .findIndex(
-                (m) =>
-                  m.sender === "me" &&
-                  m.isTransfer &&
-                  m.transfer?.status === "pending",
-              );
-
-            if (lastUserTransferIndex !== -1) {
-              const realIndex = newHistory.length - 1 - lastUserTransferIndex;
-              const targetMsg = newHistory[realIndex]; // 获取目标消息对象
-
-              if (targetMsg.transfer) {
-                // 1. 更新状态
-                targetMsg.transfer.status = responseData.transfer_action;
-
-                // 2. [关键修复] 从历史记录中提取金额，赋值给 amount
-                const amount = targetMsg.transfer.amount;
-
-                // B. 在回复列表最前面插入一条系统消息 (胶囊)
-                const actionText =
-                  responseData.transfer_action === "accept"
-                    ? "已收款"
-                    : "已退还";
-
-                newMsgs.unshift({
-                  sender: "char",
-                  id: `sys_ai_${Date.now()}`,
-                  text: `对方${actionText} ¥${amount}`, // 现在 amount 有值了
-                  isSystem: true,
-                  time: formatTime(getCurrentTimeObj()),
-                });
-              }
-            }
-          }
-
+          // 处理 AI 发起的转账
           if (responseData.transfer && responseData.transfer.amount) {
             if (newMsgs.length > 0 && newMsgs[newMsgs.length - 1].status) {
               delete newMsgs[newMsgs.length - 1].status;
             }
-
             const amount = responseData.transfer.amount;
-            const reason = responseData.transfer.reason || ""; // 获取 AI 的理由作为备注
-
+            const reason = responseData.transfer.reason || "";
             newMsgs.push({
               sender: "char",
-              // 文本回退也带上备注
               text: `[转账] ¥${amount}${reason ? ` (${reason})` : ""}`,
               isTransfer: true,
-              transfer: {
-                amount: amount,
-                status: "pending",
-                note: reason, // 存入备注
-              },
+              transfer: { amount, status: "pending", note: reason },
               time: formatTime(getCurrentTimeObj()),
               status: responseData.status,
             });
@@ -3208,41 +3250,27 @@ Requirements:
           setIsTyping(false);
           setMessageQueue(finalizedMsgs);
 
-          // --- 惊喜触发器：AI 回复后有概率触发剧情发帖 ---
-          // 逻辑：论坛已初始化 + 10% 概率 + 只有 AI 发送文本消息时才触发
+          // 惊喜逻辑：概率触发发帖
           if (forumData.isInitialized && Math.random() < 0.1) {
-            console.log("[Echoes] 触发剧情发帖检查...");
-            // 延迟 5 秒执行，让子弹飞一会儿，避免和消息提示同时弹出
             setTimeout(() => generateChatEventPost(true), 5000);
           }
 
+          // 定时检查档案更新与总结
           setTimeout(() => {
             const fullConversation = [...newHistory, ...finalizedMsgs];
-
             let userTurnCount = 0;
             let lastSender = null;
-
             for (const msg of fullConversation) {
-              if (msg.sender === "me" && lastSender !== "me") {
-                userTurnCount++;
-              }
+              if (msg.sender === "me" && lastSender !== "me") userTurnCount++;
               lastSender = msg.sender;
             }
-
             if (userTurnCount > 0 && userTurnCount % 6 === 0) {
-              console.log(
-                `[Echoes] 达到第 ${userTurnCount} 轮对话，正在更新档案...`,
-              );
-
               const lastAiMsg = finalizedMsgs[finalizedMsgs.length - 1];
-
-              if (lastAiMsg && lastAiMsg.id) {
+              if (lastAiMsg && lastAiMsg.id)
                 generateTrackerUpdate(lastAiMsg.id);
-              }
             }
           }, 3000);
 
-          // 自动总结记忆检查
           setTimeout(() => {
             if (
               memoryConfig.enabled &&
@@ -3253,10 +3281,7 @@ Requirements:
           }, 2000);
         }
       } else {
-        if (regenIndex !== null) {
-          console.log("[Echoes] 重生成未完成，恢复原始消息...");
-          setChatHistory(backupHistory);
-        }
+        if (regenIndex !== null) setChatHistory(backupHistory);
       }
     } finally {
       setLoading((prev) => ({ ...prev, chat: false }));
@@ -3513,14 +3538,13 @@ Requirements:
   };
 
   // Smart Watch State
-  const [smartWatchLocations, setSmartWatchLocations] = useStickyState(
-    [],
-    "echoes_sw_locations",
-  );
-  const [smartWatchLogs, setSmartWatchLogs] = useStickyState(
-    [],
-    "echoes_sw_logs",
-  );
+  const [
+    smartWatchLocations,
+    setSmartWatchLocations,
+    smartWatchLocationsLoaded,
+  ] = useStickyState([], "echoes_sw_locations");
+  const [smartWatchLogs, setSmartWatchLogs, smartWatchLogsLoaded] =
+    useStickyState([], "echoes_sw_logs");
   // Filter state (transient)
   const [swFilter, setSwFilter] = useState("all");
   // Edit mode for map (transient)
@@ -3739,12 +3763,12 @@ Requirements:
   };
 
   // --- FORUM STATE ---
-  const [forumData, setForumData] = useStickyState(
+  const [forumData, setForumData, forumDataLoaded] = useStickyState(
     { name: "本地生活圈", posts: [], isInitialized: false }, // Added isInitialized
     "echoes_forum_data",
   );
   // 论坛昵称设置
-  const [forumSettings, setForumSettings] = useStickyState(
+  const [forumSettings, setForumSettings, forumSettingsLoaded] = useStickyState(
     { userNick: "User本U", smurfNick: "不是小号", charNick: "匿名用户" },
     "echoes_forum_settings",
   );
@@ -3770,6 +3794,25 @@ Requirements:
   const [selectedMsgs, setSelectedMsgs] = useState(new Set());
 
   /* --- MAIN RENDER --- */
+
+  // 挑选最关键的几个数据作为“准备就绪”的判断依据
+  const isDataReady =
+    personaLoaded &&
+    chatHistoryLoaded &&
+    userPersonaLoaded &&
+    charStickersLoaded;
+
+  if (!isDataReady) {
+    return (
+      <div className="h-screen w-full bg-[#F5F5F7] flex flex-col items-center justify-center gap-4">
+        <RefreshCw className="animate-spin text-gray-400" size={32} />
+        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+          正在同步本地数据库...
+        </p>
+      </div>
+    );
+  }
+
   if (isLocked) {
     return (
       <div className="h-screen w-full bg-[#F5F5F7] flex flex-col items-center justify-start pt-32 p-8 text-[#2C2C2C] relative overflow-hidden">
@@ -6144,138 +6187,17 @@ Requirements:
             title="共鸣旋律"
             onClose={() => setActiveApp(null)}
           >
-            <div className="flex-shrink-0 w-full flex flex-col items-center pt-8">
-              <div className="w-64 h-64 rounded-full bg-[#1a1a1a] flex items-center justify-center shadow-2xl mb-8 relative group shrink-0">
-                {music.length > 0 && (
-                  <button
-                    onClick={() => handleDeleteMusic(0)}
-                    className="absolute -top-2 -right-2 p-2 bg-white rounded-full text-gray-400 hover:text-red-500 shadow-md opacity-0 group-hover:opacity-100 transition-all z-20"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                )}
-                <div className="absolute inset-0 rounded-full border-[1px] border-gray-800 opacity-40 scale-[0.9]"></div>
-                <div
-                  className={`w-24 h-24 rounded-full bg-[#7A2A3A] flex items-center justify-center relative z-10 shadow-inner ${
-                    loading.music ? "animate-spin" : ""
-                  }`}
-                >
-                  <div className="w-2 h-2 bg-black rounded-full"></div>
-                </div>
-              </div>
-              {music.length > 0 ? (
-                <div className="text-center w-full px-6">
-                  <h2 className="text-2xl truncate text-gray-900">
-                    {music[0].title}
-                  </h2>
-                  <p className="text-xs uppercase font-bold text-gray-400 mb-6 mt-1">
-                    {music[0].artist}
-                  </p>
-                  <div className="glass-card p-4 rounded-xl mb-4 border-none bg-white/40">
-                    <p className="italic text-gray-600 text-sm">
-                      "{music[0].lyric}"
-                    </p>
-                  </div>
-                  <CollapsibleThought
-                    text={music[0].thought}
-                    label="听歌心情"
-                  />
-                  <button
-                    onClick={() => generateMusic(persona)}
-                    disabled={loading.music}
-                    className="mx-auto mt-6 px-6 py-3 bg-[#2C2C2C] text-white rounded-full text-xs uppercase tracking-widest hover:bg-black flex items-center gap-2 shadow-lg hover:shadow-xl transition-all"
-                  >
-                    {loading.music ? (
-                      <RefreshCw size={12} className="animate-spin" />
-                    ) : (
-                      <SkipForward size={12} />
-                    )}
-                    {loading.music ? "生成中..." : "切歌 / Next"}
-                  </button>
-                </div>
-              ) : (
-                <div className="w-full flex flex-col items-center mt-8">
-                  <button
-                    onClick={() => generateMusic(persona)}
-                    disabled={loading.music}
-                    className="text-[10px] font-bold uppercase tracking-widest bg-[#2C2C2C] text-white px-6 py-2 rounded-full shadow-lg hover:bg-black transition-all disabled:opacity-50 flex items-center gap-2"
-                  >
-                    {loading.music && (
-                      <RefreshCw className="animate-spin" size={10} />
-                    )}
-                    {loading.music ? "生成中..." : "初始化播放器"}
-                  </button>
-                  <p className="text-[9px] text-gray-400 text-center mt-3">
-                    根据当前剧情生成第一首歌
-                  </p>
-                </div>
-              )}
-            </div>
-            {music.length > 1 && (
-              <div className="flex-grow overflow-y-auto px-6 pb-10 custom-scrollbar border-t border-gray-200/50 mt-8">
-                <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mt-6 mb-4 flex items-center gap-2 sticky top-0 bg-[#FDFCF8]/0 backdrop-blur-sm py-2 z-10">
-                  <History size={12} /> 过往共鸣
-                </h3>
-                <ul className="space-y-3">
-                  {music.slice(1).map((track, idx) => (
-                    <li
-                      key={idx}
-                      className="flex flex-col p-3 bg-white/60 border border-white rounded-lg group hover:bg-white transition-colors cursor-pointer"
-                      onClick={() =>
-                        setExpandedMusicHistory(
-                          expandedMusicHistory === idx ? null : idx,
-                        )
-                      }
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3 overflow-hidden">
-                          <span className="text-[10px] text-gray-300 w-4">
-                            0{idx + 1}
-                          </span>
-                          <div className="flex flex-col overflow-hidden">
-                            <span className="text-sm text-gray-800 truncate">
-                              {track.title}
-                            </span>
-                            <span className="text-[9px] uppercase text-gray-400 truncate">
-                              {track.artist}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <ChevronDown
-                            size={14}
-                            className={`text-gray-400 transition-transform ${
-                              expandedMusicHistory === idx ? "rotate-180" : ""
-                            }`}
-                          />
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteMusic(idx + 1);
-                            }}
-                            className="p-1.5 text-gray-300 hover:text-red-400 rounded-md opacity-0 group-hover:opacity-100 transition-all"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
-                      </div>
-                      {expandedMusicHistory === idx && (
-                        <div className="mt-3 pt-3 border-t border-gray-100 animate-in slide-in-from-top-2">
-                          <p className="italic text-gray-600 text-xs mb-2">
-                            "{track.lyric}"
-                          </p>
-                          {track.thought && (
-                            <div className="text-[10px] text-gray-500 bg-white/50 p-2 rounded-lg">
-                              心声: {track.thought}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            <MusicApp
+              persona={persona}
+              userAvatar={userAvatar}
+              charAvatar={avatar}
+              userName={userName}
+              chatHistory={chatHistory}
+              useStickyState={useStickyState} // 传入你的异步钩子
+              echoesDB={echoesDB} // 传入你的数据库工具
+              triggerAIResponse={triggerAIResponse}
+              showToast={showToast}
+            />
           </AppWindow>
           <AppWindow
             isOpen={activeApp === "status"}

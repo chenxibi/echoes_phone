@@ -229,7 +229,7 @@ export const getRecentTurns = (history, limit) => {
 
   return history.slice(startIndex);
 };
-const getFormattedMessageText = (m, userName, persona, chatStyle) => {
+export const getFormattedMessageText = (m, userName, persona, chatStyle) => {
   const senderName =
     m.sender === "me" ? userName || "User" : persona?.name || "Char";
   let content = m.text || "";
