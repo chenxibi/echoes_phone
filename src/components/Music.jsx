@@ -320,13 +320,16 @@ const MusicApp = ({
     };
   }, [audioRef]);
 
-  // 2. 歌词居中滚动
+  // 2. 歌词居中滚动（手动计算scrollTop，只滚动歌词容器，不影响window）
   useEffect(() => {
     if (activeLrcIndex === -1) return;
     const t = setTimeout(() => {
       const container = lrcScrollRef.current;
-      const activeLine = container?.children[activeLrcIndex];
-      activeLine?.scrollIntoView({ block: "center", behavior: "smooth" });
+      if (!container) return;
+      const activeLine = container.children[activeLrcIndex];
+      if (!activeLine) return;
+      const top = activeLine.offsetTop - container.offsetHeight / 2 + activeLine.offsetHeight / 2;
+      container.scrollTo({ top, behavior: "instant" });
     }, 0);
     return () => clearTimeout(t);
   }, [activeLrcIndex]);
