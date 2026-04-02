@@ -1411,7 +1411,7 @@ const App = () => {
       effectiveUserName,
     );
     const cleanWorldInfo = replacePlaceholders(
-      getWorldInfoString(),
+      getWorldInfoString(worldBook),
       p.name,
       effectiveUserName,
     );
@@ -1622,7 +1622,7 @@ const App = () => {
       effectiveUserName,
     );
     const cleanWorldInfo = replacePlaceholders(
-      getWorldInfoString(),
+      getWorldInfoString(worldBook),
       persona.name,
       effectiveUserName,
     );
@@ -1663,7 +1663,7 @@ const App = () => {
         effectiveUserName,
       );
       const cleanWorldInfo = replacePlaceholders(
-        getWorldInfoString(),
+        getWorldInfoString(worldBook),
         charName,
         effectiveUserName,
       );
@@ -1937,7 +1937,7 @@ Requirements:
       currentUserName,
     );
     const cleanWorldInfo = replacePlaceholders(
-      getWorldInfoString(),
+      getWorldInfoString(worldBook),
       persona.name,
       currentUserName,
     );
@@ -2361,7 +2361,7 @@ ${charFactsList || "None"}
       const effectiveUserName = userName || "User";
 
       const cleanWorldInfo = replacePlaceholders(
-        getWorldInfoString(),
+        getWorldInfoString(worldBook),
         charName,
         effectiveUserName,
       );
@@ -2467,7 +2467,7 @@ Requirements:
         effectiveUserName,
       );
       const cleanWorldInfo = replacePlaceholders(
-        getWorldInfoString(),
+        getWorldInfoString(worldBook),
         persona.name,
         effectiveUserName,
       );
@@ -2488,10 +2488,9 @@ Requirements:
         // 修复：添加长期记忆
         .replaceAll("{{LONG_MEMORY}}", longMemory || "None");
 
-      const genPrompt = prompts.smartwatch_step1_gen.replaceAll(
-        "{{NAME}}",
-        persona.name,
-      );
+      const genPrompt = prompts.smartwatch_step1_gen
+        .replaceAll("{{NAME}}", persona.name)
+        .replaceAll("{{USER_NAME}}", effectiveUserName);
 
       // 第一发请求：生成地点
       const step1Data = await generateContent(
@@ -2581,7 +2580,7 @@ Requirements:
       effectiveUserName,
     );
     const cleanWorldInfo = replacePlaceholders(
-      getWorldInfoString(),
+      getWorldInfoString(worldBook),
       persona.name,
       effectiveUserName,
     );
@@ -2600,6 +2599,7 @@ Requirements:
 
     const prompt = prompts.smartwatch_update
       .replaceAll("{{NAME}}", persona.name)
+      .replaceAll("{{USER_NAME}}", effectiveUserName)
       .replaceAll("{{HISTORY}}", getContextString(chatHistory, 5))
       .replaceAll("{{LOCATIONS_LIST}}", locList)
       .replaceAll("{{LAST_LOG}}", lastLog);
