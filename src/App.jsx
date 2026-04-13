@@ -1469,6 +1469,47 @@ const App = () => {
   const generateBrowser = () =>
     runGenerator("browser", setBrowserHistory, prompts.browser);
 
+  // 事件触发分析：分析聊天历史，决定触发哪些应用更新
+  const triggerAppEvents = async () => {
+    if (!persona) return;
+    const charName = persona.name || "Character";
+    const effectiveUserName = userName || "你";
+    const historyText = getContextString(chatHistory, 10);
+
+    const prompt = prompts.trigger_events
+      .replaceAll("{{NAME}}", charName)
+      .replaceAll("{{HISTORY}}", historyText);
+
+    try {
+      const data = await generateContent(
+        { prompt, systemInstruction: getFinalSystemPrompt() },
+        apiConfig,
+        (err) => {}, // 静默处理，不弹toast避免打扰
+      );
+
+      if (data) {
+        // 位置移动触发 → 更新智能家
+        if (data.triggerLocation) {
+          setTimeout(() => generateSmartWatchUpdate(), 3000);
+        }
+        // 重要事件触发 → 写日记
+        if (data.triggerDiary) {
+          setTimeout(() => generateDiary(), 4000);
+        }
+        // 浏览器搜索触发 → 更新浏览器历史
+        if (data.triggerBrowser) {
+          setTimeout(() => generateBrowser(), 5000);
+        }
+        // 购物触发 → 更新账单
+        if (data.triggerReceipt) {
+          setTimeout(() => generateReceipt(), 6000);
+        }
+      }
+    } catch (e) {
+      // 静默处理
+    }
+  };
+
   const unlockDeviceDirect = () => {
     const localPersona = {
       name: "Char",
@@ -2136,6 +2177,11 @@ Requirements:
               }
             }, 5000);
           }
+
+          // 惊喜逻辑2：AI分析聊天内容，触发智能家/日记/浏览器/账单更新
+          setTimeout(() => {
+            triggerAppEvents();
+          }, 6000);
 
           // 定时检查档案更新与总结
           setTimeout(() => {

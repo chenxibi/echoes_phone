@@ -378,6 +378,31 @@ JSON Format:
      { "author": "NetizenB", "content": "Comment 2", "isCharacter": false }
   ]
 }`,
+  trigger_events: `Analyze the recent chat history and decide what events to trigger.
+Recent Chat:
+"""
+{{HISTORY}}
+"""
+
+Instructions:
+Analyze the conversation and determine which events should be triggered:
+1. **Location Move**: Did {{NAME}} or the user mention going to a place, arriving somewhere, or planning to visit somewhere?
+2. **Diary (Important Event)**: Did something emotionally significant happen (gift, fight, confession, special moment, personal revelation)?
+3. **Browser Search**: Did {{NAME}} or the user search for information or look something up?
+4. **Shopping/Receipt**: Did {{NAME}} or the user buy something, receive a gift, or exchange goods/money?
+
+JSON Format:
+{
+  "triggerLocation": true/false,
+  "triggerDiary": true/false,
+  "triggerBrowser": true/false,
+  "triggerReceipt": true/false
+}
+
+Rules:
+- Only set to true if there is CLEAR evidence in the chat
+- If chat is too short or nothing noteworthy happened, all should be false
+- Be conservative with triggers`,
   summary: `You are an objective text summarizer. Your job is to condense recent events into a concise factual narrative. Do not analyze. Do not interpret. Do not repeat what has happened in the past. Only summarize the latest events in the Recent Chat Log. 
 Current Memory:
 """
