@@ -402,7 +402,8 @@ JSON Format:
 Rules:
 - Only set to true if there is CLEAR evidence in the chat
 - If chat is too short or nothing noteworthy happened, all should be false
-- Be conservative with triggers`,
+- Be conservative with triggers
+- CRITICAL: Output ONLY the JSON. No explanation, no analysis, no text after the JSON.`,
   summary: `You are an objective text summarizer. Your job is to condense recent events into a concise factual narrative. Do not analyze. Do not interpret. Do not repeat what has happened in the past. Only summarize the latest events in the Recent Chat Log. 
 Current Memory:
 """
