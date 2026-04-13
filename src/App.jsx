@@ -1490,25 +1490,63 @@ const App = () => {
       );
 
       if (data) {
-        // 位置移动触发 → 更新智能家
+        // 位置移动触发 → 更新智能家，生成完成后弹窗
         if (data.triggerLocation) {
-          if (typeof showToast === "function") showToast("info", `${charName}的实时位置更新了`);
-          setTimeout(() => generateSmartWatchUpdate(), 1000);
+          setTimeout(() => {
+            const doUpdate = async () => {
+              setLoading((prev) => ({ ...prev, sw_update: true }));
+              const prompt = prompts.smartwatch_update
+                .replaceAll("{{NAME}}", persona.name)
+                .replaceAll("{{TIME}}", getCurrentTimeObj().toLocaleString())
+                .replaceAll("{{HISTORY}}", getContextString(chatHistory, 5))
+                .replaceAll("{{LOCATIONS_LIST}}", smartWatchLocations.map((l) => `ID: ${l.id}, Name: ${l.name}`).join("\n"))
+                .replaceAll("{{LAST_LOG}}", smartWatchLogs.length > 0 ? JSON.stringify(smartWatchLogs[0]) : "None");
+              const systemPrompt = prompts.system
+                .replaceAll("{{NAME}}", persona.name)
+                .replaceAll("{{CHAR_DESCRIPTION}}", inputKey + "\n" + charTrackerContext)
+                .replaceAll("{{USER_PERSONA}}", userPersona + "\n" + trackerContext)
+                .replaceAll("{{USER_NAME}}", userName || "你")
+                .replaceAll("{{CUSTOM_RULES}}", customRules)
+                .replaceAll("{{WORLD_INFO}}", getWorldInfoString(worldBook));
+              try {
+                await generateContent({ prompt, systemInstruction: systemPrompt }, apiConfig, (err) => {}, new AbortController().signal);
+                if (typeof showToast === "function") showToast("info", `${charName}的实时位置更新了`);
+              } finally {
+                setLoading((prev) => ({ ...prev, sw_update: false }));
+              }
+            };
+            doUpdate();
+          }, 1000);
         }
-        // 重要事件触发 → 写日记
+        // 重要事件触发 → 写日记，生成完成后弹窗
         if (data.triggerDiary) {
-          if (typeof showToast === "function") showToast("info", `${charName}写了一篇日记`);
-          setTimeout(() => generateDiary(), 2000);
+          setTimeout(() => {
+            const doDiary = async () => {
+              await runGenerator("diary", setDiaries, prompts.diary);
+              if (typeof showToast === "function") showToast("info", `${charName}写了一篇日记`);
+            };
+            doDiary();
+          }, 2000);
         }
-        // 浏览器搜索触发 → 更新浏览器历史
+        // 浏览器搜索触发 → 更新浏览器历史，生成完成后弹窗
         if (data.triggerBrowser) {
-          if (typeof showToast === "function") showToast("info", `${charName}的浏览记录更新了`);
-          setTimeout(() => generateBrowser(), 3000);
+          setTimeout(() => {
+            const doBrowser = async () => {
+              await runGenerator("browser", setBrowserHistory, prompts.browser);
+              if (typeof showToast === "function") showToast("info", `${charName}的浏览记录更新了`);
+            };
+            doBrowser();
+          }, 3000);
         }
-        // 购物触发 → 更新账单
+        // 购物触发 → 更新账单，生成完成后弹窗
         if (data.triggerReceipt) {
-          if (typeof showToast === "function") showToast("info", `${charName}的账单更新了`);
-          setTimeout(() => generateReceipt(), 4000);
+          setTimeout(() => {
+            const doReceipt = async () => {
+              await runGenerator("receipt", setReceipts, prompts.receipt);
+              if (typeof showToast === "function") showToast("info", `${charName}的账单更新了`);
+            };
+            doReceipt();
+          }, 4000);
         }
       }
     } catch (e) {
