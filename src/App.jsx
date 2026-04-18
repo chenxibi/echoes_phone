@@ -2794,7 +2794,7 @@ Requirements:
 
   if (!isDataReady) {
     return (
-      <div className="h-screen w-full bg-[#F5F5F7] flex flex-col items-center justify-center gap-4">
+      <div className="h-screen w-full bg-[#EBEBF0] flex flex-col items-center justify-center gap-4">
         <RefreshCw className="animate-spin text-gray-400" size={32} />
         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
           正在同步本地数据库...
@@ -2805,7 +2805,7 @@ Requirements:
 
   if (isLocked) {
     return (
-      <div className="h-screen w-full bg-[#F5F5F7] flex flex-col items-center justify-start pt-32 p-8 text-[#2C2C2C] relative overflow-hidden">
+      <div className="h-screen w-full bg-[#EBEBF0] flex flex-col items-center justify-start pt-32 p-8 text-[#2C2C2C] relative overflow-hidden">
         <div className="absolute -top-20 -left-20 w-96 h-96 bg-blue-50/50 rounded-full blur-3xl animate-pulse delay-1000 pointer-events-none"></div>
         <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-gray-100/60 rounded-full blur-3xl animate-pulse pointer-events-none"></div>
         {notification && (
@@ -3010,15 +3010,17 @@ Requirements:
                 onClick={unlockDevice}
                 disabled={isConnecting || !inputKey}
                 className="p-5 bg-[#2C2C2C] text-white rounded-full hover:scale-110 active:scale-95 transition-all shadow-2xl disabled:opacity-50"
+                aria-label={isConnecting ? "正在连接..." : "解锁设备"}
               >
                 {isConnecting ? (
                   <RefreshCw
                     className="animate-spin"
                     size={24}
                     strokeWidth={1.5}
+                    aria-hidden="true"
                   />
                 ) : (
-                  <Fingerprint size={28} strokeWidth={1.2} />
+                  <Fingerprint size={28} strokeWidth={1.2} aria-hidden="true" />
                 )}
               </button>
             </div>
@@ -3026,8 +3028,9 @@ Requirements:
           <button
             onClick={() => setShowLockSettings(true)}
             className="text-gray-400 hover:text-[#2C2C2C] transition-colors p-3 rounded-full hover:bg-gray-100/50"
+            aria-label="打开设置"
           >
-            <SettingsIcon size={18} strokeWidth={1.5} />
+            <SettingsIcon size={18} strokeWidth={1.5} aria-hidden="true" />
           </button>
         </div>
         {showCreationAssistant && (
@@ -3099,6 +3102,19 @@ Requirements:
 
   return (
     <div className="h-screen w-full bg-[#EBEBF0] flex items-center justify-center text-[#2C2C2C] overflow-hidden relative">
+      {/* Skip Link for Accessibility */}
+      <a href="#main-content" className="skip-link">
+        跳转到主要内容
+      </a>
+      
+      {/* Screen Reader Announcements */}
+      <div
+        id="sr-announcer"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      />
+      
       <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] bg-blue-100/30 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-orange-50/40 rounded-full blur-3xl pointer-events-none"></div>
       {notification && (
@@ -3126,16 +3142,17 @@ Requirements:
         </div>
       )}
       <div className="relative w-full h-full md:w-[400px] md:h-[800px] bg-[#F2F2F7] md:rounded-[48px] md:border-[8px] md:border-white shadow-2xl flex flex-col overflow-hidden ring-1 ring-black/5">
-        <div className="h-12 px-8 flex items-center justify-between text-[10px] text-gray-400 bg-transparent z-20 shrink-0 pt-2">
+        {/* Status Bar */}
+        <header className="h-12 px-8 flex items-center justify-between text-[10px] text-gray-400 bg-transparent z-20 shrink-0 pt-2" role="banner">
           <span>{formatTime(getCurrentTimeObj())}</span>
-          <div className="flex gap-2">
-            <Signal size={10} />
-            <Wifi size={10} />
-            <Battery size={10} />
+          <div className="flex gap-2" role="img" aria-label="状态栏: 信号强度、WiFi、电池">
+            <Signal size={10} aria-hidden="true" />
+            <Wifi size={10} aria-hidden="true" />
+            <Battery size={10} aria-hidden="true" />
           </div>
-        </div>
+        </header>
 
-        <div className="flex-grow relative overflow-hidden">
+        <main id="main-content" className="flex-grow relative overflow-hidden" role="main">
           {/* HOME SCREEN */}
           <div
             className={`absolute inset-0 px-8 pt-2 pb-12 flex flex-col transition-all duration-500 ${
@@ -3609,8 +3626,11 @@ Requirements:
                     <span className="text-xs font-bold uppercase text-gray-500">
                       重生成指令
                     </span>
-                    <button onClick={() => setRegenerateTarget(null)}>
-                      <X size={14} />
+                    <button 
+                      onClick={() => setRegenerateTarget(null)}
+                      aria-label="关闭重生成面板"
+                    >
+                      <X size={14} aria-hidden="true" />
                     </button>
                   </div>
                   <input
@@ -4829,7 +4849,7 @@ Requirements:
               </div>
 
               {/* MAP AREA */}
-              <div className="relative w-full h-[550px] bg-[#F5F5F7] border-y border-gray-200 overflow-y-auto custom-scrollbar mb-6">
+              <div className="relative w-full h-[550px] bg-[#EBEBF0] border-y border-gray-200 overflow-y-auto custom-scrollbar mb-6">
                 {smartWatchLocations.length === 0 ? (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center px-6">
                     <p className="text-xs text-gray-400">暂无监控数据</p>
@@ -5233,7 +5253,7 @@ Requirements:
               handleResetIcon={handleResetIcon}
             />
           </AppWindow>
-        </div>
+        </main>
         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1 bg-gray-800/20 rounded-full z-30"></div>
       </div>
       {editingSticker && (
@@ -5353,7 +5373,6 @@ Requirements:
   );
 };
 
-/* --- MISSING COMPONENTS RESTORED --- */
 const AppIcon = ({ icon, label, onClick }) => (
   <div
     onClick={onClick}
