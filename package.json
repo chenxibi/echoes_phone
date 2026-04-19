@@ -11,13 +11,14 @@
     "deploy": "gh-pages -d dist --repo https://github.com/chenxibi/echoes_phone.git"
   },
   "dependencies": {
-    "@rollup/rollup-darwin-arm64": "^4.60.1",
+    "@rollup/rollup-darwin-arm64": "^4.60.2",
     "jsonrepair": "^3.13.1",
     "lucide-react": "^0.556.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@electron/rebuild": "^4.0.3",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
     "@vitejs/plugin-react": "^4.0.3",

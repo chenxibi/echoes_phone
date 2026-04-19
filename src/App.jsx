@@ -679,13 +679,19 @@ const App = () => {
     const nameFromYaml = raw.match(/^([^\n:]{2,20}):\s*\n\s+Chinese_name:/m);
     // 兜底：直接取 description 第一行（去掉 <info> 等标签后的第一行内容）
     const firstLineRaw = raw.replace(/<[^>]+>/g, "").split("\n").find(l => l.trim().length > 0);
-    const nameFromFirstLine = firstLineRaw ? firstLineRaw.trim().match(/^([^\n:]{2,20})$/) : null;
+    // 改进：匹配第一行，排除明显是字段标签的行（如 "Appearance:"、"Personality:"）
+    const nameFromFirstLine = firstLineRaw
+      ? firstLineRaw.trim().match(/^([^\n:]{2,20})$/)
+      : null;
+    const isLikelyFieldLabel = (str) => /^[A-Z][a-z]+:\s*$/.test(str) || /^(appearance|personality|background|description):/i.test(str);
+    const firstLineCandidate = firstLineRaw ? firstLineRaw.trim() : null;
+    const safeFirstLineName = (firstLineCandidate && firstLineCandidate.length >= 2 && firstLineCandidate.length <= 20 && !isLikelyFieldLabel(firstLineCandidate)) ? firstLineCandidate : null;
     const finalName =
       (generatedPreview.name && generatedPreview.name !== "Unknown" ? generatedPreview.name : null) ||
       (cleaned.name && cleaned.name !== "Unknown" ? cleaned.name : null) ||
       (nameFromStandard ? nameFromStandard[1].trim() : null) ||
       (nameFromYaml ? nameFromYaml[1].trim() : null) ||
-      (nameFromFirstLine ? nameFromFirstLine[1].trim() : null) ||
+      (safeFirstLineName && !isLikelyFieldLabel(safeFirstLineName) ? safeFirstLineName : null) ||
       "Unknown";
     setPersona({
       name: finalName,
@@ -963,6 +969,13 @@ const App = () => {
             const { rawText, worldBook, name } = cleanCharacterJson(json);
             setInputKey(rawText);
             setWorldBook(worldBook);
+            // 从 rawText 中提取 Name: xxx 格式的名字，兜底用 cleanCharacterJson 返回的 name
+            const nameMatch = rawText.match(/^Name:\s*(.+)/m);
+            const finalName = nameMatch ? nameMatch[1].trim() : (name && name !== "Unknown" ? name : "角色");
+            setPersona((prev) => ({
+              ...prev,
+              name: finalName,
+            }));
             showToast("success", "角色卡读取成功");
           } catch (err) {
             showToast("error", "JSON 解析失败: " + err.message);
