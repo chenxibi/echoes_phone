@@ -1324,7 +1324,30 @@ const App = () => {
         method: "GET",
         headers: { Authorization: `Bearer ${apiConfig.key}` },
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        // /models 端点不存在（如 Minimax），降级为 chat completion 测试
+        if (res.status === 404) {
+          const chatRes = await fetch(`${url}/chat/completions`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${apiConfig.key}`,
+            },
+            body: JSON.stringify({
+              model: "",
+              messages: [{ role: "user", content: "hi" }],
+              max_tokens: 1,
+            }),
+          });
+          if (chatRes.ok) {
+            setAvailableModels([]);
+            showToast("success", "连接成功 (该 API 不支持模型列表，请手动输入模型名)");
+            setIsFetchingModels(false);
+            return;
+          }
+        }
+        throw new Error(`HTTP ${res.status}`);
+      }
       const data = await res.json();
 
       if (data.data && Array.isArray(data.data)) {
@@ -1364,18 +1387,46 @@ const App = () => {
         tryUrl = `${url}/models`;
       }
 
-      const res = await fetch(tryUrl, {
+      let res = await fetch(tryUrl, {
         method: "GET",
         headers: { Authorization: `Bearer ${apiConfig.key}` },
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      // /models 端点不存在（如 Minimax），降级为 chat completion 测试
+      if (res.status === 404) {
+        const modelToTest = apiConfig.model || "gpt-4o";
+        res = await fetch(`${url}/chat/completions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiConfig.key}`,
+          },
+          body: JSON.stringify({
+            model: modelToTest,
+            messages: [{ role: "user", content: "hi" }],
+            max_tokens: 1,
+          }),
+        });
+        if (!res.ok) {
+          const errText = await res.text();
+          let errMsg = `API Error (${res.status})`;
+          try {
+            const errJson = JSON.parse(errText);
+            if (errJson.error && errJson.error.message) errMsg += `: ${errJson.error.message}`;
+          } catch (_) {}
+          throw new Error(errMsg);
+        }
+      } else if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+
       setConnectionStatus("success");
       showToast("success", "连接成功，配置已保存");
       setTimeout(() => setShowLockSettings(false), 1000);
     } catch (e) {
       console.error("Connection Test Failed", e);
       setConnectionStatus("error");
-      showToast("error", "连接失败，请检查地址或密钥");
+      showToast("error", `连接失败: ${e.message}`);
     }
   };
 
