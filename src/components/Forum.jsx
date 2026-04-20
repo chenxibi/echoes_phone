@@ -275,6 +275,12 @@ const Forum = ({
     let relationshipContextBlock = "";
     if (needsDeepContext) {
       const recentHistory = getContextString(10);
+      
+      // [新增] 检测用户是否使用真实姓名作为大号ID
+      const isUsingRealName = !isSmurfReply && userNick === currentUserName && currentUserName && currentUserName !== "User";
+      const realNameContext = isUsingRealName ? `
+- **REAL NAME USAGE**: The user is using their real name "${currentUserName}" as their forum nickname. Consider whether "${currentUserName}" might be a well-known or high-status person in the community (e.g., a university, city, or country) related to this forum topic. If yes, netizens' replies might indicate they recognize who the user is (e.g., showing respect, familiarity, or mentioning their reputation). If not, they might treat them as an ordinary participant.` : "";
+      
       relationshipContextBlock = `
 [DATA SOURCE 2: PRIVATE CHAT MEMORY]:
 """
@@ -285,6 +291,7 @@ ${recentHistory}
 - User's Current Forum Nickname: "${userNick}"
 - **ABSOLUTE RULE**: "${persona.name}" KNOWS that "${userNick}" is "${currentUserName}".
 - **Netizen Logic**: Random NPCs should react to "${userNick}" if they comment.
+${realNameContext}
 - **Character Logic**: 
   1. Tone must reflect the relationship in [DATA SOURCE 2].
   ${targetInstruction} 
