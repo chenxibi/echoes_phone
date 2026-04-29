@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   CloudFog,
   RefreshCw,
@@ -242,8 +242,16 @@ const SettingsPanel = ({
                   max="50"
                   value={contextLimit}
                   onChange={(e) => {
-                    const val = parseInt(e.target.value);
-                    if (!isNaN(val)) setContextLimit(val);
+                    const raw = e.target.value;
+                    if (raw === "") {
+                      setContextLimit("");
+                    } else {
+                      const val = parseInt(raw);
+                      if (!isNaN(val)) setContextLimit(val);
+                    }
+                  }}
+                  onBlur={() => {
+                    if (contextLimit === "" || contextLimit < 2) setContextLimit(10);
                   }}
                   className="w-16 p-2 bg-white border border-gray-200 rounded-lg text-center text-xs font-mono outline-none focus:border-black"
                 />
@@ -294,12 +302,20 @@ const SettingsPanel = ({
                     min="5"
                     max="100"
                     value={memoryConfig.threshold}
-                    onChange={(e) =>
-                      setMemoryConfig((p) => ({
-                        ...p,
-                        threshold: parseInt(e.target.value) || 10,
-                      }))
-                    }
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      if (raw === "") {
+                        setMemoryConfig((p) => ({ ...p, threshold: "" }));
+                      } else {
+                        const val = parseInt(raw);
+                        if (!isNaN(val)) setMemoryConfig((p) => ({ ...p, threshold: val }));
+                      }
+                    }}
+                    onBlur={() => {
+                      if (memoryConfig.threshold === "" || memoryConfig.threshold < 5) {
+                        setMemoryConfig((p) => ({ ...p, threshold: 10 }));
+                      }
+                    }}
                     className="w-16 p-2 bg-white border border-gray-200 rounded-lg text-center text-xs font-mono outline-none focus:border-black"
                   />
                   <span className="text-[10px] text-gray-400">轮对话触发</span>

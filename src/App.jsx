@@ -1776,7 +1776,7 @@ const App = () => {
       await echoesDB.setItem(imageKey, compressedBase64);
 
       // 发送图片消息，imageData 直接存在消息上方便渲染
-      handleUserSend("[真实图片]", "image", null, {
+      handleUserSend("[图片]", "image", null, {
         imageKey,
         imageData: compressedBase64,
       });
@@ -2013,7 +2013,7 @@ Requirements:
     } else if (type === "location") {
       displayText = `[位置] ${extraData?.name || content}`;
     } else if (type === "image") {
-      displayText = "[真实图片]";
+      displayText = "[图片]";
     } else {
       displayText = content;
     }
@@ -2171,8 +2171,6 @@ Requirements:
           historyMessages.push({ role, content: textContent });
         }
       }
-      // 多模态模式下，historyText 只用于 prompt 中非 HISTORY 的部分
-      historyText = recentTurns.map(formatMsgText).join("\n");
     } else {
       // 纯文本模式
       historyText = recentTurns.map(formatMsgText).join("\n");
@@ -2230,15 +2228,18 @@ Requirements:
         - Context: This scene takes place in the physical world (Real Life).
         - Style: Use descriptive, sensory narrative (Visuals, Sounds, Smells).`;
 
+    // 多模态模式下，历史已通过 messages 数组传递，prompt 里不需要重复
+    const historyForPrompt = historyMessages ? "" : historyText;
+
     const prompt = prompts.chat
       .replaceAll("{{NAME}}", persona.name)
       .replaceAll("{{TIME}}", getCurrentTimeObj().toLocaleString())
-      .replaceAll("{{HISTORY}}", historyText)
+      .replaceAll("{{HISTORY}}", historyForPrompt)
       .replaceAll(
         "{{LAST_MSG}}",
-        newHistory.length > 0
+        historyMessages ? "" : (newHistory.length > 0
           ? JSON.stringify(newHistory[newHistory.length - 1])
-          : "Start conversation...",
+          : "Start conversation..."),
       )
       .replaceAll("{{STYLE_INSTRUCTION}}", styleInst)
       .replaceAll("{{STICKER_INSTRUCTION}}", stickerInst)
