@@ -539,6 +539,8 @@ const App = () => {
   const [isLocGenerating, setIsLocGenerating] = useState(false);
 
   const [showMediaMenu, setShowMediaMenu] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const imageUploadRef = useRef(null);
 
   // [新增] 全屏状态控制
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -1755,22 +1757,52 @@ const App = () => {
     showToast("success", "已重置角色数据");
   };
 
+  // 打开图片选择弹窗
+  const handleOpenImageModal = () => {
+    setShowMediaMenu(false);
+    setShowImageModal(true);
+  };
+
+  // 上传真实图片
+  const handleSendRealImage = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+      const compressedBase64 = await compressImage(file);
+
+      // 同时存 IndexedDB（供 AI 调用）和消息对象（供渲染）
+      const imageKey = `img_${Date.now()}`;
+      await echoesDB.setItem(imageKey, compressedBase64);
+
+      // 发送图片消息，imageData 直接存在消息上方便渲染
+      handleUserSend("[真实图片]", "image", null, {
+        imageKey,
+        imageData: compressedBase64,
+      });
+      setShowImageModal(false);
+    } catch (err) {
+      console.error("图片处理失败:", err);
+      showToast("error", "图片处理失败，请重试");
+    }
+
+    // 重置 input 允许重复选同一文件
+    event.target.value = "";
+  };
+
+  // 发送假图片（原有功能）
   const handleSendFakeImage = async () => {
-    // 1. 加上 async
     const desc = await customPrompt(
-      "请输入图片描述：", // 提示语
-      "", // 默认值为空
-      "发送图片", // 标题
+      "请输入图片描述：",
+      "",
+      "发送图片",
     );
 
     if (!desc || desc.trim() === "") return;
 
     const msgContent = `${IMG_TAG_START}${desc}`;
-
-    // 复用现有的发送逻辑
     handleUserSend(msgContent, "text");
-
-    setShowMediaMenu(false);
+    setShowImageModal(false);
   };
 
   // 统一生成系统指令的辅助函数
@@ -1980,6 +2012,8 @@ Requirements:
       displayText = `[转账] ¥${content}${note}`;
     } else if (type === "location") {
       displayText = `[位置] ${extraData?.name || content}`;
+    } else if (type === "image") {
+      displayText = "[真实图片]";
     } else {
       displayText = content;
     }
@@ -1988,6 +2022,9 @@ Requirements:
       sender: "me",
       text: displayText,
       isVoice: type === "voice",
+      isImage: type === "image",
+      imageKey: extraData?.imageKey || null, // IndexedDB 中的 key
+      imageData: extraData?.imageData || null, // base64 供渲染
 
       // [新增] 转账数据结构更新
       isTransfer: type === "transfer",
@@ -2071,27 +2108,75 @@ Requirements:
     const effectiveUserName = userName || "你";
 
     // --- 2. 格式化历史记录 (用于发送给 AI) ---
-    const historyText = getRecentTurns(newHistory, contextLimit)
-      .map((m) => {
-        const senderName =
-          m.sender === "me" ? userName || "User" : persona.name;
-        let content = m.text || "";
+    // 支持多模态：带图片的消息用 image_url 格式，其余用文本
+    const recentTurns = getRecentTurns(newHistory, contextLimit);
+    let historyText = "";
+    let historyMessages = null; // null 表示纯文本模式
+    const imageMsgs = [];
 
-        if (m.isVoice) {
-          content = `(发送了一条语音): ${m.text.replace("[语音消息] ", "")}`;
+    const formatMsgText = (m) => {
+      const senderName =
+        m.sender === "me" ? userName || "User" : persona.name;
+      let content = m.text || "";
+
+      if (m.isVoice) {
+        content = `(发送了一条语音): ${m.text.replace("[语音消息] ", "")}`;
+      }
+      if (m.sticker) {
+        if (!content || !content.trim()) {
+          content = `[发送了表情包: ${m.sticker.desc}]`;
         }
-        if (m.sticker) {
-          if (!content || !content.trim()) {
-            content = `[发送了表情包: ${m.sticker.desc}]`;
+      }
+      if (m.isImage && m.imageKey) {
+        content = "[发送了一张图片]";
+      }
+      if (m.isForward && m.forwardData) {
+        const fwd = m.forwardData;
+        content += ` [转发了${fwd.type === "post" ? "帖子" : "评论"}: "${fwd.content.slice(0, 50)}..."]`;
+      }
+      return `${senderName}: ${content}`;
+    };
+
+    // 检查是否有真实图片消息
+    const hasRealImages = recentTurns.some((m) => m.isImage && m.imageKey);
+
+    if (hasRealImages) {
+      // 多模态模式：构建 messages 数组
+      historyMessages = [];
+      for (const m of recentTurns) {
+        const role = m.sender === "me" ? "user" : "assistant";
+        const textContent = formatMsgText(m);
+
+        if (m.isImage && m.imageKey) {
+          // 从 IndexedDB 读取图片
+          try {
+            const imageData = await echoesDB.getItem(m.imageKey);
+            if (imageData) {
+              historyMessages.push({
+                role,
+                content: [
+                  { type: "text", text: textContent },
+                  { type: "image_url", image_url: { url: imageData } },
+                ],
+              });
+            } else {
+              // 图片数据丢失，降级为纯文本
+              historyMessages.push({ role, content: textContent });
+            }
+          } catch (e) {
+            console.error("读取图片失败:", e);
+            historyMessages.push({ role, content: textContent });
           }
+        } else {
+          historyMessages.push({ role, content: textContent });
         }
-        if (m.isForward && m.forwardData) {
-          const fwd = m.forwardData;
-          content += ` [转发了${fwd.type === "post" ? "帖子" : "评论"}: "${fwd.content.slice(0, 50)}..."]`;
-        }
-        return `${senderName}: ${content}`;
-      })
-      .join("\n");
+      }
+      // 多模态模式下，historyText 只用于 prompt 中非 HISTORY 的部分
+      historyText = recentTurns.map(formatMsgText).join("\n");
+    } else {
+      // 纯文本模式
+      historyText = recentTurns.map(formatMsgText).join("\n");
+    }
 
     const currentUserName = userName || "User";
     const cleanCharDesc = replacePlaceholders(
@@ -2118,13 +2203,15 @@ Requirements:
     }
 
     // 核心修复：对 finalHint 进行占位符替换处理
+    // 构建独立的 Special Instruction（放在 Directives 之前，模型关注度更高）
+    let specialInst = "";
     if (finalHint) {
       const processedHint = replacePlaceholders(
         finalHint,
         persona.name,
         userName || "你",
       );
-      styleInst += `\n[Special Instruction]: ${processedHint}`;
+      specialInst = `\n**[USER OVERRIDE - HIGHEST PRIORITY]**: ${processedHint}\nYou MUST follow this instruction above all other style rules.`;
     }
 
     const rawForwardContext = overrideContext || forwardContext;
@@ -2158,7 +2245,8 @@ Requirements:
       .replaceAll("{{USER_PERSONA}}", userPersona + "\n" + trackerContext)
       .replaceAll("{{USER_NAME}}", effectiveUserName)
       .replaceAll("{{MODE_INSTRUCTION}}", modeInstruction)
-      .replaceAll("{{FORWARD_CONTEXT}}", finalForwardSection);
+      .replaceAll("{{FORWARD_CONTEXT}}", finalForwardSection)
+      .replaceAll("{{SPECIAL_INSTRUCTION}}", specialInst);
 
     const systemPrompt = prompts.system
       .replaceAll("{{NAME}}", persona.name)
@@ -2177,8 +2265,25 @@ Requirements:
 
     // --- 4. 调用 API ---
     try {
+      // 构建 messages 数组（多模态模式下带图片）
+      let messagesParam = undefined;
+      if (historyMessages) {
+        // 多模态模式：将完整 prompt 拆成 system + 对话历史消息
+        messagesParam = [
+          ...historyMessages,
+          // 最后一条用户消息包含完整 prompt（含角色设定等）
+          // 这样模型既能看到图片，又能读到完整的上下文指令
+          { role: "user", content: prompt },
+        ];
+      }
+
       const responseData = await generateContent(
-        { prompt, systemInstruction: systemPrompt, isJson: true },
+        {
+          prompt,
+          systemInstruction: systemPrompt,
+          isJson: true,
+          ...(messagesParam ? { messages: messagesParam } : {}),
+        },
         apiConfig,
         (err) => showToast("error", err),
         abortController.signal,
@@ -3994,7 +4099,26 @@ Requirements:
                                   );
                                 }
 
-                                // C. 假图片逻辑
+                                // C. 真实图片
+                                if (msg.isImage) {
+                                  return (
+                                    <div className="cursor-pointer overflow-hidden rounded-xl border-2 border-white shadow-sm bg-white relative group/img transition-transform active:scale-95">
+                                      {msg.imageData ? (
+                                        <img
+                                          src={msg.imageData}
+                                          alt="发送的图片"
+                                          className="w-48 max-h-64 object-cover rounded-xl"
+                                        />
+                                      ) : (
+                                        <div className="w-48 h-32 bg-gray-200 flex items-center justify-center">
+                                          <Camera size={24} className="text-gray-400" />
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                }
+
+                                // D. 假图片逻辑
                                 const isFakeImg = isImageMsg(msg.text);
 
                                 if (isFakeImg) {
@@ -4392,7 +4516,7 @@ Requirements:
 
                         {/* [新增] 发图按钮 */}
                         <button
-                          onClick={handleSendFakeImage}
+                          onClick={handleOpenImageModal}
                           className="flex flex-col items-center gap-1 text-gray-600 hover:text-black min-w-[40px]"
                         >
                           <div className="p-2 bg-gray-100 rounded-full">
@@ -5432,7 +5556,63 @@ Requirements:
           </div>
         </div>
       )}
-      <audio ref={audioRef} style={{ display: "none" }} />;
+      {/* 图片发送弹窗 */}
+      {showImageModal && (
+        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl space-y-4">
+            <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
+              <Camera size={20} className="text-[#7A2A3A]" />
+              发送图片
+            </h3>
+
+            {/* 上传真实图片 */}
+            <button
+              onClick={() => imageUploadRef.current?.click()}
+              className="w-full py-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-[#7A2A3A] hover:text-[#7A2A3A] hover:bg-gray-50 transition-all flex flex-col items-center gap-2"
+            >
+              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                <Plus size={20} />
+              </div>
+              <span className="text-sm font-medium">上传图片</span>
+              <span className="text-[10px] text-gray-400">支持 JPG/PNG/GIF/WebP</span>
+              <span className="text-[10px] text-amber-500">请确保您所使用的模型支持图片输入</span>
+            </button>
+            <input
+              ref={imageUploadRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleSendRealImage}
+            />
+
+            {/* 分隔线 */}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-gray-200" />
+              <span className="text-xs text-gray-400">或</span>
+              <div className="flex-1 h-px bg-gray-200" />
+            </div>
+
+            {/* 假图片输入（原有功能） */}
+            <button
+              onClick={handleSendFakeImage}
+              className="w-full py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
+            >
+              <Edit2 size={14} />
+              输入图片描述
+            </button>
+
+            {/* 取消按钮 */}
+            <button
+              onClick={() => setShowImageModal(false)}
+              className="w-full py-2.5 text-gray-400 text-sm hover:text-gray-600 transition-colors"
+            >
+              取消
+            </button>
+          </div>
+        </div>
+      )}
+
+      <audio ref={audioRef} style={{ display: "none" }} />
     </div>
   );
 };

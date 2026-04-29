@@ -286,19 +286,38 @@ export const replacePlaceholders = (text, charName, userName) => {
 
 /* --- API HANDLER --- */
 export const generateContent = async (params, apiConfig, onError, signal) => {
-  const { prompt, systemInstruction, isJson = true } = params;
+  const { prompt, systemInstruction, isJson = true, messages: customMessages } = params;
   let content = null;
 
   console.log(`[Echoes] Starting Generation. isJson: ${isJson}`);
 
   try {
     if (apiConfig.baseUrl && apiConfig.key) {
-      const messages = [
-        { role: "system", content: systemInstruction },
-        { role: "user", content: prompt },
-      ];
+      // 支持两种模式：
+      // 1. 传入 messages 数组（多模态/自定义消息格式）
+      // 2. 传统 prompt + systemInstruction 模式
+      const messages = customMessages
+        ? [
+            { role: "system", content: systemInstruction },
+            ...customMessages,
+          ]
+        : [
+            { role: "system", content: systemInstruction },
+            { role: "user", content: prompt },
+          ];
+
+      // 检查是否包含多模态内容
+      const hasMultimodal = messages.some(
+        (m) => Array.isArray(m.content) && m.content.some((c) => c.type === "image_url"),
+      );
 
       console.group("📝 [Echoes Debug] 发送给 AI 的完整数据");
+      if (hasMultimodal) {
+        console.log(
+          "%c🖼️ 多模态模式：消息中包含图片",
+          "color: orange; font-weight: bold; font-size: 14px;",
+        );
+      }
       console.log(
         "%c系统指令 (System Prompt):",
         "color: blue; font-weight: bold;",

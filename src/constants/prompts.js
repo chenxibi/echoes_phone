@@ -34,6 +34,7 @@ Recent Message: {{LAST_MSG}}
 
 Style Instruction: {{STYLE_INSTRUCTION}}
 {{STICKER_INSTRUCTION}}
+{{SPECIAL_INSTRUCTION}}
 
 Directives:
 1. Authenticity: Be the character.

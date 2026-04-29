@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   RotateCcw,
   Activity,
@@ -11,6 +11,7 @@ import {
   Share,
   MoreHorizontal,
 } from "lucide-react";
+import { echoesDB } from "../utils/appHelpers";
 
 /* ============================================
    CHAT BUBBLE COMPONENT
@@ -46,7 +47,18 @@ const ChatBubble = ({
   const isLocation = msg.isLocation;
   const isForward = msg.isForward;
   const isSticker = msg.sticker || msg.stickerId;
+  const isRealImage = msg.isImage && msg.imageKey;
   const hasStatus = msg.sender === "char" && msg.status;
+
+  // 加载真实图片
+  const [realImageUrl, setRealImageUrl] = useState(null);
+  useEffect(() => {
+    if (isRealImage && msg.imageKey) {
+      echoesDB.getItem(msg.imageKey).then((data) => {
+        if (data) setRealImageUrl(data);
+      });
+    }
+  }, [isRealImage, msg.imageKey]);
 
   // Determine sticker URL
   let stickerUrl = null;
@@ -172,8 +184,29 @@ const ChatBubble = ({
           <LocationBubble name={msg.location?.name || "地点"} address={msg.location?.address || ""} />
         )}
 
+        {/* Real Image */}
+        {isRealImage && !isTransfer && (
+          <div
+            className="cursor-pointer overflow-hidden rounded-xl border-2 border-white shadow-sm bg-white relative group/img transition-default active:scale-95"
+            role="img"
+            aria-label="发送的图片"
+          >
+            {realImageUrl ? (
+              <img
+                src={realImageUrl}
+                alt="发送的图片"
+                className="w-48 max-h-64 object-cover rounded-xl"
+              />
+            ) : (
+              <div className="w-48 h-32 bg-gray-200 flex items-center justify-center animate-pulse">
+                <Camera size={24} className="text-gray-400" aria-hidden="true" />
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Fake Image */}
-        {msg.text?.startsWith("[图片]") && !isTransfer && (
+        {msg.text?.startsWith("[图片]") && !isTransfer && !isRealImage && (
           <div
             className="cursor-pointer overflow-hidden rounded-xl border-2 border-white shadow-sm bg-white relative group/img transition-default active:scale-95"
             onClick={() => {}}
@@ -219,7 +252,7 @@ const ChatBubble = ({
         )}
 
         {/* Regular Text Bubble */}
-        {!isTransfer && !stickerUrl && !isVoice && !isLocation && !isForward && !msg.text?.startsWith("[图片]") && (
+        {!isTransfer && !stickerUrl && !isVoice && !isLocation && !isForward && !isRealImage && !msg.text?.startsWith("[图片]") && (
           <div
             className={`
               px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap select-text
