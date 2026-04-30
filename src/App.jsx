@@ -541,6 +541,8 @@ const App = () => {
   const [showMediaMenu, setShowMediaMenu] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const imageUploadRef = useRef(null);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importData, setImportData] = useState(null);
 
   // [新增] 全屏状态控制
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -1259,69 +1261,160 @@ const App = () => {
     }
   };
 
-  const exportChatData = () => {
-    if (chatHistory.length === 0) {
-      showToast("error", "暂无聊天记录可导出");
-      return;
+  // ---------- Backup & Restore ----------\\
+  const BACKUP_CATEGORIES = {
+    chat: {
+      label: "聊天记录",
+      keys: ["echoes_chat_history", "echoes_status_history"],
+    },
+    persona: {
+      label: "角色数据",
+      keys: ["echoes_persona", "echoes_raw_json", "echoes_char_avatar", "echoes_char_facts", "echoes_shared_events"],
+    },
+    worldbook: {
+      label: "世界书",
+      keys: ["echoes_worldbook"],
+    },
+    memory: {
+      label: "长期记忆",
+      keys: ["echoes_memory_config", "echoes_long_memory"],
+    },
+    stickers: {
+      label: "表情包",
+      keys: ["echoes_char_stickers", "echoes_user_stickers", "echoes_stickers_enabled"],
+    },
+    config: {
+      label: "偏好设置",
+      keys: [
+        "echoes_custom_rules", "echoes_chat_style", "echoes_context_limit",
+        "echoes_custom_font_name", "echoes_custom_icons", "echoes_user_name",
+        "echoes_user_persona", "echoes_user_avatar", "echoes_interaction_mode",
+        "echoes_tracker_config", "echoes_user_facts",
+      ],
+    },
+    social: {
+      label: "社交 & 生活",
+      keys: [
+        "echoes_forum_data", "echoes_forum_settings",
+        "echoes_diaries", "echoes_receipts", "echoes_music", "echoes_browser",
+      ],
+    },
+    smartwatch: {
+      label: "智能家",
+      keys: ["echoes_sw_locations", "echoes_sw_logs"],
+    },
+  };
+
+  // 统计分类数据预览
+  const getCategoryPreview = (data, catId) => {
+    const cat = BACKUP_CATEGORIES[catId];
+    if (!cat) return "—";
+    const firstKey = cat.keys[0];
+    const val = data[firstKey];
+    if (val === undefined) return "—";
+    if (catId === "chat") return val?.length ? `${val.length} 条消息` : "—";
+    if (catId === "persona") return val?.name || "—";
+    if (catId === "worldbook") return val?.length ? `${val.length} 条目` : "—";
+    if (catId === "memory") {
+      const mem = data["echoes_long_memory"];
+      return mem ? `${mem.length} 字符` : "—";
     }
-    const dataToSave = {
-      personaName: persona?.name,
-      userName: userName,
-      history: chatHistory,
-      exportDate: new Date().toLocaleString(),
-    };
+    if (catId === "stickers") {
+      const total = (data["echoes_char_stickers"]?.length || 0) + (data["echoes_user_stickers"]?.length || 0);
+      return total > 0 ? `${total} 组` : "—";
+    }
+    if (catId === "config") {
+      const rules = data["echoes_custom_rules"];
+      const style = data["echoes_chat_style"];
+      return rules ? `${style || "default"}` : style || "—";
+    }
+    if (catId === "social") {
+      const forum = data["echoes_forum_data"];
+      const diaries = data["echoes_diaries"];
+      const parts = [];
+      if (forum?.posts?.length) parts.push(`${forum.posts.length} 帖子`);
+      if (diaries?.length) parts.push(`${diaries.length} 日记`);
+      return parts.length ? parts.join(" · ") : "—";
+    }
+    if (catId === "smartwatch") return val?.length ? `${val.length} 地点` : "—";
+    return "—";
+  };
 
-    const blob = new Blob([JSON.stringify(dataToSave, null, 2)], {
-      type: "application/json",
-    });
+  const exportFullBackup = () => {
+    const allData = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith("echoes_")) {
+        try { allData[key] = JSON.parse(localStorage.getItem(key)); }
+        catch { allData[key] = localStorage.getItem(key); }
+      }
+    }
+    // 排除 API key（安全）
+    if (allData["echoes_api_config"]) {
+      allData["echoes_api_config"] = { ...allData["echoes_api_config"], key: "" };
+    }
+    // 从聊天记录中移除冗余的 imageData base64（图片在 IndexedDB 里不受影响）
+    if (allData["echoes_chat_history"]?.length) {
+      allData["echoes_chat_history"] = allData["echoes_chat_history"].map((msg) => {
+        if (msg.imageData) { const { imageData, ...rest } = msg; return rest; }
+        return msg;
+      });
+    }
+    // 排除字体 base64（体积大）
+    delete allData["echoes_custom_font_url"];
+
+    const blob = new Blob([JSON.stringify({ version: 2, exportDate: new Date().toLocaleString(), data: allData }, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-
     const a = document.createElement("a");
     a.href = url;
-    a.download = `Echoes_Backup_${persona?.name || "Chat"}_${new Date()
-      .toISOString()
-      .slice(0, 10)}.json`;
+    a.download = `Echoes_FullBackup_${persona?.name || "Echoes"}_${new Date().toISOString().slice(0, 10)}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-
-    showToast("success", "聊天记录已导出");
+    showToast("success", "完整备份已导出");
   };
 
-  // [新增] 导入聊天记录
-  const importChatData = (event) => {
+  const importFullBackup = (event) => {
     const file = event.target.files[0];
     if (!file) return;
-
+    event.target.value = "";
     const reader = new FileReader();
     reader.onload = async (e) => {
       try {
-        const data = JSON.parse(e.target.result);
-        if (data.history && Array.isArray(data.history)) {
-          // 简单校验一下格式
-          if (
-            await customConfirm(
-              `确认覆盖当前的聊天记录吗？\n文件包含 ${data.history.length} 条消息。\n(建议先备份当前记录)`,
-              "导入备份",
-              true,
-            )
-          ) {
-            setChatHistory(data.history);
-            showToast("success", "聊天记录已恢复");
-          }
-        } else {
-          showToast("error", "文件格式不正确，找不到历史记录");
-        }
-      } catch (err) {
-        console.error(err);
-        showToast("error", "读取失败: " + err.message);
-      }
+        const raw = JSON.parse(e.target.result);
+        const allData = raw.data || raw;
+        const categories = Object.keys(BACKUP_CATEGORIES)
+          .filter((id) => BACKUP_CATEGORIES[id].keys.some((k) => allData[k] !== undefined))
+          .map((id) => ({ id, selected: true }));
+        if (categories.length === 0) { showToast("error", "备份文件中没有可识别的数据"); return; }
+        setImportData({ allData, categories });
+        setShowImportModal(true);
+      } catch (err) { console.error(err); showToast("error", "文件解析失败: " + err.message); }
     };
     reader.readAsText(file);
-    // 重置 input value，允许重复导入同一个文件
-    event.target.value = "";
   };
+
+  const doImport = () => {
+    if (!importData) return;
+    const { allData, categories } = importData;
+    const selectedIds = new Set(categories.filter((c) => c.selected).map((c) => c.id));
+    const keysToWrite = new Set();
+    for (const [id, cat] of Object.entries(BACKUP_CATEGORIES)) {
+      if (selectedIds.has(id)) for (const key of cat.keys) keysToWrite.add(key);
+    }
+    let restored = 0;
+    for (const key of keysToWrite) {
+      if (allData[key] !== undefined) { localStorage.setItem(key, JSON.stringify(allData[key])); restored++; }
+    }
+    setShowImportModal(false);
+    setImportData(null);
+    showToast("success", `已恢复 ${restored} 个数据项，请刷新页面使设置生效`);
+  };
+
+  // 兼容旧接口
+  const exportChatData = () => exportFullBackup();
+  const importChatData = (event) => importFullBackup(event);
 
   const fetchModelsList = async () => {
     if (!apiConfig.baseUrl || !apiConfig.key) {
@@ -5609,6 +5702,71 @@ Requirements:
             >
               取消
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* 导入备份清单弹窗 */}
+      {showImportModal && importData && (
+        <div className="fixed inset-0 z-[250] bg-black/40 backdrop-blur-sm flex items-center justify-center p-6">
+          <div className="bg-white/95 backdrop-blur-xl w-full max-w-sm rounded-2xl shadow-2xl p-5 border border-white/50 flex flex-col gap-4 max-h-[80vh] overflow-y-auto">
+            <div className="text-center">
+              <h3 className="text-base font-bold text-gray-800">恢复备份</h3>
+              <p className="text-[11px] text-gray-400 mt-1">勾选需要恢复的数据分类</p>
+            </div>
+
+            <div className="space-y-1.5">
+              {importData.categories.map((cat) => (
+                <label
+                  key={cat.id}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors"
+                >
+                  <div
+                    className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                      cat.selected
+                        ? "bg-black border-black"
+                        : "border-gray-300 bg-white"
+                    }`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setImportData({
+                        ...importData,
+                        categories: importData.categories.map((c) =>
+                          c.id === cat.id ? { ...c, selected: !c.selected } : c
+                        ),
+                      });
+                    }}
+                  >
+                    {cat.selected && (
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <path d="M2.5 6L5 8.5L9.5 3.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-medium text-gray-700">{BACKUP_CATEGORIES[cat.id]?.label || cat.id}</span>
+                  </div>
+                  <span className="text-[10px] text-gray-400 flex-shrink-0">
+                    {getCategoryPreview(importData.allData, cat.id)}
+                  </span>
+                </label>
+              ))}
+            </div>
+
+            <div className="flex gap-2.5">
+              <button
+                onClick={() => { setShowImportModal(false); setImportData(null); }}
+                className="flex-1 py-2.5 text-gray-500 bg-gray-100 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={doImport}
+                className="flex-1 py-2.5 bg-black text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-colors"
+              >
+                恢复选中
+              </button>
+            </div>
           </div>
         </div>
       )}

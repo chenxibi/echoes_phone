@@ -517,7 +517,7 @@ const SettingsPanel = ({
             </h3>
             <div className="glass-card p-4 rounded-xl space-y-3">
               <p className="text-[9px] text-gray-400 mb-2">
-                将聊天记录导出为文件保存，或从文件恢复。
+                导出全部数据（角色、记忆、聊天记录等）或从备份恢复。
               </p>
               <div className="flex gap-3">
                 {/* 导出按钮 */}
