@@ -627,6 +627,7 @@ const App = () => {
   const identityAvatarInputRef = useRef(null);
   const userAvatarInputRef = useRef(null);
   const stickerInputRef = useRef(null);
+  const lastUserSendTimeRef = useRef(Date.now());
   const chatScrollRef = useRef(null);
 
   // === 新增状态 ===
@@ -2147,6 +2148,7 @@ Requirements:
 
     setChatHistory((prev) => [...prev, newMsg]);
     setChatInput("");
+    lastUserSendTimeRef.current = Date.now();
     setMsgCountSinceSummary((prev) => prev + 1);
     setShowUserStickerPanel(false);
   };
@@ -2303,6 +2305,20 @@ Requirements:
         userName || "你",
       );
       specialInst = `\n**[USER OVERRIDE - HIGHEST PRIORITY]**: ${processedHint}\nYou MUST follow this instruction above all other style rules.`;
+    }
+
+    // 时间流逝感知：用户超过 1 小时未回复
+    const gapMs = Date.now() - lastUserSendTimeRef.current;
+    if (gapMs > 3600000) {
+      const gapH = Math.floor(gapMs / 3600000);
+      const gapM = Math.floor((gapMs % 3600000) / 60000);
+      const gapDesc = gapH > 0 ? `${gapH} hours${gapM > 0 ? ` ${gapM} minutes` : ""}` : `${gapM} minutes`;
+      specialInst += `\n[Time Gap Notice]: The user has been away for ${gapDesc}. Decide whether to continue the previous topic (if it was significant, emotional, or unfinished) or naturally transition to what you have been doing or a new topic. Do not explicitly mention the time gap unless it feels natural.`;
+    }
+
+    // 角色日常生活节奏：线上模式 50% 概率触发
+    if (interactionMode === "online" && Math.random() < 0.5) {
+      specialInst += `\n[Life Context]: Consider whether {{char}} is focusing on chatting with {{user}}, or they might be doing something right now based on their routine and personality (e.g. meal time, bedtime, school, work, hobbies, meeting people). If relevant, they might naturally mention it in conversation.`;
     }
 
     const rawForwardContext = overrideContext || forwardContext;
