@@ -106,7 +106,7 @@ export const compressImage = (file, maxWidth = 500, quality = 0.7) => {
 };
 
 export const formatTime = (date) =>
-  date.toLocaleTimeString("en-US", {
+  date.toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
@@ -117,6 +117,25 @@ export const formatDate = (date) =>
     day: "numeric",
     weekday: "short",
   });
+
+// 智能时间显示：今天/昨天/前天/今年/去年
+export const formatSmartTime = (timestamp) => {
+  if (!timestamp) return "";
+  const d = new Date(timestamp);
+  const now = new Date();
+  const hm = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+
+  // 今天
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const msgDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diffDays = Math.floor((today - msgDay) / 86400000);
+
+  if (diffDays === 0) return hm;
+  if (diffDays === 1) return `昨天 ${hm}`;
+  if (diffDays === 2) return `前天 ${hm}`;
+  if (d.getFullYear() === now.getFullYear()) return `${d.getMonth() + 1}月${d.getDate()}日 ${hm}`;
+  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 ${hm}`;
+};
 
 export const replacePlaceholders = (text, charName, userName) => {
   if (!text) return "";

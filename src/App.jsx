@@ -14,6 +14,7 @@ import {
   getWorldInfoString,
   getRecentTurns,
   getStickerInstruction,
+  formatSmartTime,
 } from "./utils/helpers";
 import AppWindow from "./components/AppWindow";
 import PersonalizationPanel from "./components/Personalization";
@@ -477,6 +478,7 @@ const App = () => {
       isSystem: true,
       text: `你${actionText} ¥${amount}`,
       time: formatTime(getCurrentTimeObj()),
+      ...(realTimeEnabled ? { timestamp: Date.now() } : {}),
     };
 
     newHistory.push(notificationMsg);
@@ -628,6 +630,11 @@ const App = () => {
   const userAvatarInputRef = useRef(null);
   const stickerInputRef = useRef(null);
   const lastUserSendTimeRef = useRef(Date.now());
+  const skipNextGapNoticeRef = useRef(false);
+  const [realTimeEnabled, setRealTimeEnabled, realTimeEnabledLoaded] = useStickyState(
+    true,
+    "echoes_real_time_enabled",
+  );
   const chatScrollRef = useRef(null);
 
   // === 新增状态 ===
@@ -2144,7 +2151,14 @@ Requirements:
       sticker: stickerId ? null : sticker,
       stickerSource: sticker ? "user" : null,
       time: formatTime(getCurrentTimeObj()),
+      ...(realTimeEnabled ? { timestamp: Date.now() } : {}),
     };
+
+    // 跳过下一次 Time Gap Notice（刚开启真实时间感知时）
+    if (skipNextGapNoticeRef.current) {
+      skipNextGapNoticeRef.current = false;
+      lastUserSendTimeRef.current = Date.now();
+    }
 
     setChatHistory((prev) => [...prev, newMsg]);
     setChatInput("");
@@ -2185,6 +2199,7 @@ Requirements:
         sender: "me",
         text: userContent,
         time: formatTime(getCurrentTimeObj()),
+        ...(realTimeEnabled ? { timestamp: Date.now() } : {}),
       };
       newHistory = [...newHistory, userMsg];
     }
@@ -2307,9 +2322,9 @@ Requirements:
       specialInst = `\n**[USER OVERRIDE - HIGHEST PRIORITY]**: ${processedHint}\nYou MUST follow this instruction above all other style rules.`;
     }
 
-    // 时间流逝感知：用户超过 1 小时未回复
+    // 时间流逝感知：用户超过 1 小时未回复（需要真实时间感知开启）
     const gapMs = Date.now() - lastUserSendTimeRef.current;
-    if (gapMs > 3600000) {
+    if (realTimeEnabled && gapMs > 3600000) {
       const gapH = Math.floor(gapMs / 3600000);
       const gapM = Math.floor((gapMs % 3600000) / 60000);
       const gapDesc = gapH > 0 ? `${gapH} hours${gapM > 0 ? ` ${gapM} minutes` : ""}` : `${gapM} minutes`;
@@ -2455,6 +2470,7 @@ Requirements:
               sender: "char",
               text: actualText,
               time: formatTime(getCurrentTimeObj()),
+              ...(realTimeEnabled ? { timestamp: Date.now() } : {}),
               style: chatStyle,
               status:
                 index === responseData.messages.length - 1
@@ -2474,6 +2490,7 @@ Requirements:
                 sender: "char",
                 sticker: sticker,
                 time: formatTime(getCurrentTimeObj()),
+                ...(realTimeEnabled ? { timestamp: Date.now() } : {}),
                 status: responseData.status,
               });
             }
@@ -2492,6 +2509,7 @@ Requirements:
               isTransfer: true,
               transfer: { amount, status: "pending", note: reason },
               time: formatTime(getCurrentTimeObj()),
+              ...(realTimeEnabled ? { timestamp: Date.now() } : {}),
               status: responseData.status,
             });
           }
@@ -4049,9 +4067,26 @@ Requirements:
                     }
                   }
 
+                  // 时间分隔线：消息间隔超过 1 小时
+                  const prevMsg = i > 0 ? chatHistory[i - 1] : null;
+                  const showGapMarker =
+                    !msg.isSystem &&
+                    prevMsg &&
+                    !prevMsg.isSystem &&
+                    msg.timestamp &&
+                    prevMsg.timestamp &&
+                    msg.timestamp - prevMsg.timestamp > 3600000;
+
                   return (
+                    <React.Fragment key={i}>
+                    {showGapMarker && (
+                      <div className="flex justify-center my-3">
+                        <span className="text-[10px] text-gray-400 bg-gray-100 px-3 py-1 rounded-full">
+                          {formatSmartTime(msg.timestamp)}
+                        </span>
+                      </div>
+                    )}
                     <div
-                      key={i}
                       onClick={() => {
                         // 如果在多选模式下，点击任何地方都是切换选中
                         if (isMultiSelectMode) toggleMessageSelection(i);
@@ -4406,7 +4441,7 @@ Requirements:
                           }`}
                         >
                           <span className="text-[9px] text-gray-300">
-                            {msg.time}
+                            {msg.timestamp ? formatSmartTime(msg.timestamp) : msg.time}
                           </span>
                           {msg.sender === "char" && !msg.isTransfer && (
                             <button
@@ -4465,6 +4500,7 @@ Requirements:
                         </div>
                       )}
                     </div>
+                    </React.Fragment>
                   );
                 })}
                 {(loading.chat || isTyping) && (
@@ -4823,6 +4859,9 @@ Requirements:
                 setChatStyle={setChatStyle}
                 interactionMode={interactionMode}
                 setInteractionMode={setInteractionMode}
+                realTimeEnabled={realTimeEnabled}
+                setRealTimeEnabled={setRealTimeEnabled}
+                onRealTimeToggle={() => { skipNextGapNoticeRef.current = true; }}
                 stickersEnabled={stickersEnabled}
                 setStickersEnabled={setStickersEnabled}
                 getGroups={getGroups}

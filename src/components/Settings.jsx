@@ -47,6 +47,9 @@ const SettingsPanel = ({
   setChatStyle,
   interactionMode,
   setInteractionMode,
+  realTimeEnabled,
+  setRealTimeEnabled,
+  onRealTimeToggle,
   stickersEnabled,
   setStickersEnabled,
   getGroups,
@@ -434,6 +437,32 @@ const SettingsPanel = ({
                       <MapPin size={12} /> 现实 (Reality)
                     </button>
                   </div>
+                </div>
+
+                {/* 真实时间感知 */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase text-gray-500">
+                      真实时间感知
+                    </label>
+                    <span className="text-[9px] text-gray-400">【线下】、【小说】、【剧本】模式下推荐关闭</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const next = !realTimeEnabled;
+                      setRealTimeEnabled(next);
+                      if (next && onRealTimeToggle) onRealTimeToggle();
+                    }}
+                    className={`w-10 h-5 rounded-full relative transition-colors ${
+                      realTimeEnabled ? "bg-green-500" : "bg-gray-300"
+                    }`}
+                  >
+                    <div
+                      className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${
+                        realTimeEnabled ? "left-5" : "left-0.5"
+                      }`}
+                    />
+                  </button>
                 </div>
 
                 {/* 表情包管理 (Inside SettingsPanel) */}
