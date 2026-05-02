@@ -477,23 +477,26 @@ ${realNameContext}
         if (onChatEventPost) {
           onChatEventPost(newPost);
         }
+        if (typeof showToast === "function") showToast("info", `${charNick}在生活圈发布了一条帖子`);
       }
     } finally {
       setLoading((prev) => ({ ...prev, chat_event_post: false }));
     }
   };
 
-  // 暴露 generateChatEventPost 给外部调用（通过 ref）
+  // 暴露 generateChatEventPost 给外部调用（通过稳定 ref）
+  const genPostRef = useRef(generateChatEventPost);
+  genPostRef.current = generateChatEventPost;
   useEffect(() => {
     if (typeof window !== "undefined") {
-      window.__forumGenerateChatEventPost = generateChatEventPost;
+      window.__forumGenerateChatEventPost = (...args) => genPostRef.current(...args);
     }
     return () => {
       if (typeof window !== "undefined") {
         delete window.__forumGenerateChatEventPost;
       }
     };
-  }, [forumData, forumSettings, persona, userName, userPersona, charTrackerContext, worldInfoString]);
+  }, []);
 
   // --- UI 事件处理 ---
 
