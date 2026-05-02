@@ -1,5 +1,4 @@
 import React from "react";
-import { MonitorX } from "lucide-react";
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -28,9 +27,11 @@ class ErrorBoundary extends React.Component {
           role="alert"
           aria-live="assertive"
         >
-          <div className="mb-6">
-            <MonitorX size={64} color="#7A2A3A" />
-          </div>
+          <img
+            src="./error.png"
+            alt="error"
+            className="w-24 h-24 mb-6 object-contain"
+          />
           <h1 className="text-2xl font-bold mb-2 text-center">
             应用程序出现了一些问题
           </h1>
