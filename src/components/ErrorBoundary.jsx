@@ -37,10 +37,10 @@ class ErrorBoundary extends React.Component {
           <p className="text-sm text-gray-500 mb-6 text-center max-w-md">
             这可能是由于角色设定或配置导致的。请尝试重置或重新加载。
           </p>
-          {process.env.NODE_ENV === "development" && this.state.error && (
+          {this.state.error && (
             <details className="mb-6 p-4 bg-gray-100 rounded-xl text-left w-full max-w-lg">
               <summary className="text-xs font-bold text-gray-500 cursor-pointer mb-2">
-                开发者信息（仅开发模式可见）
+                错误详情 (点击展开)
               </summary>
               <pre className="text-xs text-red-600 overflow-auto whitespace-pre-wrap">
                 {this.state.error.toString()}
