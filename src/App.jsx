@@ -2465,10 +2465,22 @@ Requirements:
               typeof item === "object" && item !== null && item.text
                 ? item.text
                 : String(item);
+            let isVoice =
+              typeof item === "object" && item !== null && item.isVoice === true;
+
+            // 支持文字标记：「语音」开头也视为语音
+            if (!isVoice && typeof actualText === "string" && actualText.startsWith("[语音]")) {
+              isVoice = true;
+              actualText = actualText.replace("[语音]", "").trim();
+            }
+
+            // 语音消息统一加前缀（兼容老渲染逻辑）
+            const displayText = isVoice ? `[语音消息] ${actualText}` : actualText;
 
             return {
               sender: "char",
-              text: actualText,
+              text: displayText,
+              isVoice: isVoice || undefined,
               time: formatTime(getCurrentTimeObj()),
               ...(realTimeEnabled ? { timestamp: Date.now() } : {}),
               style: chatStyle,
