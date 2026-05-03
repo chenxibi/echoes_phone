@@ -111,6 +111,11 @@ const OFFICIAL_SKINS = [
 /* 选项/标签 */ 
 #echoes-chat [class*="bg-black"] { background: #5566cc !important; }
 #echoes-chat .bg-green-500 { background: #44aa77 !important; }
+/* 弹窗背景保留半透明 */
+#echoes-chat .fixed.inset-0 { background: rgba(0,0,0,0.5) !important; }
+#echoes-chat .bg-white\\/90 { background: rgba(30,30,60,0.85) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
+#echoes-chat [class*="bg-white"].rounded-2xl { background: #252540 !important; opacity: 0.95; }
+#echoes-chat .bg-black\\/50 { background: rgba(0,0,0,0.5) !important; }
 #echoes-chat .text-red-500 { color: #ff7799 !important; }
 `
   },
@@ -203,6 +208,11 @@ const OFFICIAL_SKINS = [
 #echoes-chat .flex.justify-around svg { stroke: #8b7355; }
 #echoes-chat [class*="bg-\\[\\#1a1a1a\\]"] { background: #fff8f0 !important; color: #4a3728 !important; }
 #echoes-chat .bg-green-500 { background: #8bb06a !important; }
+/* 弹窗背景保留半透明 */
+#echoes-chat .fixed.inset-0 { background: rgba(0,0,0,0.5) !important; }
+#echoes-chat .bg-white\\/90 { background: rgba(255,248,240,0.85) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
+#echoes-chat [class*="bg-white"].rounded-2xl { background: #fff8f0 !important; opacity: 0.95; }
+#echoes-chat .bg-black\\/50 { background: rgba(0,0,0,0.5) !important; }
 #echoes-chat .text-red-500 { color: #cc6666 !important; }
 `
   },
