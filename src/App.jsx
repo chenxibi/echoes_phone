@@ -396,6 +396,14 @@ const App = () => {
   const [music, setMusic, musicLoaded] = useStickyState([], "echoes_music");
   const [browserHistory, setBrowserHistory, browserHistoryLoaded] =
     useStickyState([], "echoes_browser");
+  const [skinCSS, setSkinCSS, skinCSSLoaded] = useStickyState(
+    "",
+    "echoes_skin_css",
+  );
+  const [selectedSkin, setSelectedSkin, selectedSkinLoaded] = useStickyState(
+    "",
+    "echoes_selected_skin",
+  );
 
   // 追踪器相关状态
   const [userFacts, setUserFacts, userFactsLoaded] = useStickyState(
@@ -966,6 +974,21 @@ const App = () => {
       setIsTyping(false);
     }
   }, [isTyping, messageQueue]);
+
+  // 皮肤 CSS 注入
+  useEffect(() => {
+    let styleEl = document.getElementById("echoes-skin-style");
+    if (!skinCSS) {
+      if (styleEl) styleEl.remove();
+      return;
+    }
+    if (!styleEl) {
+      styleEl = document.createElement("style");
+      styleEl.id = "echoes-skin-style";
+      document.head.appendChild(styleEl);
+    }
+    styleEl.textContent = skinCSS;
+  }, [skinCSS]);
 
   // Helpers
 
@@ -3436,7 +3459,7 @@ Requirements:
           </div>
         </div>
       )}
-      <div className="relative w-full h-full md:w-[400px] md:h-[800px] bg-[#F2F2F7] md:rounded-[48px] md:border-[8px] md:border-white shadow-2xl flex flex-col overflow-hidden ring-1 ring-black/5">
+      <div id="echoes-chat" className="relative w-full h-full md:w-[400px] md:h-[800px] bg-[#F2F2F7] md:rounded-[48px] md:border-[8px] md:border-white shadow-2xl flex flex-col overflow-hidden ring-1 ring-black/5">
         {/* Status Bar */}
         <header className="h-12 px-8 flex items-center justify-between text-[10px] text-gray-400 bg-transparent z-20 shrink-0 pt-2" role="banner">
           <span>{formatTime(getCurrentTimeObj())}</span>
@@ -5586,6 +5609,11 @@ Requirements:
               customIcons={customIcons}
               handleAppIconUpload={handleAppIconUpload}
               handleResetIcon={handleResetIcon}
+              // 皮肤
+              skinCSS={skinCSS}
+              setSkinCSS={setSkinCSS}
+              selectedSkin={selectedSkin}
+              setSelectedSkin={setSelectedSkin}
             />
           </AppWindow>
         </main>
