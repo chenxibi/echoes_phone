@@ -264,15 +264,29 @@ const OFFICIAL_SKINS = [
 #echoes-chat [class*="rounded-\\[24px\\]"].glass-panel { background:#fff0f5 !important; border:2px solid #00e5ff !important; border-color:#00e5ff !important; box-shadow:4px 4px 0 #ff6b9d !important; }
 #echoes-chat [class*="rounded-\\[24px\\]"].glass-panel svg,#echoes-chat .flex.justify-around svg { stroke:#cc7799; }
 #echoes-chat [class*="bg-\\[\\#1a1a1a\\]"] { background:#fff0f5 !important; color:#554455 !important; border:2px solid #ffccdd !important; border-color:#ffccdd !important; }
-#echoes-chat .bg-green-500 { background:#ff6b9d !important; color:#fff !important; }
-#echoes-chat .text-red-500 { color:#ff6b9d !important; }
+#echoes-chat .bg-green-500 { background: linear-gradient(135deg,#ff6b9d 0%,#ff8fab 50%,#00e5ff 100%) !important; color:#fff !important; border:2px solid #00e5ff !important; }
+#echoes-chat .text-red-500 { color:#ff6b9d !important; text-shadow:1px 1px 0 #00e5ff !important; }
 #echoes-chat .bg-green-50\\/50 { background:#ffe0f0 !important; }
 #echoes-chat .bg-green-100 { background:#ffd0e0 !important; }
-#echoes-chat .text-green-700 { color:#00e5ff !important; }
+#echoes-chat .text-green-700 { color:#00e5ff !important; text-shadow:0 0 8px rgba(0,229,255,0.4) !important; }
 #echoes-chat .text-green-600 { color:#00e5ff !important; }
 #echoes-chat .border-green-100 { border-color:#00e5ff !important; }
 #echoes-chat [class*="border-black"] { border-color:#00e5ff !important; }
-#echoes-chat [class*="bg-black"][class*="text-white"] { background:#00e5ff !important; color:#554455 !important; }`
+#echoes-chat [class*="bg-black"][class*="text-white"] { background: linear-gradient(135deg,#ff6b9d,#ff8fab) !important; color:#fff !important; border:2px solid #00e5ff !important; box-shadow:3px 3px 0 #00e5ff !important; }
+/* 蒸汽波网格背景 */
+#echoes-chat::before { content:""; position:fixed; inset:0; pointer-events:none; z-index:0; opacity:0.12; background-image: linear-gradient(#00e5ff 1px,transparent 1px),linear-gradient(90deg,#00e5ff 1px,transparent 1px); background-size:40px 40px; }
+/* 扫描线效果 */
+#echoes-chat::after { content:""; position:fixed; inset:0; pointer-events:none; z-index:9999; opacity:0.03; background: repeating-linear-gradient(0deg,transparent,transparent 2px,#ff6b9d 2px,#ff6b9d 4px); }
+/* 标题霓虹发光 */
+#echoes-chat header { color:#ff6b9d !important; background:#ffe0ec !important; text-shadow: 0 0 10px rgba(255,107,157,0.5), 2px 2px 0 #00e5ff !important; }
+/* 按钮渐变 */
+#echoes-chat [class*="bg-black"] { background: linear-gradient(180deg,#ffd4e4 0%,#ffc0d8 100%) !important; border:2px solid #00e5ff !important; border-color:#00e5ff !important; color:#00e5ff !important; box-shadow:3px 3px 0 #ff6b9d, 0 0 15px rgba(0,229,255,0.3) !important; }
+#echoes-chat [class*="bg-black"]:hover { background: linear-gradient(180deg,#ffc0d8 0%,#ffb0c8 100%) !important; border-color:#33ebff !important; color:#33ebff !important; box-shadow:3px 3px 0 #ff8fab, 0 0 20px rgba(0,229,255,0.5) !important; }
+#echoes-chat button.bg-black { background: linear-gradient(180deg,#ffd4e4 0%,#ffc0d8 100%) !important; border:2px solid #00e5ff !important; border-color:#00e5ff !important; color:#00e5ff !important; box-shadow:3px 3px 0 #ff6b9d, 0 0 15px rgba(0,229,255,0.3) !important; }
+#echoes-chat button.bg-black:hover { background: linear-gradient(180deg,#ffc0d8 0%,#ffb0c8 100%) !important; color:#33ebff !important; }
+/* 玻璃面板霓虹 */
+#echoes-chat .glass-panel { background: linear-gradient(135deg,#fff0f5 0%,#ffe8f0 100%) !important; backdrop-filter:none !important; -webkit-backdrop-filter:none !important; border:2px solid #00e5ff !important; border-color:#00e5ff !important; color:#554455 !important; box-shadow:4px 4px 0 #ff6b9d, 0 0 20px rgba(0,229,255,0.2) !important; }
+#echoes-chat .glass-card { background: linear-gradient(135deg,#ffe8f0 0%,#ffe0ec 100%) !important; backdrop-filter:none !important; -webkit-backdrop-filter:none !important; border:2px solid #ffccdd !important; border-color:#ffccdd !important; color:#554455 !important; box-shadow:2px 2px 0 #ffbbcc, inset 0 0 15px rgba(255,107,157,0.1) !important; }`
   },
   {
     id: "sweet",
@@ -369,9 +383,9 @@ const OFFICIAL_SKINS = [
 /* 蘑菇替换世界书图标 */
 #echoes-chat [data-app-link="世界书"] svg { display:none !important; }
 #echoes-chat [data-app-link="世界书"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./pink-mushroom.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
-/* 饮料替换底部通讯栏 */
-#echoes-chat [data-app-link="通讯"] svg { display:none !important; }
-#echoes-chat [data-app-link="通讯"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./pink-drink.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
+/* 饮料替换底部通讯栏图标 */
+#echoes-chat [data-icon="chat"] svg { display:none !important; }
+#echoes-chat [data-icon="chat"]::before { content:""; display:inline-block; width:24px; height:24px; background-image:url("./pink-drink.png"); background-size:contain; background-repeat:no-repeat; vertical-align:middle; }
 /* 发带替换图标定制标题 */
 #echoes-chat h3[data-section-icon="customize"] svg { display:none !important; }
 #echoes-chat h3[data-section-icon="customize"]::before { content:""; display:inline-block; width:12px; height:12px; background-image:url("./pink-hair-band.png"); background-size:contain; background-repeat:no-repeat; vertical-align:middle; }
