@@ -560,9 +560,11 @@ const App = () => {
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement
-        .requestFullscreen()
+        .requestFullscreen({ navigationUI: "hide" })
         .then(() => {
           setIsFullscreen(true);
+          // 全屏后添加 viewport-fit 以覆盖状态栏区域
+          document.documentElement.style.setProperty("padding-top", "env(safe-area-inset-top)");
         })
         .catch((e) => {
           console.log(e);
@@ -572,6 +574,7 @@ const App = () => {
       if (document.exitFullscreen) {
         document.exitFullscreen().then(() => {
           setIsFullscreen(false);
+          document.documentElement.style.removeProperty("padding-top");
         });
       }
     }
@@ -918,12 +921,8 @@ const App = () => {
 
   useEffect(() => {
     if (activeApp === "chat" && chatScrollRef.current) {
-      setTimeout(() => {
-        chatScrollRef.current.scrollTo({
-          top: chatScrollRef.current.scrollHeight,
-          behavior: "smooth",
-        });
-      }, 100);
+      // 直接定位到底部，不做滚动动画
+      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
     }
   }, [chatHistory, activeApp, loading.chat, isTyping]);
 
@@ -1766,8 +1765,18 @@ const App = () => {
     try {
       // 1. 本地简易解析 (只提取名字)
       let extractedName = "Unknown";
-      // 尝试匹配 Name: xxx
-      const nameMatch = inputKey.match(/^Name:\s*(.+?)(\n|$)/i);
+      // 匹配多种格式: Name: xxx / Name：xxx / 名字：xxx / 姓名：xxx
+      const namePatterns = [
+        /^name:\s*(.+?)(\n|$)/im,
+        /^name：\s*(.+?)(\n|$)/im,
+        /^名字：\s*(.+?)(\n|$)/im,
+        /^姓名：\s*(.+?)(\n|$)/im,
+      ];
+      let nameMatch = null;
+      for (const p of namePatterns) {
+        nameMatch = inputKey.match(p);
+        if (nameMatch) break;
+      }
       if (nameMatch) {
         extractedName = nameMatch[1].trim();
       } else {
@@ -3306,14 +3315,16 @@ Requirements:
                 </div>
               </button>
 
-              {/* 直接进入 */}
-              <button
-                onClick={unlockDeviceDirect}
-                className="w-full text-center text-[11px] text-gray-400 hover:text-[#7A2A3A] transition-colors py-1"
-                style={{ textDecorationLine: "underline", textDecorationThickness: "1px", textUnderlineOffset: "4px" }}
-              >
-                直接进入
-              </button>
+              {/* 直接进入：仅在核心设定为空时显示 */}
+              {!inputKey && (
+                <button
+                  onClick={unlockDeviceDirect}
+                  className="w-full text-center text-[11px] text-gray-400 hover:text-[#7A2A3A] transition-colors py-1"
+                  style={{ textDecorationLine: "underline", textDecorationThickness: "1px", textUnderlineOffset: "4px" }}
+                >
+                  直接进入
+                </button>
+              )}
 
             </div>
 
