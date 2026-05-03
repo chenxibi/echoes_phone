@@ -21,10 +21,22 @@ const OFFICIAL_SKINS = [
   --skin-accent: #7788dd;
   --skin-accent-hover: #99aaff;
 }
+#echoes-chat { background: #1a1a2e !important; color: #d0d0e8 !important; }
 /* 主背景 */
 #echoes-chat .bg-\\[\\#F2F2F7\\] { background: #1a1a2e !important; }
 #echoes-chat [class*="bg-\\[\\#F2F2F7"] { background: #1a1a2e !important; }
 #echoes-chat .bg-\\[\\#EBEBF0\\] { background: #14142a !important; }
+/* 锁屏装饰 */
+#echoes-chat .bg-blue-50\\/50 { background: rgba(100,100,255,0.15) !important; }
+#echoes-chat .bg-gray-100\\/60 { background: rgba(80,80,160,0.2) !important; }
+#echoes-chat .bg-gray-300\\/50 { background: rgba(255,255,255,0.1) !important; }
+#echoes-chat .bg-white\\/50 { background: rgba(30,30,60,0.6) !important; }
+#echoes-chat [class*="bg-\\[\\#EBEBF0"] { background: #14142a !important; }
+#echoes-chat .bg-green-50\\/50 { background: rgba(68,170,119,0.2) !important; }
+#echoes-chat .bg-green-100 { background: rgba(68,170,119,0.3) !important; }
+#echoes-chat .text-green-700 { color: #66cc99 !important; }
+#echoes-chat .text-green-600 { color: #55bb88 !important; }
+#echoes-chat .border-green-100 { border-color: rgba(68,170,119,0.3) !important; }
 /* 文字层级 */
 #echoes-chat .text-\\[\\#1a1a1a\\] { color: #e0e0f0 !important; }
 #echoes-chat .text-\\[\\#2C2C2C\\] { color: #c8c8e0 !important; }
@@ -99,6 +111,7 @@ const OFFICIAL_SKINS = [
 /* 选项/标签 */ 
 #echoes-chat [class*="bg-black"] { background: #5566cc !important; }
 #echoes-chat .bg-green-500 { background: #44aa77 !important; }
+#echoes-chat .text-red-500 { color: #ff7799 !important; }
 `
   },
   {
@@ -119,6 +132,17 @@ const OFFICIAL_SKINS = [
 #echoes-chat .bg-\\[\\#F2F2F7\\] { background: #faf0e6 !important; }
 #echoes-chat [class*="bg-\\[\\#F2F2F7"] { background: #faf0e6 !important; }
 #echoes-chat .bg-\\[\\#EBEBF0\\] { background: #f0e4d8 !important; }
+/* 锁屏装饰 */
+#echoes-chat .bg-blue-50\\/50 { background: rgba(196,180,160,0.3) !important; }
+#echoes-chat .bg-gray-100\\/60 { background: rgba(196,150,106,0.2) !important; }
+#echoes-chat .bg-gray-300\\/50 { background: rgba(196,150,106,0.2) !important; }
+#echoes-chat .bg-white\\/50 { background: rgba(255,248,240,0.7) !important; }
+#echoes-chat [class*="bg-\\[\\#EBEBF0"] { background: #f0e4d8 !important; }
+#echoes-chat .bg-green-50\\/50 { background: rgba(139,176,106,0.2) !important; }
+#echoes-chat .bg-green-100 { background: rgba(139,176,106,0.3) !important; }
+#echoes-chat .text-green-700 { color: #6b8b50 !important; }
+#echoes-chat .text-green-600 { color: #7ba060 !important; }
+#echoes-chat .border-green-100 { border-color: rgba(139,176,106,0.3) !important; }
 #echoes-chat .text-\\[\\#1a1a1a\\] { color: #4a3728 !important; }
 #echoes-chat .text-\\[\\#2C2C2C\\] { color: #5c4a3a !important; }
 #echoes-chat .text-gray-800 { color: #4a3728 !important; }
@@ -179,96 +203,84 @@ const OFFICIAL_SKINS = [
 #echoes-chat .flex.justify-around svg { stroke: #8b7355; }
 #echoes-chat [class*="bg-\\[\\#1a1a1a\\]"] { background: #fff8f0 !important; color: #4a3728 !important; }
 #echoes-chat .bg-green-500 { background: #8bb06a !important; }
+#echoes-chat .text-red-500 { color: #cc6666 !important; }
 `
   },
   {
     id: "wechat",
-    name: "微信暗黑",
-    desc: "深黑界面，微信绿点缀",
-    preview: "bg-[#0f0f0f]",
-    css: `/* == 微信暗黑 == */
+    name: "经典微信",
+    desc: "亮白界面，微信绿按钮，经典聊天感",
+    preview: "bg-[#ededed]",
+    css: `/* == 经典微信 == */
 #echoes-chat {
-  --skin-bg: #0f0f0f;
-  --skin-surface: #1a1a1a;
-  --skin-card: #1f1f1f;
-  --skin-text: #e5e5e5;
-  --skin-sub: #999;
+  --skin-bg: #ededed;
+  --skin-surface: #f5f5f5;
+  --skin-card: #ffffff;
+  --skin-text: #191919;
+  --skin-sub: #888;
   --skin-accent: #07C160;
   --skin-accent-hover: #06AD56;
 }
-#echoes-chat .bg-\\[\\#F2F2F7\\] { background: #0f0f0f !important; }
-#echoes-chat [class*="bg-\\[\\#F2F2F7"] { background: #0f0f0f !important; }
-#echoes-chat .bg-\\[\\#EBEBF0\\] { background: #080808 !important; }
-#echoes-chat .text-\\[\\#1a1a1a\\] { color: #e5e5e5 !important; }
-#echoes-chat .text-\\[\\#2C2C2C\\] { color: #d5d5d5 !important; }
-#echoes-chat .text-gray-800 { color: #e0e0e0 !important; }
-#echoes-chat .text-gray-700 { color: #d0d0d0 !important; }
-#echoes-chat .text-gray-600 { color: #bbb !important; }
-#echoes-chat .text-gray-500 { color: #999 !important; }
-#echoes-chat .text-gray-400 { color: #888 !important; }
-#echoes-chat .text-gray-300 { color: #777 !important; }
-#echoes-chat header { color: #07C160 !important; }
-#echoes-chat .glass-panel {
-  background: rgba(30,30,30,0.85) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-  border-color: rgba(255,255,255,0.06) !important;
-  color: #e0e0e0 !important;
-}
-#echoes-chat .glass-card {
-  background: rgba(30,30,30,0.7) !important;
-  backdrop-filter: blur(10px) !important;
-  -webkit-backdrop-filter: blur(10px) !important;
-  border-color: rgba(255,255,255,0.05) !important;
-  border-radius: 10px !important;
-  color: #e0e0e0 !important;
-}
-#echoes-chat .glass-card label { color: #ddd !important; }
-#echoes-chat .glass-card p, #echoes-chat .glass-card span { color: #aaa !important; }
-#echoes-chat [class*="bg-white"] { background: #1a1a1a !important; }
-#echoes-chat [class*="bg-gray-50"] { background: #151515 !important; }
-#echoes-chat [class*="bg-gray-100"] { background: rgba(255,255,255,0.04) !important; }
-/* 微信绿按钮 */
+#echoes-chat { background: #ededed !important; color: #191919 !important; }
+#echoes-chat .bg-\\[\\#F2F2F7\\] { background: #ededed !important; }
+#echoes-chat .bg-\\[\\#EBEBF0\\] { background: #e0e0e0 !important; }
+#echoes-chat [class*="bg-\\[\\#F2F2F7"] { background: #ededed !important; }
+#echoes-chat [class*="bg-\\[\\#EBEBF0"] { background: #e0e0e0 !important; }
+#echoes-chat .bg-blue-50\\/50 { background: rgba(7,193,96,0.08) !important; }
+#echoes-chat .bg-gray-100\\/60 { background: rgba(7,193,96,0.06) !important; }
+#echoes-chat .bg-gray-300\\/50 { background: rgba(0,0,0,0.08) !important; }
+#echoes-chat header { color: #191919 !important; background: #ededed !important; }
+#echoes-chat .glass-panel { background: rgba(255,255,255,0.85) !important; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-color: rgba(0,0,0,0.06) !important; color: #191919 !important; }
+#echoes-chat .glass-card { background: rgba(255,255,255,0.8) !important; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-color: rgba(0,0,0,0.05) !important; border-radius: 8px !important; color: #191919 !important; }
+#echoes-chat .glass-card label { color: #333 !important; }
+#echoes-chat .glass-card p, #echoes-chat .glass-card span { color: #666 !important; }
+#echoes-chat .bg-white\\/50 { background: rgba(255,255,255,0.7) !important; }
 #echoes-chat [class*="bg-black"] { background: #07C160 !important; border-color: #07C160 !important; color: #fff !important; }
 #echoes-chat [class*="bg-black"]:hover { background: #06AD56 !important; }
 #echoes-chat button.bg-black { background: #07C160 !important; color: #fff !important; }
 #echoes-chat button.bg-black:hover { background: #06AD56 !important; }
-#echoes-chat [class*="bg-\\[\\#2C2C2C\\]"] { background: #1a1a1a !important; border-color: rgba(255,255,255,0.1) !important; }
-#echoes-chat [class*="bg-\\[\\#2C2C2C\\]"]:hover { background: #2a2a2a !important; }
-#echoes-chat [class*="bg-gray-800"] { background: #1a1a1a !important; }
-/* 文字白保持不变 */
-#echoes-chat input, #echoes-chat textarea {
-  background: #151515 !important;
-  color: #e0e0e0 !important;
-  border-color: rgba(255,255,255,0.08) !important;
-}
-#echoes-chat input::placeholder, #echoes-chat textarea::placeholder { color: #666 !important; }
-#echoes-chat .border-gray-200 { border-color: rgba(255,255,255,0.06) !important; }
-#echoes-chat .border-gray-200\\/50 { border-color: rgba(255,255,255,0.04) !important; }
-#echoes-chat .border-white\\/50 { border-color: rgba(255,255,255,0.05) !important; }
-#echoes-chat .border-white\\/60 { border-color: rgba(255,255,255,0.06) !important; }
-#echoes-chat .ring-black\\/5 { --tw-ring-color: rgba(255,255,255,0.04) !important; }
-#echoes-chat .text-gray-700.group-hover\\:text-black { color: #aaa !important; }
+#echoes-chat [class*="bg-\\[\\#2C2C2C\\]"] { background: #333 !important; border-color: #333 !important; }
+#echoes-chat [class*="bg-\\[\\#2C2C2C\\]"]:hover { background: #4a4a4a !important; }
+#echoes-chat [class*="bg-gray-800"] { background: #333 !important; }
+#echoes-chat [class*="bg-white"] { background: #ffffff !important; }
+#echoes-chat [class*="bg-gray-50"] { background: #f8f8f8 !important; }
+#echoes-chat [class*="bg-gray-100"] { background: #f0f0f0 !important; }
+#echoes-chat .text-gray-800 { color: #191919 !important; }
+#echoes-chat .text-gray-700 { color: #333 !important; }
+#echoes-chat .text-gray-600 { color: #555 !important; }
+#echoes-chat .text-gray-500 { color: #888 !important; }
+#echoes-chat .text-gray-400 { color: #aaa !important; }
+#echoes-chat .text-gray-300 { color: #ccc !important; }
+#echoes-chat input, #echoes-chat textarea { background: #fff !important; color: #191919 !important; border-color: rgba(0,0,0,0.1) !important; }
+#echoes-chat input::placeholder, #echoes-chat textarea::placeholder { color: #aaa !important; }
+#echoes-chat .border-gray-200 { border-color: rgba(0,0,0,0.06) !important; }
+#echoes-chat .border-gray-200\\/50 { border-color: rgba(0,0,0,0.04) !important; }
+#echoes-chat .border-white\\/50 { border-color: rgba(0,0,0,0.04) !important; }
+#echoes-chat .border-white\\/60 { border-color: rgba(0,0,0,0.05) !important; }
+#echoes-chat .ring-black\\/5 { --tw-ring-color: rgba(0,0,0,0.04) !important; }
+#echoes-chat .border-white { border-color: rgba(0,0,0,0.06) !important; }
+#echoes-chat .text-gray-700.group-hover\\:text-black { color: #555 !important; }
 #echoes-chat .text-gray-700.group-hover\\:text-black:hover { color: #07C160 !important; }
-#echoes-chat .glass-panel svg { stroke: #aaa; }
-#echoes-chat [class*="bg-white"] svg { stroke: #aaa; }
-#echoes-chat [class*="rounded-\\[24px\\]"].glass-panel {
-  background: rgba(30,30,30,0.85) !important;
-  border-color: rgba(255,255,255,0.06) !important;
-}
-#echoes-chat [class*="rounded-\\[24px\\]"].glass-panel svg,
-#echoes-chat .flex.justify-around svg { stroke: #aaa; }
-#echoes-chat [class*="bg-\\[\\#1a1a1a\\]"] { background: #1f1f1f !important; color: #e0e0e0 !important; }
+#echoes-chat .glass-panel svg { stroke: #555; }
+#echoes-chat [class*="bg-white"] svg { stroke: #555; }
+#echoes-chat [class*="rounded-\\[24px\\]"].glass-panel { background: rgba(255,255,255,0.85) !important; border-color: rgba(0,0,0,0.06) !important; }
+#echoes-chat [class*="rounded-\\[24px\\]"].glass-panel svg, #echoes-chat .flex.justify-around svg { stroke: #555; }
+#echoes-chat [class*="bg-\\[\\#1a1a1a\\]"] { background: #fff !important; color: #191919 !important; }
 #echoes-chat .bg-green-500 { background: #07C160 !important; }
-/* 选中状态标签 */
+#echoes-chat .text-red-500 { color: #e64340 !important; }
+#echoes-chat .bg-green-50\\/50 { background: rgba(7,193,96,0.15) !important; }
+#echoes-chat .bg-green-100 { background: rgba(7,193,96,0.2) !important; }
+#echoes-chat .text-green-700 { color: #07C160 !important; }
+#echoes-chat .text-green-600 { color: #07C160 !important; }
+#echoes-chat .border-green-100 { border-color: rgba(7,193,96,0.3) !important; }
 #echoes-chat [class*="border-black"] { border-color: #333 !important; }
 #echoes-chat [class*="bg-black"][class*="text-white"] { background: #07C160 !important; }
-`
+`,
   },
   {
     id: "sweet",
     name: "甜梦泡泡",
-    desc: "灰粉甜系，波点与小翅膀",
+    desc: "灰粉撞色波点，蝴蝶结与软萌小熊",
     preview: "bg-[#f0e8ed]",
     css: `/* == 甜梦泡泡 == */
 #echoes-chat {
@@ -280,18 +292,14 @@ const OFFICIAL_SKINS = [
   --skin-accent: #d4959a;
   --skin-accent-hover: #c08088;
 }
-/* 波点背景 */
-#echoes-chat .bg-\\[\\#F2F2F7\\] {
-  background-color: #f0e8ed !important;
-  background-image: radial-gradient(circle, rgba(255,255,255,0.7) 1px, transparent 1px) !important;
-  background-size: 20px 20px !important;
-}
-#echoes-chat [class*="bg-\\[\\#F2F2F7"] {
-  background-color: #f0e8ed !important;
-  background-image: radial-gradient(circle, rgba(255,255,255,0.7) 1px, transparent 1px) !important;
-  background-size: 20px 20px !important;
-}
+#echoes-chat { background-color: #f0e8ed !important; background-image: radial-gradient(circle, rgba(220,180,190,0.55) 2px, transparent 2px) !important; background-size: 16px 16px !important; color: #4a3548 !important; }
+#echoes-chat .bg-\\[\\#F2F2F7\\] { background-color: #f0e8ed !important; background-image: radial-gradient(circle, rgba(220,180,190,0.55) 2px, transparent 2px) !important; background-size: 16px 16px !important; }
 #echoes-chat .bg-\\[\\#EBEBF0\\] { background: #e8dde4 !important; }
+#echoes-chat [class*="bg-\\[\\#F2F2F7"] { background-color: #f0e8ed !important; background-image: radial-gradient(circle, rgba(220,180,190,0.55) 2px, transparent 2px) !important; background-size: 16px 16px !important; }
+#echoes-chat [class*="bg-\\[\\#EBEBF0"] { background: #e8dde4 !important; }
+#echoes-chat .bg-blue-50\\/50 { background: rgba(220,180,200,0.35) !important; }
+#echoes-chat .bg-gray-100\\/60 { background: rgba(212,149,154,0.25) !important; }
+#echoes-chat .bg-gray-300\\/50 { background: rgba(212,149,154,0.2) !important; }
 #echoes-chat .text-\\[\\#1a1a1a\\] { color: #4a3548 !important; }
 #echoes-chat .text-\\[\\#2C2C2C\\] { color: #5c4658 !important; }
 #echoes-chat .text-gray-800 { color: #4a3548 !important; }
@@ -301,28 +309,14 @@ const OFFICIAL_SKINS = [
 #echoes-chat .text-gray-400 { color: #a088a0 !important; }
 #echoes-chat .text-gray-300 { color: #c0a8b8 !important; }
 #echoes-chat header { color: #d4959a !important; }
-#echoes-chat .glass-panel {
-  background: rgba(250,245,248,0.75) !important;
-  backdrop-filter: blur(14px) !important;
-  -webkit-backdrop-filter: blur(14px) !important;
-  border-color: rgba(212,149,154,0.25) !important;
-  color: #4a3548 !important;
-  border-radius: 18px !important;
-}
-#echoes-chat .glass-card {
-  background: rgba(255,255,255,0.55) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
-  border-color: rgba(212,149,154,0.2) !important;
-  border-radius: 16px !important;
-  color: #4a3548 !important;
-}
+#echoes-chat .glass-panel { background: rgba(250,245,248,0.75) !important; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-color: rgba(212,149,154,0.25) !important; color: #4a3548 !important; border-radius: 18px !important; }
+#echoes-chat .glass-card { background: rgba(255,255,255,0.55) !important; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-color: rgba(212,149,154,0.2) !important; border-radius: 16px !important; color: #4a3548 !important; }
 #echoes-chat .glass-card label { color: #5c4658 !important; }
 #echoes-chat .glass-card p, #echoes-chat .glass-card span { color: #8b7088 !important; }
+#echoes-chat .bg-white\\/50 { background: rgba(250,245,248,0.75) !important; }
 #echoes-chat [class*="bg-white"] { background: #faf5f8 !important; border-radius: 14px !important; }
 #echoes-chat [class*="bg-gray-50"] { background: #faf5f8 !important; }
 #echoes-chat [class*="bg-gray-100"] { background: rgba(212,149,154,0.08) !important; }
-/* 粉调按钮 */
 #echoes-chat [class*="bg-black"] { background: #d4959a !important; border-color: #d4959a !important; }
 #echoes-chat [class*="bg-black"]:hover { background: #c08088 !important; }
 #echoes-chat button.bg-black { background: #d4959a !important; }
@@ -331,43 +325,35 @@ const OFFICIAL_SKINS = [
 #echoes-chat [class*="bg-\\[\\#2C2C2C\\]"]:hover { background: #c08088 !important; }
 #echoes-chat [class*="bg-gray-800"] { background: #d4959a !important; }
 #echoes-chat [class*="text-white"] { color: #fff !important; }
-#echoes-chat input, #echoes-chat textarea {
-  background: #faf5f8 !important;
-  color: #4a3548 !important;
-  border-color: rgba(212,149,154,0.3) !important;
-  border-radius: 12px !important;
-}
+#echoes-chat input, #echoes-chat textarea { background: #faf5f8 !important; color: #4a3548 !important; border-color: rgba(212,149,154,0.3) !important; border-radius: 12px !important; }
 #echoes-chat input::placeholder, #echoes-chat textarea::placeholder { color: #c0a8b8 !important; }
 #echoes-chat .border-gray-200 { border-color: rgba(212,149,154,0.2) !important; }
 #echoes-chat .border-gray-200\\/50 { border-color: rgba(212,149,154,0.15) !important; }
 #echoes-chat .border-white\\/50 { border-color: rgba(212,149,154,0.2) !important; }
 #echoes-chat .border-white\\/60 { border-color: rgba(212,149,154,0.25) !important; }
 #echoes-chat .ring-black\\/5 { --tw-ring-color: rgba(212,149,154,0.06) !important; }
+#echoes-chat .border-white { border-color: rgba(212,149,154,0.25) !important; }
 #echoes-chat .text-gray-700.group-hover\\:text-black { color: #8b7088 !important; }
 #echoes-chat .text-gray-700.group-hover\\:text-black:hover { color: #d4959a !important; }
 #echoes-chat .glass-panel svg { stroke: #8b7088; }
 #echoes-chat [class*="bg-white"] svg { stroke: #8b7088; }
-#echoes-chat [class*="rounded-\\[24px\\]"].glass-panel {
-  background: rgba(250,245,248,0.75) !important;
-  border-color: rgba(212,149,154,0.25) !important;
-  border-radius: 18px !important;
-}
-#echoes-chat [class*="rounded-\\[24px\\]"].glass-panel svg,
-#echoes-chat .flex.justify-around svg { stroke: #8b7088; }
+#echoes-chat [class*="rounded-\\[24px\\]"].glass-panel { background: rgba(250,245,248,0.75) !important; border-color: rgba(212,149,154,0.25) !important; border-radius: 18px !important; }
+#echoes-chat [class*="rounded-\\[24px\\]"].glass-panel svg, #echoes-chat .flex.justify-around svg { stroke: #8b7088; }
 #echoes-chat [class*="bg-\\[\\#1a1a1a\\]"] { background: #faf5f8 !important; color: #4a3548 !important; }
 #echoes-chat .bg-green-500 { background: #b8a8c8 !important; }
-/* 圆角泛滥 - 所有圆角变大 */
-#echoes-chat [class*="rounded-lg"],
-#echoes-chat [class*="rounded-xl"],
-#echoes-chat [class*="rounded-\\[16px\\]"],
-#echoes-chat [class*="rounded-\\[22px\\]"],
-#echoes-chat [class*="rounded-\\[24px\\]"],
-#echoes-chat [class*="rounded-2xl"],
-#echoes-chat [class*="rounded-full"],
-#echoes-chat [class*="rounded-\\[48px\\]"] { border-radius: 18px !important; }
+#echoes-chat .text-red-500 { color: #cc8899 !important; }
+#echoes-chat .bg-green-50\\/50 { background: rgba(184,168,200,0.2) !important; }
+#echoes-chat .bg-green-100 { background: rgba(184,168,200,0.3) !important; }
+#echoes-chat .text-green-700 { color: #9b8bb0 !important; }
+#echoes-chat .text-green-600 { color: #a898b8 !important; }
+#echoes-chat .border-green-100 { border-color: rgba(184,168,200,0.3) !important; }
+#echoes-chat [class*="rounded-lg"], #echoes-chat [class*="rounded-xl"], #echoes-chat [class*="rounded-2xl"], #echoes-chat [class*="rounded-\\[16px\\]"], #echoes-chat [class*="rounded-\\[22px\\]"], #echoes-chat [class*="rounded-\\[24px\\]"], #echoes-chat [class*="rounded-full"], #echoes-chat [class*="rounded-\\[48px\\]"] { border-radius: 18px !important; }
 #echoes-chat [class*="rounded-\\[48px\\]"] { border-radius: 36px !important; }
 #echoes-chat [class*="rounded-full"] { border-radius: 9999px !important; }
-`
+#echoes-chat header::before { content: ""; display: inline-block; width: 20px; height: 20px; background-image: url("./bow.png"); background-size: contain; background-repeat: no-repeat; margin-right: 4px; vertical-align: middle; opacity: 0.65; }
+/* 小熊: 聊天输入栏底部装饰 */
+#echoes-chat [class*="glass-panel"][class*="shrink-0"]::after { content: ""; position: absolute; right: 8px; bottom: 8px; width: 34px; height: 34px; background-image: url("./pink-bear.png"); background-size: contain; background-repeat: no-repeat; pointer-events: none; opacity: 0.6; z-index: 1; }
+`,
   },
 ];
 

@@ -6,13 +6,19 @@ Echoes Phone 使用 CSS 注入机制实现界面换肤。所有主题 CSS 通过
 
 ```
 App.jsx
-  └── <div id="echoes-chat">          ← 皮肤 CSS 的作用域根节点
-        ├── <header>                   ← 顶部状态栏
-        ├── <main id="main-content">   ← 主内容区（聊天/设置/浏览器等）
-        │     ├── 玻璃面板 (.glass-panel / .glass-card)
-        │     ├── 输入框 / 按钮 / 文字
-        │     └── 各类子组件
-        └── 底部导航栏
+  └── <div id="echoes-chat">          ← 皮肤 CSS 的作用域根节点（涵盖锁屏/加载/主界面）
+        ├── 锁屏界面 (isLocked)
+        │     ├── 发光装饰圆
+        │     ├── 时间文字
+        │     └── 解锁/导入按钮
+        ├── 主界面 (unlocked)
+        │     ├── <header>             ← 顶部状态栏
+        │     ├── <main id="main-content"> ← 主内容区
+        │     │     ├── 玻璃面板 (.glass-panel / .glass-card)
+        │     │     ├── 输入框 / 按钮 / 文字
+        │     │     └── 各类子组件
+        │     └── 底部导航栏
+        └── 加载屏幕 (数据未就绪)
 ```
 
 **核心规则**：所有自定义 CSS 选择器必须以 `#echoes-chat` 为前缀，确保样式只影响 Echoes 界面本身。
