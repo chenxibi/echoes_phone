@@ -5860,6 +5860,7 @@ Requirements:
 const AppIcon = ({ icon, label, onClick }) => (
   <div
     onClick={onClick}
+    data-app-link={label}
     className="flex flex-col items-center gap-2.5 cursor-pointer group w-20"
   >
     <div className="w-16 h-16 rounded-[22px] glass-panel flex items-center justify-center shadow-sm group-hover:scale-105 group-hover:shadow-lg transition-all duration-300 relative overflow-hidden text-gray-700 group-hover:text-black border-white/60">
