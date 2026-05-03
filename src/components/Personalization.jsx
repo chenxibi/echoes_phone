@@ -116,6 +116,19 @@ const OFFICIAL_SKINS = [
 #echoes-chat .bg-white\\/90 { background: rgba(30,30,60,0.85) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
 #echoes-chat [class*="bg-white"].rounded-2xl { background: #252540 !important; opacity: 0.95; }
 #echoes-chat .bg-black\\/50 { background: rgba(0,0,0,0.5) !important; }
+/* 操作菜单、表情面板、模态卡片保持原始深色样式 */
+#echoes-chat .bg-\[\#1a1a1a\]\/95 { background: rgba(26,26,26,0.95) !important; color: #fff !important; }
+#echoes-chat .bg-\[\#1a1a1a\]\/95 * { color: #fff !important; }
+#echoes-chat .bg-\[\#1a1a1a\]\\/95 { background: rgba(26,26,26,0.95) !important; color: #fff !important; }
+#echoes-chat [class*="bg-[#1a1a1a]"] { background: #1a1a1a !important; color: #fff !important; }
+#echoes-chat [class*="bg-[#1a1a1a]"] * { color: #fff !important; }
+#echoes-chat .text-red-300 { color: #fc8181 !important; }
+#echoes-chat .hover\:bg-white\/20:hover { background: rgba(255,255,255,0.2) !important; }
+#echoes-chat .border-white\/20 { border-color: rgba(255,255,255,0.2) !important; }
+#echoes-chat .bg-black\/50 { background: rgba(0,0,0,0.5) !important; }
+#echoes-chat .fixed.inset-0 { background: rgba(0,0,0,0.5) !important; }
+#echoes-chat .bg-white\/90 { opacity:0.92 !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
+#echoes-chat [class*="bg-white"].rounded-2xl { opacity: 0.95 !important; }
 #echoes-chat .text-red-500 { color: #ff7799 !important; }
 `
   },
@@ -213,6 +226,19 @@ const OFFICIAL_SKINS = [
 #echoes-chat .bg-white\\/90 { background: rgba(255,248,240,0.85) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
 #echoes-chat [class*="bg-white"].rounded-2xl { background: #fff8f0 !important; opacity: 0.95; }
 #echoes-chat .bg-black\\/50 { background: rgba(0,0,0,0.5) !important; }
+/* 操作菜单、表情面板、模态卡片保持原始深色样式 */
+#echoes-chat .bg-\[\#1a1a1a\]\/95 { background: rgba(26,26,26,0.95) !important; color: #fff !important; }
+#echoes-chat .bg-\[\#1a1a1a\]\/95 * { color: #fff !important; }
+#echoes-chat .bg-\[\#1a1a1a\]\\/95 { background: rgba(26,26,26,0.95) !important; color: #fff !important; }
+#echoes-chat [class*="bg-[#1a1a1a]"] { background: #1a1a1a !important; color: #fff !important; }
+#echoes-chat [class*="bg-[#1a1a1a]"] * { color: #fff !important; }
+#echoes-chat .text-red-300 { color: #fc8181 !important; }
+#echoes-chat .hover\:bg-white\/20:hover { background: rgba(255,255,255,0.2) !important; }
+#echoes-chat .border-white\/20 { border-color: rgba(255,255,255,0.2) !important; }
+#echoes-chat .bg-black\/50 { background: rgba(0,0,0,0.5) !important; }
+#echoes-chat .fixed.inset-0 { background: rgba(0,0,0,0.5) !important; }
+#echoes-chat .bg-white\/90 { opacity:0.92 !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
+#echoes-chat [class*="bg-white"].rounded-2xl { opacity: 0.95 !important; }
 #echoes-chat .text-red-500 { color: #cc6666 !important; }
 `
   },
@@ -509,7 +535,7 @@ const PersonalizationPanel = ({
         </h3>
 
         {/* 官方皮肤 */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="grid grid-cols-4 gap-2 mb-4">
           {OFFICIAL_SKINS.map((skin) => (
             <button
               key={skin.id}
@@ -522,15 +548,27 @@ const PersonalizationPanel = ({
                   setSkinCSS(skin.css);
                 }
               }}
-              className={`p-3 rounded-xl border-2 text-left transition-all ${
+              className={`p-2 rounded-xl border-2 text-center transition-all ${
                 selectedSkin === skin.id
                   ? "border-black bg-gray-50"
                   : "border-gray-200 hover:border-gray-400"
               }`}
             >
-              <div className={`w-full h-10 rounded-lg mb-2 ${skin.preview}`} />
-              <div className="text-xs font-bold text-gray-700">{skin.name}</div>
-              <div className="text-[10px] text-gray-400 mt-0.5">{skin.desc}</div>
+              <div className={`w-full h-8 rounded-lg mb-1 ${skin.preview}/* 操作菜单、表情面板、模态卡片保持原始深色样式 */
+#echoes-chat .bg-\[\#1a1a1a\]\/95 { background: rgba(26,26,26,0.95) !important; color: #fff !important; }
+#echoes-chat .bg-\[\#1a1a1a\]\/95 * { color: #fff !important; }
+#echoes-chat .bg-\[\#1a1a1a\]\\/95 { background: rgba(26,26,26,0.95) !important; color: #fff !important; }
+#echoes-chat [class*="bg-[#1a1a1a]"] { background: #1a1a1a !important; color: #fff !important; }
+#echoes-chat [class*="bg-[#1a1a1a]"] * { color: #fff !important; }
+#echoes-chat .text-red-300 { color: #fc8181 !important; }
+#echoes-chat .hover\:bg-white\/20:hover { background: rgba(255,255,255,0.2) !important; }
+#echoes-chat .border-white\/20 { border-color: rgba(255,255,255,0.2) !important; }
+#echoes-chat .bg-black\/50 { background: rgba(0,0,0,0.5) !important; }
+#echoes-chat .fixed.inset-0 { background: rgba(0,0,0,0.5) !important; }
+#echoes-chat .bg-white\/90 { opacity:0.92 !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
+#echoes-chat [class*="bg-white"].rounded-2xl { opacity: 0.95 !important; }
+`} />
+              <div className="text-[11px] font-bold text-gray-700 leading-tight">{skin.name}</div>
             </button>
           ))}
         </div>
@@ -566,8 +604,18 @@ const PersonalizationPanel = ({
             className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-xs font-mono outline-none focus:border-black resize-y"
           />
           <p className="text-[9px] text-gray-400">
-            使用 <code className="bg-gray-100 px-1 rounded">#echoes-chat</code> 作为选择器前缀，见
-            <a href="./theme-guide.md" target="_blank" className="text-blue-500 underline ml-1">主题创作指南</a>
+            使用 <code className="bg-gray-100 px-1 rounded">#echoes-chat</code> 作为选择器前缀，
+            <button
+              onClick={() => {
+                const link = document.createElement('a');
+                link.href = './theme-guide.md';
+                link.download = 'theme-guide.md';
+                link.click();
+              }}
+              className="text-blue-500 underline ml-1 cursor-pointer"
+            >
+              点击下载主题创作指南
+            </button>
           </p>
         </div>
       </section>
