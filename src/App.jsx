@@ -3555,6 +3555,7 @@ Requirements:
             </div>
             <div className="mt-auto pb-6">
               <div
+                data-app-link="通讯"
                 className="glass-panel rounded-[24px] p-2 flex justify-around items-center shadow-lg cursor-pointer hover:bg-white/40 transition-colors mx-2"
                 onClick={() => setActiveApp("chat")}
               >
@@ -5478,6 +5479,7 @@ Requirements:
           >
             <div className="space-y-6 pb-20 pt-4">
               <button
+                data-app-link="浏览器刷新"
                 onClick={generateBrowser}
                 disabled={loading.browser}
                 className="w-full py-3 bg-[#2C2C2C] text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-2 shadow-lg"

@@ -209,71 +209,70 @@ const OFFICIAL_SKINS = [
   {
     id: "pixel",
     name: "像素复古",
-    desc: "Terminal 绿 mono 字体，极简像素感",
-    preview: "bg-[#0a0f0a]",
-    css: `/* 像素复古 */
-#echoes-chat { --skin-bg: #0a0f0a; --skin-surface: #0e140e; --skin-card: #111811; --skin-text: #d4fcd4; --skin-sub: #6a9a6a; --skin-accent: #3afc4a; --skin-accent-hover: #2ad43a; }
+    desc: "Vaporwave mono，紫色星云 + 荧光粉蓝",
+    preview: "bg-[#0d0221]",
+    css: `/* 像素复古 — Vaporwave */
+#echoes-chat { --skin-bg: #0d0221; --skin-surface: #120530; --skin-card: #1a0840; --skin-text: #f0e0ff; --skin-sub: #b366ff; --skin-accent: #00f0ff; --skin-accent-hover: #ff2d95; }
 #echoes-chat, #echoes-chat *, #echoes-chat *::before, #echoes-chat *::after { font-family: "Courier New","Source Code Pro","Fira Code","IBM Plex Mono","JetBrains Mono",Consolas,monospace !important; border-radius:2px !important; }
 #echoes-chat [class*="rounded-full"] { border-radius:4px !important; }
-#echoes-chat { background:#0a0f0a !important; color:#d4fcd4 !important; }
-#echoes-chat .bg-\\[\\#F2F2F7\\] { background:#0a0f0a !important; }
-#echoes-chat .bg-\\[\\#EBEBF0\\] { background:#050805 !important; }
-#echoes-chat [class*="bg-\\[\\#F2F2F7"] { background:#0a0f0a !important; }
-#echoes-chat [class*="bg-\\[\\#EBEBF0"] { background:#050805 !important; }
-#echoes-chat .bg-blue-50\\/50 { background:#0a1f0a !important; }
-#echoes-chat .bg-gray-100\\/60 { background:#0f1f0f !important; }
-#echoes-chat .bg-gray-300\\/50 { background:#1a2a1a !important; }
-#echoes-chat .bg-white\\/50 { background:#111811 !important; }
-#echoes-chat .text-\\[\\#1a1a1a\\] { color:#d4fcd4 !important; }
-#echoes-chat .text-\\[\\#2C2C2C\\] { color:#c0f0c0 !important; }
-#echoes-chat .text-gray-800 { color:#d4fcd4 !important; }
-#echoes-chat .text-gray-700 { color:#c0f0c0 !important; }
-#echoes-chat .text-gray-600 { color:#a0e0a0 !important; }
-#echoes-chat .text-gray-500 { color:#6a9a6a !important; }
-#echoes-chat .text-gray-400 { color:#5a8a5a !important; }
-#echoes-chat .text-gray-300 { color:#4a7a4a !important; }
-#echoes-chat header { color:#3afc4a !important; background:#0a0f0a !important; }
-#echoes-chat .glass-panel { background:#111811 !important; backdrop-filter:none !important; -webkit-backdrop-filter:none !important; border:2px solid #3afc4a !important; border-color:#3afc4a !important; color:#d4fcd4 !important; box-shadow:4px 4px 0 #3afc4a !important; }
-#echoes-chat .glass-card { background:#0e140e !important; backdrop-filter:none !important; -webkit-backdrop-filter:none !important; border:2px solid #2a5a2a !important; border-color:#2a5a2a !important; color:#d4fcd4 !important; box-shadow:2px 2px 0 #1a3a1a !important; }
-#echoes-chat .glass-card label { color:#a0e0a0 !important; }
-#echoes-chat .glass-card p,#echoes-chat .glass-card span { color:#6a9a6a !important; }
-#echoes-chat [class*="bg-white"] { background:#111811 !important; }
-#echoes-chat [class*="bg-gray-50"] { background:#0e140e !important; }
-#echoes-chat [class*="bg-gray-100"] { background:#0a0f0a !important; }
-#echoes-chat [class*="bg-black"] { background:#1a2a1a !important; border:2px solid #3afc4a !important; border-color:#3afc4a !important; color:#3afc4a !important; box-shadow:3px 3px 0 #1a5a1a !important; }
-#echoes-chat [class*="bg-black"]:hover { background:#0f1f0f !important; border-color:#5cfc6a !important; color:#5cfc6a !important; }
-#echoes-chat button.bg-black { background:#1a2a1a !important; border:2px solid #3afc4a !important; border-color:#3afc4a !important; color:#3afc4a !important; box-shadow:3px 3px 0 #1a5a1a !important; }
-#echoes-chat button.bg-black:hover { background:#0f1f0f !important; color:#5cfc6a !important; }
-#echoes-chat [class*="bg-\\[\\#2C2C2C\\]"] { background:#1a2a1a !important; border:2px solid #2a5a2a !important; border-color:#2a5a2a !important; box-shadow:2px 2px 0 #0a1f0a !important; }
-#echoes-chat [class*="bg-\\[\\#2C2C2C\\]"]:hover { background:#0f1f0f !important; }
-#echoes-chat [class*="bg-gray-800"] { background:#1a2a1a !important; border:2px solid #2a5a2a !important; border-color:#2a5a2a !important; }
-#echoes-chat [class*="text-white"] { color:#d4fcd4 !important; }
-#echoes-chat input,#echoes-chat textarea { background:#0a0f0a !important; color:#3afc4a !important; border:2px solid #2a5a2a !important; caret-color:#3afc4a !important; }
-#echoes-chat input::placeholder,#echoes-chat textarea::placeholder { color:#3a6a3a !important; }
-#echoes-chat .border-gray-200 { border-color:#2a5a2a !important; }
-#echoes-chat .border-gray-200\\/50 { border-color:#1a3a1a !important; }
-#echoes-chat .border-white\\/50 { border-color:#2a5a2a !important; }
-#echoes-chat .border-white\\/60 { border-color:#2a5a2a !important; }
-#echoes-chat .ring-black\\/5 { --tw-ring-color:#1a3a1a !important; }
-#echoes-chat .border-white { border-color:#2a5a2a !important; }
-#echoes-chat .border-t { border-color:#2a5a2a !important; }
-#echoes-chat .text-gray-700.group-hover\\:text-black { color:#6a9a6a !important; }
-#echoes-chat .text-gray-700.group-hover\\:text-black:hover { color:#3afc4a !important; }
-#echoes-chat .glass-panel svg { stroke:#6a9a6a; }
-#echoes-chat [class*="bg-white"] svg { stroke:#6a9a6a; }
-#echoes-chat [class*="rounded-\\[24px\\]"].glass-panel { background:#111811 !important; border:2px solid #3afc4a !important; border-color:#3afc4a !important; box-shadow:4px 4px 0 #3afc4a !important; }
-#echoes-chat [class*="rounded-\\[24px\\]"].glass-panel svg,#echoes-chat .flex.justify-around svg { stroke:#6a9a6a; }
-#echoes-chat [class*="bg-\\[\\#1a1a1a\\]"] { background:#111811 !important; color:#d4fcd4 !important; border:2px solid #2a5a2a !important; border-color:#2a5a2a !important; }
-#echoes-chat .bg-green-500 { background:#3afc4a !important; color:#0a0f0a !important; }
-#echoes-chat .text-red-500 { color:#fc3a4a !important; }
-#echoes-chat .bg-green-50\\/50 { background:#1a2a1a !important; }
-#echoes-chat .bg-green-100 { background:#1a2a1a !important; }
-#echoes-chat .text-green-700 { color:#3afc4a !important; }
-#echoes-chat .text-green-600 { color:#3afc4a !important; }
-#echoes-chat .border-green-100 { border-color:#3afc4a !important; }
-#echoes-chat [class*="border-black"] { border-color:#3afc4a !important; }
-#echoes-chat [class*="bg-black"][class*="text-white"] { background:#3afc4a !important; color:#0a0f0a !important; }
-`,
+#echoes-chat { background:#0d0221 !important; color:#f0e0ff !important; }
+#echoes-chat .bg-\\\\[\\\\#F2F2F7\\\\] { background:#0d0221 !important; }
+#echoes-chat .bg-\\\\[\\\\#EBEBF0\\\\] { background:#080018 !important; }
+#echoes-chat [class*="bg-\\\\[\\\\#F2F2F7"] { background:#0d0221 !important; }
+#echoes-chat [class*="bg-\\\\[\\\\#EBEBF0"] { background:#080018 !important; }
+#echoes-chat .bg-blue-50\\\\/50 { background:#1d0038 !important; }
+#echoes-chat .bg-gray-100\\\\/60 { background:#200840 !important; }
+#echoes-chat .bg-gray-300\\\\/50 { background:#2d1045 !important; }
+#echoes-chat .bg-white\\\\/50 { background:#1a0840 !important; }
+#echoes-chat .text-\\\\[\\\\#1a1a1a\\\\] { color:#f0e0ff !important; }
+#echoes-chat .text-\\\\[\\\\#2C2C2C\\\\] { color:#e0d0f0 !important; }
+#echoes-chat .text-gray-800 { color:#f0e0ff !important; }
+#echoes-chat .text-gray-700 { color:#e0d0f0 !important; }
+#echoes-chat .text-gray-600 { color:#d0b8e8 !important; }
+#echoes-chat .text-gray-500 { color:#b366ff !important; }
+#echoes-chat .text-gray-400 { color:#9966cc !important; }
+#echoes-chat .text-gray-300 { color:#8855bb !important; }
+#echoes-chat header { color:#ff2d95 !important; background:#0d0221 !important; }
+#echoes-chat .glass-panel { background:#1a0840 !important; backdrop-filter:none !important; -webkit-backdrop-filter:none !important; border:2px solid #ff2d95 !important; border-color:#ff2d95 !important; color:#f0e0ff !important; box-shadow:4px 4px 0 #00f0ff !important; }
+#echoes-chat .glass-card { background:#120530 !important; backdrop-filter:none !important; -webkit-backdrop-filter:none !important; border:2px solid #b366ff !important; border-color:#b366ff !important; color:#f0e0ff !important; box-shadow:2px 2px 0 #6b0f6b !important; }
+#echoes-chat .glass-card label { color:#d0b8e8 !important; }
+#echoes-chat .glass-card p,#echoes-chat .glass-card span { color:#b366ff !important; }
+#echoes-chat [class*="bg-white"] { background:#1a0840 !important; }
+#echoes-chat [class*="bg-gray-50"] { background:#120530 !important; }
+#echoes-chat [class*="bg-gray-100"] { background:#0d0221 !important; }
+#echoes-chat [class*="bg-black"] { background:#2d1045 !important; border:2px solid #ff2d95 !important; border-color:#ff2d95 !important; color:#00f0ff !important; box-shadow:3px 3px 0 #00f0ff !important; }
+#echoes-chat [class*="bg-black"]:hover { background:#3d2060 !important; border-color:#ff66b8 !important; color:#66ffff !important; }
+#echoes-chat button.bg-black { background:#2d1045 !important; border:2px solid #ff2d95 !important; border-color:#ff2d95 !important; color:#00f0ff !important; box-shadow:3px 3px 0 #00f0ff !important; }
+#echoes-chat button.bg-black:hover { background:#3d2060 !important; color:#66ffff !important; }
+#echoes-chat [class*="bg-\\\\[\\\\#2C2C2C\\\\]"] { background:#2d1045 !important; border:2px solid #b366ff !important; border-color:#b366ff !important; box-shadow:2px 2px 0 #6b0f6b !important; }
+#echoes-chat [class*="bg-\\\\[\\\\#2C2C2C\\\\]"]:hover { background:#3d2060 !important; }
+#echoes-chat [class*="bg-gray-800"] { background:#2d1045 !important; border:2px solid #b366ff !important; border-color:#b366ff !important; }
+#echoes-chat [class*="text-white"] { color:#f0e0ff !important; }
+#echoes-chat input,#echoes-chat textarea { background:#0d0221 !important; color:#00f0ff !important; border:2px solid #b366ff !important; caret-color:#00f0ff !important; }
+#echoes-chat input::placeholder,#echoes-chat textarea::placeholder { color:#6633aa !important; }
+#echoes-chat .border-gray-200 { border-color:#b366ff !important; }
+#echoes-chat .border-gray-200\\\\/50 { border-color:#6b0f6b !important; }
+#echoes-chat .border-white\\\\/50 { border-color:#b366ff !important; }
+#echoes-chat .border-white\\\\/60 { border-color:#b366ff !important; }
+#echoes-chat .ring-black\\\\/5 { --tw-ring-color:#6b0f6b !important; }
+#echoes-chat .border-white { border-color:#b366ff !important; }
+#echoes-chat .border-t { border-color:#b366ff !important; }
+#echoes-chat .text-gray-700.group-hover\\\\:text-black { color:#b366ff !important; }
+#echoes-chat .text-gray-700.group-hover\\\\:text-black:hover { color:#ff2d95 !important; }
+#echoes-chat .glass-panel svg { stroke:#b366ff; }
+#echoes-chat [class*="bg-white"] svg { stroke:#b366ff; }
+#echoes-chat [class*="rounded-\\\\[24px\\\\]"].glass-panel { background:#1a0840 !important; border:2px solid #ff2d95 !important; border-color:#ff2d95 !important; box-shadow:4px 4px 0 #00f0ff !important; }
+#echoes-chat [class*="rounded-\\\\[24px\\\\]"].glass-panel svg,#echoes-chat .flex.justify-around svg { stroke:#b366ff; }
+#echoes-chat [class*="bg-\\\\[\\\\#1a1a1a\\\\]"] { background:#1a0840 !important; color:#f0e0ff !important; border:2px solid #b366ff !important; border-color:#b366ff !important; }
+#echoes-chat .bg-green-500 { background:#ff2d95 !important; color:#f0e0ff !important; }
+#echoes-chat .text-red-500 { color:#ff6688 !important; }
+#echoes-chat .bg-green-50\\\\/50 { background:#2d1045 !important; }
+#echoes-chat .bg-green-100 { background:#2d1045 !important; }
+#echoes-chat .text-green-700 { color:#00f0ff !important; }
+#echoes-chat .text-green-600 { color:#00f0ff !important; }
+#echoes-chat .border-green-100 { border-color:#00f0ff !important; }
+#echoes-chat [class*="border-black"] { border-color:#ff2d95 !important; }
+#echoes-chat [class*="bg-black"][class*="text-white"] { background:#ff2d95 !important; color:#f0e0ff !important; }`
   },
   {
     id: "sweet",
@@ -343,11 +342,45 @@ const OFFICIAL_SKINS = [
 /* 小熊替换生活圈图标 */
 #echoes-chat [data-app-link="生活圈"] svg { display:none !important; }
 #echoes-chat [data-app-link="生活圈"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./pink-bear.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
-/* 蝴蝶结替换界面样式/个性化图标 */
-#echoes-chat [data-section-icon="palette"] { visibility:hidden; }
-#echoes-chat [data-section-icon="palette"]::after { content:""; display:inline-block; width:12px; height:12px; background-image:url("./bow.png"); background-size:contain; background-repeat:no-repeat; vertical-align:middle; visibility:visible; }
+/* 蝴蝶结替换界面样式标题图标 */
+#echoes-chat h3[data-section-icon="palette"] svg { display:none !important; }
+#echoes-chat h3[data-section-icon="palette"]::before { content:""; display:inline-block; width:12px; height:12px; background-image:url("./bow.png"); background-size:contain; background-repeat:no-repeat; vertical-align:middle; }
+/* 蝴蝶结替换个性化App图标 */
 #echoes-chat [data-app-link="个性化"] svg { display:none !important; }
 #echoes-chat [data-app-link="个性化"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./bow.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
+/* 棒棒糖替换系统设置图标 */
+#echoes-chat [data-app-link="系统设置"] svg { display:none !important; }
+#echoes-chat [data-app-link="系统设置"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./pink-lollipop.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
+/* 电话替换浏览器图标 */
+#echoes-chat [data-app-link="浏览器"] svg { display:none !important; }
+#echoes-chat [data-app-link="浏览器"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./pink-telephone.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
+/* 爱心替换音乐图标 */
+#echoes-chat [data-app-link="共鸣旋律"] svg { display:none !important; }
+#echoes-chat [data-app-link="共鸣旋律"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./pink-heart.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
+/* 蝴蝶结替换智能家图标 */
+#echoes-chat [data-app-link="智能家"] svg { display:none !important; }
+#echoes-chat [data-app-link="智能家"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./pink-butterfly.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
+/* 草莓巧克力替换日记图标 */
+#echoes-chat [data-app-link="日记"] svg { display:none !important; }
+#echoes-chat [data-app-link="日记"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./strawberry-chocolate.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
+/* 蜡烛替换生活痕迹图标 */
+#echoes-chat [data-app-link="生活痕迹"] svg { display:none !important; }
+#echoes-chat [data-app-link="生活痕迹"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./pink-candle.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
+/* 蘑菇替换世界书图标 */
+#echoes-chat [data-app-link="世界书"] svg { display:none !important; }
+#echoes-chat [data-app-link="世界书"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./pink-mushroom.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
+/* 饮料替换底部通讯栏 */
+#echoes-chat [data-app-link="通讯"] svg { display:none !important; }
+#echoes-chat [data-app-link="通讯"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./pink-drink.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
+/* 发带替换图标定制标题 */
+#echoes-chat h3[data-section-icon="customize"] svg { display:none !important; }
+#echoes-chat h3[data-section-icon="customize"]::before { content:""; display:inline-block; width:12px; height:12px; background-image:url("./pink-hair-band.png"); background-size:contain; background-repeat:no-repeat; vertical-align:middle; }
+/* 笔记本替换显示与排版标题 */
+#echoes-chat h3[data-section-icon="display"] svg { display:none !important; }
+#echoes-chat h3[data-section-icon="display"]::before { content:""; display:inline-block; width:12px; height:12px; background-image:url("./pink-laptop.png"); background-size:contain; background-repeat:no-repeat; vertical-align:middle; }
+/* 玩具替换浏览器刷新按钮图标 */
+#echoes-chat [data-app-link="浏览器刷新"] svg { display:none !important; }
+#echoes-chat [data-app-link="浏览器刷新"]::before { content:""; display:inline-block; width:16px; height:16px; background-image:url("./pink-toy.png"); background-size:contain; background-repeat:no-repeat; vertical-align:middle; margin-right:6px; }
 `,
   },
 ];
@@ -380,8 +413,8 @@ const PersonalizationPanel = ({
     <div className="space-y-8 pt-4 pb-20 px-1">
       {/* ---------------- SECTION 1: 显示与排版 ---------------- */}
       <section>
-        <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3 border-b border-gray-200/50 pb-1 flex items-center gap-2">
-          <Monitor size={10} data-section-icon="display" /> 显示与排版
+        <h3 data-section-icon="display" className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3 border-b border-gray-200/50 pb-1 flex items-center gap-2">
+          <Monitor size={10} /> 显示与排版
         </h3>
 
         {/* 沉浸模式 */}
@@ -447,8 +480,8 @@ const PersonalizationPanel = ({
 
       {/* ---------------- SECTION: 界面样式 ---------------- */}
       <section>
-        <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3 border-b border-gray-200/50 pb-1 flex items-center gap-2">
-          <Palette size={10} data-section-icon="palette" /> 界面样式
+        <h3 data-section-icon="palette" className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3 border-b border-gray-200/50 pb-1 flex items-center gap-2">
+          <Palette size={10} /> 界面样式
         </h3>
 
         {/* 官方皮肤 */}
@@ -517,8 +550,8 @@ const PersonalizationPanel = ({
 
       {/* ---------------- SECTION 2: 图标定制 ---------------- */}
       <section>
-        <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3 border-b border-gray-200/50 pb-1 flex items-center gap-2">
-          <Asterisk size={10} data-section-icon="customize" /> 图标定制
+        <h3 data-section-icon="customize" className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3 border-b border-gray-200/50 pb-1 flex items-center gap-2">
+          <Asterisk size={10} /> 图标定制
         </h3>
 
         <div className="grid grid-cols-4 gap-y-6 gap-x-2">
