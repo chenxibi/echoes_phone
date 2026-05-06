@@ -346,17 +346,18 @@ const OFFICIAL_SKINS = [
 }
 
 /* 次要按钮/辅助背景 */
-/* 记录/刷新按钮：亮色文字和图标 */
-#echoes-chat [class*="bg-\[\#2C2C2C\]"],
-#echoes-chat [class*="bg-\[\#2C2C2C\]"] button,
-#echoes-chat [class*="bg-\[\#2C2C2C\]"] * { color: #00f3ff !important; }
-#echoes-chat [class*="bg-\[\#2C2C2C\]"] svg { stroke: #00f3ff !important; filter: drop-shadow(0 0 2px #00f3ff); }
+
 
 [class*="bg-gray-800"], #echoes-chat [class*="bg-\[\#2C2C2C\]"] {
  background: #1a262f !important;
- border: 1px solid #64ffda !important;
- color: #64ffda !important;
+ border: 1px solid #fcee0a !important;
+ color: #fcee0a !important;
 }
+#echoes-chat [class*="bg-\[\#2C2C2C\]"] svg { stroke: #fcee0a !important; }
+
+/* 模型下拉框：深色文字 */
+#echoes-chat select,
+#echoes-chat select option { color: #050a0e !important; background: #fff !important; }
 
 /* 输入框：极简科技感 */
 #echoes-chat input, #echoes-chat textarea {
