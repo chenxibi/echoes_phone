@@ -603,7 +603,7 @@ const PersonalizationPanel = ({
           >
             <div
               className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${
-                isFullscreen ? "left-4.5" : "left-0.5"
+                isFullscreen ? "left-4" : "left-0.5"
               }`}
             />
           </button>
