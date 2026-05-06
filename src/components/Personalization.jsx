@@ -338,7 +338,11 @@ const OFFICIAL_SKINS = [
 }
 
 /* 次要按钮/辅助背景 */
-#echoes-chat [class*="bg-gray-800"], #echoes-chat [class*="bg-\[\#2C2C2C\]"] {
+#echoes-chat /* 记录/刷新按钮：亮色文字 */
+#echoes-chat [class*="bg-\[\#2C2C2C\]"] { color: #00f3ff !important; }
+#echoes-chat [class*="bg-\[\#2C2C2C\]"] svg { stroke: #00f3ff !important; }
+
+[class*="bg-gray-800"], #echoes-chat [class*="bg-\[\#2C2C2C\]"] {
  background: #1a262f !important;
  border: 1px solid #64ffda !important;
  color: #64ffda !important;
@@ -388,6 +392,14 @@ const OFFICIAL_SKINS = [
 #echoes-chat .text-gray-700 { color: #64ffda !important; }
 #echoes-chat .text-gray-600 { color: #a0b2b1 !important; }
 #echoes-chat .text-gray-500 { color: #a0b2b1 !important; }
+/* 身份档案标题：白底黑字 */
+#echoes-chat [class*="bg-white"] .text-gray-700,
+#echoes-chat [class*="bg-white"].text-gray-700 { color: #111827 !important; }
+#echoes-chat [class*="bg-white"] .text-gray-800,
+#echoes-chat [class*="bg-white"].text-gray-800 { color: #000000 !important; }
+#echoes-chat [class*="bg-white"] .text-gray-600 { color: #333333 !important; }
+#echoes-chat [class*="bg-white"] .text-gray-500 { color: #555555 !important; }
+
 
 /* 图标处理：发光青色 */
 #echoes-chat svg { stroke: #00f3ff !important; filter: drop-shadow(0 0 2px #00f3ff); }
@@ -407,9 +419,17 @@ const OFFICIAL_SKINS = [
 #echoes-chat .bg-white\/50 { background: rgba(255,255,255,0.9) !important; }
 #echoes-chat .bg-white\/90 { background: rgba(13,22,29,0.85) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
 #echoes-chat [class*="bg-white"].rounded-2xl { background: rgba(13,22,29,0.92) !important; }
+/* 白色背景内文字加深 */
+#echoes-chat [class*="bg-white"] { color: #111827 !important; }
+#echoes-chat [class*="bg-white"] * { color: #111827 !important; }
+
 /* 角色气泡保持白色背景（排除 rounded-tl-none/rounded-tr-none 的气泡） */
 #echoes-chat [class*="bg-white"][class*="rounded-tl-none"] { background: #ffffff !important; border-radius: 0 !important; }
 #echoes-chat [class*="bg-white"][class*="rounded-tr-none"] { background: #ffffff !important; border-radius: 0 !important; }
+/* 角色气泡：白底配黑字 */
+#echoes-chat [class*="bg-white"][class*="rounded-tl-none"] { color: #000000 !important; }
+#echoes-chat [class*="bg-white"][class*="rounded-tl-none"] .text-gray-800 { color: #000000 !important; }
+
 
 #echoes-chat .bg-black\/50 { background: rgba(0,0,0,0.5) !important; }
 #echoes-chat .bg-black\/40 { background: rgba(0,0,0,0.4) !important; }
