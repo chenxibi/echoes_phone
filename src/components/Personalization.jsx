@@ -322,7 +322,14 @@ const OFFICIAL_SKINS = [
 #echoes-chat button.bg-black:hover { background: linear-gradient(180deg,#ffc0d8 0%,#ffb0c8 100%) !important; color:#33ebff !important; }
 /* 玻璃面板霓虹 */
 #echoes-chat .glass-panel { background: linear-gradient(135deg,#fff0f5 0%,#ffe8f0 100%) !important; backdrop-filter:none !important; -webkit-backdrop-filter:none !important; border:2px solid #00e5ff !important; border-color:#00e5ff !important; color:#554455 !important; box-shadow:4px 4px 0 #ff6b9d, 0 0 20px rgba(0,229,255,0.2) !important; }
-#echoes-chat .glass-card { background: linear-gradient(135deg,#ffe8f0 0%,#ffe0ec 100%) !important; backdrop-filter:none !important; -webkit-backdrop-filter:none !important; border:2px solid #ffccdd !important; border-color:#ffccdd !important; color:#554455 !important; box-shadow:2px 2px 0 #ffbbcc, inset 0 0 15px rgba(255,107,157,0.1) !important; }`
+#echoes-chat .glass-card { background: linear-gradient(135deg,#ffe8f0 0%,#ffe0ec 100%) !important; backdrop-filter:none !important; -webkit-backdrop-filter:none !important; border:2px solid #ffccdd !important; border-color:#ffccdd !important; color:#554455 !important; box-shadow:2px 2px 0 #ffbbcc, inset 0 0 15px rgba(255,107,157,0.1) !important; }
+/* 弹窗保持半透明 */
+#echoes-chat .fixed.inset-0 { background: rgba(0,0,0,0.5) !important; }
+#echoes-chat .bg-white\/90 { background: rgba(255,232,240,0.85) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
+#echoes-chat [class*="bg-white"].rounded-2xl { background: rgba(255,240,245,0.92) !important; }
+#echoes-chat .bg-black\/50 { background: rgba(0,0,0,0.5) !important; }
+#echoes-chat .bg-black\/40 { background: rgba(0,0,0,0.4) !important; }
+`
   },
   {
     id: "sweet",
@@ -431,6 +438,12 @@ const OFFICIAL_SKINS = [
 /* 玩具替换浏览器刷新按钮图标 */
 #echoes-chat [data-app-link="浏览器刷新"] svg { display:none !important; }
 #echoes-chat [data-app-link="浏览器刷新"]::before { content:""; display:inline-block; width:16px; height:16px; background-image:url("./pink-toy.png"); background-size:contain; background-repeat:no-repeat; vertical-align:middle; margin-right:6px; }
+/* 弹窗保持半透明 */
+#echoes-chat .fixed.inset-0 { background: rgba(0,0,0,0.5) !important; }
+#echoes-chat .bg-white\/90 { background: rgba(250,245,248,0.85) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
+#echoes-chat [class*="bg-white"].rounded-2xl { background: rgba(250,245,248,0.92) !important; }
+#echoes-chat .bg-black\/50 { background: rgba(0,0,0,0.5) !important; }
+#echoes-chat .bg-black\/40 { background: rgba(0,0,0,0.4) !important; }
 `,
   },
 ];
