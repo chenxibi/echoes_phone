@@ -286,7 +286,7 @@ const SettingsPanel = ({
                 >
                   <div
                     className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${
-                      memoryConfig.enabled ? "left-4.5" : "left-0.5"
+                      memoryConfig.enabled ? "left-4" : "left-0.5"
                     }`}
                   />
                 </button>
@@ -460,7 +460,7 @@ const SettingsPanel = ({
                   >
                     <div
                       className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${
-                        realTimeEnabled ? "left-5" : "left-0.5"
+                        realTimeEnabled ? "left-4" : "left-0.5"
                       }`}
                     />
                   </button>
