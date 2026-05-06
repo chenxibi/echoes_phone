@@ -319,8 +319,7 @@ const OFFICIAL_SKINS = [
 #echoes-chat .glass-card label { color: #64ffda !important; font-weight: bold; }
 #echoes-chat .glass-card p, #echoes-chat .glass-card span { color: #a0b2b1 !important; }
 /* 模态内标题：深色文字 */
-#echoes-chat .bg-white header,
-#echoes-chat [class*="bg-white"] header { color: #000000 !important; text-shadow: none !important; text-transform: none !important; font-weight: 700 !important; border-bottom-color: #ddd !important; }
+/* 模态标题保持默认样式 */
 
 /* 身份档案等模态标题：白底黑字 */
 #echoes-chat h3.text-gray-700,
@@ -407,9 +406,9 @@ const OFFICIAL_SKINS = [
 #echoes-chat [class*="bg-white"].rounded-xl,
 #echoes-chat [class*="bg-white"][class*="rounded-xl"] { border-left: 4px solid #fcee0a !important; }
 
-#echoes-chat .text-\[\#1a1a1a\] { color: #00f3ff !important; }
-/* 锁屏时间：亮色 */
-#echoes-chat .lock-time { color: #e0f2f1 !important; text-shadow: 0 0 10px rgba(0,243,255,0.3) !important; }
+/* text-[#1a1a1a] 在白色/dark背景各自使用默认色，仅在深色模态中覆盖 */
+/* 锁屏时间：暗色背景上亮色文字 */
+#echoes-chat .lock-time { color: #e0f2f1 !important; }
 
 #echoes-chat .text-\[\#2C2C2C\] { color: #e0f2f1 !important; }
 #echoes-chat .text-gray-900 { color: #fcee0a !important; }
