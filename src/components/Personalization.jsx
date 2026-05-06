@@ -112,6 +112,14 @@ const OFFICIAL_SKINS = [
 #echoes-chat [class*="bg-white"].rounded-2xl { background: rgba(255,255,255,0.92) !important; }
 #echoes-chat .bg-black\/50 { background: rgba(0,0,0,0.5) !important; }
 #echoes-chat .bg-black\/40 { background: rgba(0,0,0,0.4) !important; }
+/* 消息菜单：浅色主题匹配 */
+#echoes-chat [class*="bg-[#1a1a1a]"] { background: rgba(255,255,255,0.95) !important; color: #2c3e50 !important; }
+#echoes-chat [class*="bg-[#1a1a1a]"] * { color: #2c3e50 !important; }
+#echoes-chat .bg-\[\#1a1a1a\]\/95 { background: rgba(255,255,255,0.95) !important; color: #2c3e50 !important; }
+#echoes-chat .bg-\[\#1a1a1a\]\/95 * { color: #2c3e50 !important; }
+#echoes-chat .hover\:bg-white\/20:hover { background: rgba(93,169,173,0.2) !important; }
+#echoes-chat .border-white\/20 { border-color: rgba(0,0,0,0.1) !important; }
+#echoes-chat .text-red-300 { color: #e07a5f !important; }
 
 /* 开关主题色 */
 #echoes-chat .bg-green-500 { background: #81b29a !important; }
@@ -372,16 +380,37 @@ const OFFICIAL_SKINS = [
  color: rgba(0, 243, 255, 0.5);
 }
 
+/* 文字层级 - 赛博亮色系 */
+#echoes-chat .text-\[\#1a1a1a\] { color: #00f3ff !important; }
+#echoes-chat .text-\[\#2C2C2C\] { color: #e0f2f1 !important; }
+#echoes-chat .text-gray-900 { color: #fcee0a !important; }
+#echoes-chat .text-gray-800 { color: #00f3ff !important; }
+#echoes-chat .text-gray-700 { color: #64ffda !important; }
+#echoes-chat .text-gray-600 { color: #a0b2b1 !important; }
+#echoes-chat .text-gray-500 { color: #a0b2b1 !important; }
+
 /* 图标处理：发光青色 */
 #echoes-chat svg { stroke: #00f3ff !important; filter: drop-shadow(0 0 2px #00f3ff); }
+/* Plus图标按钮内SVG用深色文字色，避免在青色背景上消失 */
+#echoes-chat button.bg-black svg, #echoes-chat [class*="bg-black"] button svg, #echoes-chat button[class*="bg-black"] svg { stroke: #050a0e !important; filter: none !important; }
+
 
 /* 非按钮文字保持白色 */
+/* 通讯按钮：明亮色图标 */
+[data-app-link="通讯"] svg { stroke: #e0f2f1 !important; filter: none !important; }
+
 #echoes-chat :not(button)[class*="text-white"] { color: #e0f2f1 !important; }
 
 /* 弹窗保持半透明 */
 #echoes-chat .fixed.inset-0 { background: rgba(0,0,0,0.5) !important; }
+/* 状态/设置按钮：纯白背景 */
+#echoes-chat .bg-white\/50 { background: rgba(255,255,255,0.9) !important; }
 #echoes-chat .bg-white\/90 { background: rgba(13,22,29,0.85) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
 #echoes-chat [class*="bg-white"].rounded-2xl { background: rgba(13,22,29,0.92) !important; }
+/* 角色气泡保持白色背景（排除 rounded-tl-none/rounded-tr-none 的气泡） */
+#echoes-chat [class*="bg-white"][class*="rounded-tl-none"] { background: #ffffff !important; border-radius: 0 !important; }
+#echoes-chat [class*="bg-white"][class*="rounded-tr-none"] { background: #ffffff !important; border-radius: 0 !important; }
+
 #echoes-chat .bg-black\/50 { background: rgba(0,0,0,0.5) !important; }
 #echoes-chat .bg-black\/40 { background: rgba(0,0,0,0.4) !important; }
 
@@ -437,7 +466,7 @@ const OFFICIAL_SKINS = [
 #echoes-chat [class*="bg-\[\#2C2C2C\]"] { background:#ffd4e4 !important; border:2px solid #ffccdd !important; border-color:#ffccdd !important; box-shadow:2px 2px 0 #ffbbcc !important; }
 #echoes-chat [class*="bg-\[\#2C2C2C\]"]:hover { background:#ffc0d8 !important; }
 #echoes-chat [class*="bg-gray-800"] { background:#ffd4e4 !important; border:2px solid #ffccdd !important; border-color:#ffccdd !important; }
-#echoes-chat :not(button)[class*="text-white"] { color:#554455 !important; }
+#echoes-chat :not(button)[class*="text-white"] { color:#665566 !important; }
 #echoes-chat input,#echoes-chat textarea { background:#ffe0ec !important; color:#00e5ff !important; border:2px solid #ffccdd !important; caret-color:#00e5ff !important; }
 #echoes-chat input::placeholder,#echoes-chat textarea::placeholder { color:#ccaabb !important; }
 #echoes-chat .border-gray-200 { border-color:#ffccdd !important; }
@@ -598,6 +627,8 @@ const OFFICIAL_SKINS = [
 #echoes-chat .text-\\[\\#1a1a1a\\] { color: #e0e0f0 !important; }
 #echoes-chat .text-\\[\\#2C2C2C\\] { color: #c8c8e0 !important; }
 #echoes-chat .text-gray-800 { color: #d0d0e8 !important; }
+#echoes-chat .text-gray-900 { color: #aabbee !important; }
+
 #echoes-chat .text-gray-700 { color: #c0c0dd !important; }
 #echoes-chat .text-gray-600 { color: #b0b0d0 !important; }
 #echoes-chat .text-gray-500 { color: #8888aa !important; }
