@@ -318,6 +318,15 @@ const OFFICIAL_SKINS = [
 
 #echoes-chat .glass-card label { color: #64ffda !important; font-weight: bold; }
 #echoes-chat .glass-card p, #echoes-chat .glass-card span { color: #a0b2b1 !important; }
+/* 模态内标题：深色文字 */
+#echoes-chat .bg-white header,
+#echoes-chat [class*="bg-white"] header { color: #000000 !important; text-shadow: none !important; text-transform: none !important; font-weight: 700 !important; border-bottom-color: #ddd !important; }
+
+/* 身份档案等模态标题：白底黑字 */
+#echoes-chat h3.text-gray-700,
+#echoes-chat [class*="bg-white"] h3,
+#echoes-chat [class*="bg-white"] h2 { color: #000000 !important; }
+
 
 /* 按钮 */
 #echoes-chat [class*="bg-black"], #echoes-chat button.bg-black {
@@ -338,9 +347,11 @@ const OFFICIAL_SKINS = [
 }
 
 /* 次要按钮/辅助背景 */
-#echoes-chat /* 记录/刷新按钮：亮色文字 */
-#echoes-chat [class*="bg-\[\#2C2C2C\]"] { color: #00f3ff !important; }
-#echoes-chat [class*="bg-\[\#2C2C2C\]"] svg { stroke: #00f3ff !important; }
+/* 记录/刷新按钮：亮色文字和图标 */
+#echoes-chat [class*="bg-\[\#2C2C2C\]"],
+#echoes-chat [class*="bg-\[\#2C2C2C\]"] button,
+#echoes-chat [class*="bg-\[\#2C2C2C\]"] * { color: #00f3ff !important; }
+#echoes-chat [class*="bg-\[\#2C2C2C\]"] svg { stroke: #00f3ff !important; filter: drop-shadow(0 0 2px #00f3ff); }
 
 [class*="bg-gray-800"], #echoes-chat [class*="bg-\[\#2C2C2C\]"] {
  background: #1a262f !important;
@@ -385,7 +396,21 @@ const OFFICIAL_SKINS = [
 }
 
 /* 文字层级 - 赛博亮色系 */
+/* Forum 帖子标题：黑色+黄色左侧装饰条 */
+#echoes-chat .bg-white .text-gray-900,
+#echoes-chat [class*="bg-white"] .text-gray-900 { color: #000000 !important; }
+#echoes-chat .bg-white h2.text-gray-900,
+#echoes-chat [class*="bg-white"] h2[class*="text-gray-900"] { color: #000000 !important; }
+#echoes-chat .bg-white h2,
+#echoes-chat [class*="bg-white"] h2 { color: #000000 !important; }
+/* 帖子卡片左侧黄色装饰条 */
+#echoes-chat [class*="bg-white"].rounded-xl,
+#echoes-chat [class*="bg-white"][class*="rounded-xl"] { border-left: 4px solid #fcee0a !important; }
+
 #echoes-chat .text-\[\#1a1a1a\] { color: #00f3ff !important; }
+/* 锁屏时间：亮色 */
+#echoes-chat .lock-time { color: #e0f2f1 !important; text-shadow: 0 0 10px rgba(0,243,255,0.3) !important; }
+
 #echoes-chat .text-\[\#2C2C2C\] { color: #e0f2f1 !important; }
 #echoes-chat .text-gray-900 { color: #fcee0a !important; }
 #echoes-chat .text-gray-800 { color: #00f3ff !important; }
@@ -425,7 +450,12 @@ const OFFICIAL_SKINS = [
 #echoes-chat .fixed.inset-0 { background: rgba(0,0,0,0.5) !important; }
 /* 状态/设置按钮：纯白背景 */
 #echoes-chat .bg-white\\/50 { background: rgba(255,255,255,0.9) !important; }
-#echoes-chat .bg-white\\/90 { background: rgba(13,22,29,0.85) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
+#echoes-chat /* 登出弹窗确定按钮：亮色文字 */
+#echoes-chat .bg-white\/90 button.bg-black,
+#echoes-chat .fixed.inset-0 button.bg-black,
+#echoes-chat [class*="bg-white\/90"] button.bg-black { color: #fcee0a !important; }
+
+.bg-white\\/90 { background: rgba(13,22,29,0.85) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
 #echoes-chat [class*="bg-white"].rounded-2xl { background: rgba(13,22,29,0.92) !important; }
 /* 白色背景内文字加深（排除 hover:bg-white 等变体） */
 #echoes-chat .bg-white,
