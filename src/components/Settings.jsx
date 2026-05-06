@@ -391,9 +391,10 @@ const SettingsPanel = ({
                         onClick={() => setChatStyle(style.id)}
                         className={`flex flex-col items-center justify-center py-2 rounded-lg transition-all border ${
                           chatStyle === style.id
-                            ? "bg-black text-white border-black shadow-md"
+                            ? "bg-black border-black shadow-md"
                             : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"
                         }`}
+                    style={chatStyle === style.id ? { color: '#fff' } : {}}
                       >
                         <span className="text-xs font-bold">{style.label}</span>
                         <span
@@ -498,12 +499,12 @@ const SettingsPanel = ({
                     <button
                       onClick={() => setStickersEnabled(!stickersEnabled)}
                       className={`w-8 h-4 rounded-full relative transition-colors ${
-                        stickersEnabled ? "bg-[#7A2A3A]" : "bg-gray-300"
+                        stickersEnabled ? "bg-green-500" : "bg-gray-300"
                       }`}
                     >
                       <div
                         className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${
-                          stickersEnabled ? "left-4.5" : "left-0.5"
+                          stickersEnabled ? "left-4" : "left-0.5"
                         }`}
                       />
                     </button>

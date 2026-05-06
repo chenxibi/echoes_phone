@@ -11,6 +11,8 @@ const OFFICIAL_SKINS = [
     name: "午夜深蓝",
     desc: "暗色界面，护眼柔和",
     preview: "bg-[#1a1a2e]",
+    previewColor: "#1a1a2e",
+    borderColor: "#99aaff",
     css: `/* == 午夜深蓝 == */
 #echoes-chat {
   --skin-bg: #1a1a2e;
@@ -138,8 +140,6 @@ const OFFICIAL_SKINS = [
 #echoes-chat button.bg-black { color: #fff !important; }
 #echoes-chat button.bg-black:hover { color: #fff !important; }
 #echoes-chat [class*="bg-black"][class*="text-white"] { color: #fff !important; }
-/* 皮肤预览色块保护 */
-#echoes-chat [data-skin-preview] { all: unset; }
 `
   },
   {
@@ -147,6 +147,8 @@ const OFFICIAL_SKINS = [
     name: "燕麦拿铁",
     desc: "暖调配色，温柔奶油感",
     preview: "bg-[#faf0e6]",
+    previewColor: "#faf0e6",
+    borderColor: "#c4956a",
     css: `/* == 燕麦拿铁 == */
 #echoes-chat {
   --skin-bg: #faf0e6;
@@ -258,8 +260,6 @@ const OFFICIAL_SKINS = [
 #echoes-chat button.bg-black { color: #fff !important; }
 #echoes-chat button.bg-black:hover { color: #fff !important; }
 #echoes-chat [class*="bg-black"][class*="text-white"] { color: #fff !important; }
-/* 皮肤预览色块保护 */
-#echoes-chat [data-skin-preview] { all: unset; }
 `
   },
   {
@@ -267,6 +267,8 @@ const OFFICIAL_SKINS = [
     name: "像素复古",
     desc: "Soft Vaporwave，浅粉 + 荧光蓝",
     preview: "bg-[#ffe0ec]",
+    previewColor: "#ffe0ec",
+    borderColor: "#00e5ff",
     css: `/* 像素复古 — Soft Vaporwave (Asset Integrated) */
 #echoes-chat { --skin-bg: #ffe0ec; --skin-surface: #ffe8f0; --skin-card: #fff0f5; --skin-text: #554455; --skin-sub: #cc7799; --skin-accent: #00e5ff; --skin-accent-hover: #ff6b9d; }
 #echoes-chat, #echoes-chat *, #echoes-chat *::before, #echoes-chat *::after { font-family: "Courier New","Source Code Pro","Fira Code","IBM Plex Mono","JetBrains Mono",Consolas,monospace !important; border-radius:2px !important; }
@@ -425,8 +427,6 @@ const OFFICIAL_SKINS = [
 #echoes-chat button.bg-black { color: #fff !important; }
 #echoes-chat button.bg-black:hover { color: #fff !important; }
 #echoes-chat [class*="bg-black"][class*="text-white"] { color: #fff !important; }
-/* 皮肤预览色块保护 */
-#echoes-chat [data-skin-preview] { all: unset; }
 `
   },
   {
@@ -434,6 +434,8 @@ const OFFICIAL_SKINS = [
     name: "甜梦泡泡",
     desc: "灰粉波点，小熊软萌氛围",
     preview: "bg-[#f0e8ed]",
+    previewColor: "#f0e8ed",
+    borderColor: "#d4959a",
     css: `/* 甜梦泡泡 */
 #echoes-chat { --skin-bg: #f0e8ed; --skin-surface: #f5eff4; --skin-card: #faf5f8; --skin-text: #4a3548; --skin-sub: #8b7088; --skin-accent: #d4959a; --skin-accent-hover: #c08088; }
 #echoes-chat { background-color:#f0e8ed !important; background-image:radial-gradient(circle,rgba(212,149,154,0.45) 1.5px,transparent 1.5px) !important; background-size:18px 18px !important; color:#4a3548 !important; }
@@ -550,8 +552,6 @@ const OFFICIAL_SKINS = [
 #echoes-chat button.bg-black { color: #fff !important; }
 #echoes-chat button.bg-black:hover { color: #fff !important; }
 #echoes-chat [class*="bg-black"][class*="text-white"] { color: #fff !important; }
-/* 皮肤预览色块保护 */
-#echoes-chat [data-skin-preview] { all: unset; }
 `,
   },
 ];
@@ -671,11 +671,12 @@ const PersonalizationPanel = ({
               }}
               className={`p-2 rounded-xl border text-center transition-all ${
                 selectedSkin === skin.id
-                  ? "border-gray-400 bg-gray-50"
+                  ? "bg-gray-50"
                   : "border-gray-200 hover:border-gray-400"
               }`}
+              style={selectedSkin === skin.id ? { borderColor: skin.borderColor, borderWidth: '1px', borderStyle: 'solid' } : {}}
             >
-              <div className={`w-full h-8 rounded-lg mb-1 ${skin.preview}`} data-skin-preview={skin.id}></div>
+              <div className="w-full h-8 rounded-lg mb-1" style={{ backgroundColor: skin.previewColor }}></div>
               <div className="text-[11px] font-bold text-gray-700 leading-tight">{skin.name}</div>
             </button>
           ))}
