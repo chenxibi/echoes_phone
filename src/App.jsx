@@ -3868,7 +3868,7 @@ Requirements:
                   <button
                     onClick={() => toggleTrackerConfig("facts")}
                     className={`w-8 h-4 rounded-full relative transition-colors ${
-                      trackerConfig.facts ? "bg-[#D4C5A9]" : "bg-gray-300"
+                      trackerConfig.facts ? "bg-green-500" : "bg-gray-300"
                     }`}
                   >
                     <div
