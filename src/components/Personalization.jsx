@@ -354,10 +354,12 @@ const OFFICIAL_SKINS = [
  color: #fcee0a !important;
 }
 #echoes-chat [class*="bg-\[\#2C2C2C\]"] svg { stroke: #fcee0a !important; }
+/* bg-[#2C2C2C]子元素强制黄色 手机不可hover */
+#echoes-chat [class*="bg-\[\#2C2C2C\]"] * { color: #fcee0a !important; }
 
-/* 模型下拉框：深色文字 */
+/* 模型下拉框：深色底蓝字 */
 #echoes-chat select,
-#echoes-chat select option { color: #050a0e !important; background: #fff !important; }
+#echoes-chat select option { color: #00f3ff !important; background: rgba(0,243,255,0.05) !important; border: 1px solid rgba(0,243,255,0.5) !important; }
 
 /* 输入框：极简科技感 */
 #echoes-chat input, #echoes-chat textarea {
