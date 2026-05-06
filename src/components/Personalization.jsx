@@ -407,8 +407,14 @@ const OFFICIAL_SKINS = [
 #echoes-chat [class*="bg-white"][class*="rounded-xl"] { border-left: 4px solid #fcee0a !important; }
 
 /* text-[#1a1a1a] 在白色/dark背景各自使用默认色，仅在深色模态中覆盖 */
-/* 锁屏时间：暗色背景上亮色文字 */
-#echoes-chat .lock-time { color: #e0f2f1 !important; }
+/* 锁屏时间：保留默认色，深色背景通过父容器处理 */
+/* .lock-time uses default text-[#1a1a1a] which is near-black */
+/* 锁屏深色背景下时间亮色 */
+#echoes-chat > div > .lock-time,
+#echoes-chat .max-w-md .lock-time { color: #e0f2f1 !important; }
+/* 主界面白色/浅色模态中时间保持深色 */
+#echoes-chat [class*="bg-white"] .lock-time,
+#echoes-chat .glass-card .lock-time { color: #1a1a1a !important; }
 
 #echoes-chat .text-\[\#2C2C2C\] { color: #e0f2f1 !important; }
 #echoes-chat .text-gray-900 { color: #fcee0a !important; }
