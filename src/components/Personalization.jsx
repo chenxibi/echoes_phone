@@ -247,21 +247,21 @@ const OFFICIAL_SKINS = [
     name: "像素复古",
     desc: "Soft Vaporwave，浅粉 + 荧光蓝",
     preview: "bg-[#ffe0ec]",
-    css: `/* 像素复古 — Soft Vaporwave */
+    css: `/* 像素复古 — Soft Vaporwave (Asset Integrated) */
 #echoes-chat { --skin-bg: #ffe0ec; --skin-surface: #ffe8f0; --skin-card: #fff0f5; --skin-text: #554455; --skin-sub: #cc7799; --skin-accent: #00e5ff; --skin-accent-hover: #ff6b9d; }
 #echoes-chat, #echoes-chat *, #echoes-chat *::before, #echoes-chat *::after { font-family: "Courier New","Source Code Pro","Fira Code","IBM Plex Mono","JetBrains Mono",Consolas,monospace !important; border-radius:2px !important; }
 #echoes-chat [class*="rounded-full"] { border-radius:4px !important; }
 #echoes-chat { background:#ffe0ec !important; color:#554455 !important; }
-#echoes-chat .bg-\\[\\#F2F2F7\\] { background:#ffe0ec !important; }
-#echoes-chat .bg-\\[\\#EBEBF0\\] { background:#ffd4e4 !important; }
-#echoes-chat [class*="bg-\\[\\#F2F2F7"] { background:#ffe0ec !important; }
-#echoes-chat [class*="bg-\\[\\#EBEBF0"] { background:#ffd4e4 !important; }
-#echoes-chat .bg-blue-50\\/50 { background:#ffe0f0 !important; }
-#echoes-chat .bg-gray-100\\/60 { background:#ffd8e8 !important; }
-#echoes-chat .bg-gray-300\\/50 { background:#ffcce0 !important; }
-#echoes-chat .bg-white\\/50 { background:#fff0f5 !important; }
-#echoes-chat .text-\\[\\#1a1a1a\\] { color:#554455 !important; }
-#echoes-chat .text-\\[\\#2C2C2C\\] { color:#665566 !important; }
+#echoes-chat .bg-\[\#F2F2F7\] { background:#ffe0ec !important; }
+#echoes-chat .bg-\[\#EBEBF0\] { background:#ffd4e4 !important; }
+#echoes-chat [class*="bg-\[\#F2F2F7"] { background:#ffe0ec !important; }
+#echoes-chat [class*="bg-\[\#EBEBF0"] { background:#ffd4e4 !important; }
+#echoes-chat .bg-blue-50\/50 { background:#ffe0f0 !important; }
+#echoes-chat .bg-gray-100\/60 { background:#ffd8e8 !important; }
+#echoes-chat .bg-gray-300\/50 { background:#ffcce0 !important; }
+#echoes-chat .bg-white\/50 { background:#fff0f5 !important; }
+#echoes-chat .text-\[\#1a1a1a\] { color:#554455 !important; }
+#echoes-chat .text-\[\#2C2C2C\] { color:#665566 !important; }
 #echoes-chat .text-gray-800 { color:#554455 !important; }
 #echoes-chat .text-gray-700 { color:#665566 !important; }
 #echoes-chat .text-gray-600 { color:#776677 !important; }
@@ -280,49 +280,117 @@ const OFFICIAL_SKINS = [
 #echoes-chat [class*="bg-black"]:hover { background:#ffc0d8 !important; border-color:#33ebff !important; color:#33ebff !important; }
 #echoes-chat button.bg-black { background:#ffd4e4 !important; border:2px solid #00e5ff !important; border-color:#00e5ff !important; color:#00e5ff !important; box-shadow:3px 3px 0 #ff6b9d !important; }
 #echoes-chat button.bg-black:hover { background:#ffc0d8 !important; color:#33ebff !important; }
-#echoes-chat [class*="bg-\\[\\#2C2C2C\\]"] { background:#ffd4e4 !important; border:2px solid #ffccdd !important; border-color:#ffccdd !important; box-shadow:2px 2px 0 #ffbbcc !important; }
-#echoes-chat [class*="bg-\\[\\#2C2C2C\\]"]:hover { background:#ffc0d8 !important; }
+#echoes-chat [class*="bg-\[\#2C2C2C\]"] { background:#ffd4e4 !important; border:2px solid #ffccdd !important; border-color:#ffccdd !important; box-shadow:2px 2px 0 #ffbbcc !important; }
+#echoes-chat [class*="bg-\[\#2C2C2C\]"]:hover { background:#ffc0d8 !important; }
 #echoes-chat [class*="bg-gray-800"] { background:#ffd4e4 !important; border:2px solid #ffccdd !important; border-color:#ffccdd !important; }
 #echoes-chat [class*="text-white"] { color:#554455 !important; }
 #echoes-chat input,#echoes-chat textarea { background:#ffe0ec !important; color:#00e5ff !important; border:2px solid #ffccdd !important; caret-color:#00e5ff !important; }
 #echoes-chat input::placeholder,#echoes-chat textarea::placeholder { color:#ccaabb !important; }
 #echoes-chat .border-gray-200 { border-color:#ffccdd !important; }
-#echoes-chat .border-gray-200\\/50 { border-color:#ffbbcc !important; }
-#echoes-chat .border-white\\/50 { border-color:#ffccdd !important; }
-#echoes-chat .border-white\\/60 { border-color:#ffccdd !important; }
-#echoes-chat .ring-black\\/5 { --tw-ring-color:#ffbbcc !important; }
+#echoes-chat .border-gray-200\/50 { border-color:#ffbbcc !important; }
+#echoes-chat .border-white\/50 { border-color:#ffccdd !important; }
+#echoes-chat .border-white\/60 { border-color:#ffccdd !important; }
+#echoes-chat .ring-black\/5 { --tw-ring-color:#ffbbcc !important; }
 #echoes-chat .border-white { border-color:#ffccdd !important; }
 #echoes-chat .border-t { border-color:#ffccdd !important; }
-#echoes-chat .text-gray-700.group-hover\\:text-black { color:#cc7799 !important; }
-#echoes-chat .text-gray-700.group-hover\\:text-black:hover { color:#ff6b9d !important; }
+#echoes-chat .text-gray-700.group-hover\:text-black { color:#cc7799 !important; }
+#echoes-chat .text-gray-700.group-hover\:text-black:hover { color:#ff6b9d !important; }
 #echoes-chat .glass-panel svg { stroke:#cc7799; }
 #echoes-chat [class*="bg-white"] svg { stroke:#cc7799; }
-#echoes-chat [class*="rounded-\\[24px\\]"].glass-panel { background:#fff0f5 !important; border:2px solid #00e5ff !important; border-color:#00e5ff !important; box-shadow:4px 4px 0 #ff6b9d !important; }
-#echoes-chat [class*="rounded-\\[24px\\]"].glass-panel svg,#echoes-chat .flex.justify-around svg { stroke:#cc7799; }
-#echoes-chat [class*="bg-\\[\\#1a1a1a\\]"] { background:#fff0f5 !important; color:#554455 !important; border:2px solid #ffccdd !important; border-color:#ffccdd !important; }
+#echoes-chat [class*="rounded-\[24px\]"].glass-panel { background:#fff0f5 !important; border:2px solid #00e5ff !important; border-color:#00e5ff !important; box-shadow:4px 4px 0 #ff6b9d !important; }
+#echoes-chat [class*="rounded-\[24px\]"].glass-panel svg,#echoes-chat .flex.justify-around svg { stroke:#cc7799; }
+#echoes-chat [class*="bg-\[\#1a1a1a\]"] { background:#fff0f5 !important; color:#554455 !important; border:2px solid #ffccdd !important; border-color:#ffccdd !important; }
 #echoes-chat .bg-green-500 { background: linear-gradient(135deg,#ff6b9d 0%,#ff8fab 50%,#00e5ff 100%) !important; color:#fff !important; border:2px solid #00e5ff !important; }
 #echoes-chat .text-red-500 { color:#ff6b9d !important; text-shadow:1px 1px 0 #00e5ff !important; }
-#echoes-chat .bg-green-50\\/50 { background:#ffe0f0 !important; }
+#echoes-chat .bg-green-50\/50 { background:#ffe0f0 !important; }
 #echoes-chat .bg-green-100 { background:#ffd0e0 !important; }
 #echoes-chat .text-green-700 { color:#00e5ff !important; text-shadow:0 0 8px rgba(0,229,255,0.4) !important; }
 #echoes-chat .text-green-600 { color:#00e5ff !important; }
 #echoes-chat .border-green-100 { border-color:#00e5ff !important; }
 #echoes-chat [class*="border-black"] { border-color:#00e5ff !important; }
 #echoes-chat [class*="bg-black"][class*="text-white"] { background: linear-gradient(135deg,#ff6b9d,#ff8fab) !important; color:#fff !important; border:2px solid #00e5ff !important; box-shadow:3px 3px 0 #00e5ff !important; }
+
+
 /* 蒸汽波网格背景 */
 #echoes-chat::before { content:""; position:fixed; inset:0; pointer-events:none; z-index:0; opacity:0.12; background-image: linear-gradient(#00e5ff 1px,transparent 1px),linear-gradient(90deg,#00e5ff 1px,transparent 1px); background-size:40px 40px; }
 /* 扫描线效果 */
 #echoes-chat::after { content:""; position:fixed; inset:0; pointer-events:none; z-index:9999; opacity:0.03; background: repeating-linear-gradient(0deg,transparent,transparent 2px,#ff6b9d 2px,#ff6b9d 4px); }
 /* 标题霓虹发光 */
 #echoes-chat header { color:#ff6b9d !important; background:#ffe0ec !important; text-shadow: 0 0 10px rgba(255,107,157,0.5), 2px 2px 0 #00e5ff !important; }
-/* 按钮渐变 */
-#echoes-chat [class*="bg-black"] { background: linear-gradient(180deg,#ffd4e4 0%,#ffc0d8 100%) !important; border:2px solid #00e5ff !important; border-color:#00e5ff !important; color:#00e5ff !important; box-shadow:3px 3px 0 #ff6b9d, 0 0 15px rgba(0,229,255,0.3) !important; }
-#echoes-chat [class*="bg-black"]:hover { background: linear-gradient(180deg,#ffc0d8 0%,#ffb0c8 100%) !important; border-color:#33ebff !important; color:#33ebff !important; box-shadow:3px 3px 0 #ff8fab, 0 0 20px rgba(0,229,255,0.5) !important; }
-#echoes-chat button.bg-black { background: linear-gradient(180deg,#ffd4e4 0%,#ffc0d8 100%) !important; border:2px solid #00e5ff !important; border-color:#00e5ff !important; color:#00e5ff !important; box-shadow:3px 3px 0 #ff6b9d, 0 0 15px rgba(0,229,255,0.3) !important; }
-#echoes-chat button.bg-black:hover { background: linear-gradient(180deg,#ffc0d8 0%,#ffb0c8 100%) !important; color:#33ebff !important; }
-/* 玻璃面板霓虹 */
-#echoes-chat .glass-panel { background: linear-gradient(135deg,#fff0f5 0%,#ffe8f0 100%) !important; backdrop-filter:none !important; -webkit-backdrop-filter:none !important; border:2px solid #00e5ff !important; border-color:#00e5ff !important; color:#554455 !important; box-shadow:4px 4px 0 #ff6b9d, 0 0 20px rgba(0,229,255,0.2) !important; }
-#echoes-chat .glass-card { background: linear-gradient(135deg,#ffe8f0 0%,#ffe0ec 100%) !important; backdrop-filter:none !important; -webkit-backdrop-filter:none !important; border:2px solid #ffccdd !important; border-color:#ffccdd !important; color:#554455 !important; box-shadow:2px 2px 0 #ffbbcc, inset 0 0 15px rgba(255,107,157,0.1) !important; }
+
+
+/* --- 蒸汽波素材插入部分 --- */
+
+
+/* 拓麻歌子替换生活圈图标 */
+#echoes-chat [data-app-link="生活圈"] svg { display:none !important; }
+#echoes-chat [data-app-link="生活圈"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./vapor-tamagotchi.png"); background-size:contain; background-repeat:no-repeat; background-position:center; filter: drop-shadow(2px 2px 0px #00e5ff); }
+
+
+/* 贝壳替换界面样式标题图标 */
+#echoes-chat h3[data-section-icon="palette"] svg { display:none !important; }
+#echoes-chat h3[data-section-icon="palette"]::before { content:""; display:inline-block; width:14px; height:14px; background-image:url("./vapor-shell.png"); background-size:contain; background-repeat:no-repeat; vertical-align:middle; margin-right:4px; }
+
+
+/* GameBoy替换个性化App图标 */
+#echoes-chat [data-app-link="个性化"] svg { display:none !important; }
+#echoes-chat [data-app-link="个性化"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./vapor-gameboy.png"); background-size:contain; background-repeat:no-repeat; background-position:center; filter: drop-shadow(2px 2px 0px #00e5ff); }
+
+
+/* 复古电脑替换系统设置图标 */
+#echoes-chat [data-app-link="系统设置"] svg { display:none !important; }
+#echoes-chat [data-app-link="系统设置"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./vapor-mac.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
+
+
+/* IE图标替换浏览器图标 */
+#echoes-chat [data-app-link="浏览器"] svg { display:none !important; }
+#echoes-chat [data-app-link="浏览器"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./vapor-ie.png"); background-size:contain; background-repeat:no-repeat; background-position:center; filter: hue-rotate(20deg); }
+
+
+/* iPod替换音乐图标 */
+#echoes-chat [data-app-link="共鸣旋律"] svg { display:none !important; }
+#echoes-chat [data-app-link="共鸣旋律"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./vapor-ipod.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
+
+
+/* 蝴蝶替换智能家图标 */
+#echoes-chat [data-app-link="智能家"] svg { display:none !important; }
+#echoes-chat [data-app-link="智能家"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./vapor-butterfly.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
+
+
+/* 磁带替换日记图标 */
+#echoes-chat [data-app-link="日记"] svg { display:none !important; }
+#echoes-chat [data-app-link="日记"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./vapor-cassette.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
+
+
+/* 充气爱心替换生活痕迹图标 */
+#echoes-chat [data-app-link="生活痕迹"] svg { display:none !important; }
+#echoes-chat [data-app-link="生活痕迹"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./vapor-heart.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
+
+
+/* 十字架替换世界书图标 */
+#echoes-chat [data-app-link="世界书"] svg { display:none !important; }
+#echoes-chat [data-app-link="世界书"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./vapor-cross.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
+
+
+/* 翻盖手机替换底部通讯栏图标 */
+#echoes-chat [data-icon="chat"] svg { display:none !important; }
+#echoes-chat [data-icon="chat"]::before { content:""; display:inline-block; width:26px; height:26px; background-image:url("./vapor-phone.png"); background-size:contain; background-repeat:no-repeat; vertical-align:middle; }
+
+
+/* 墨镜替换图标定制标题 */
+#echoes-chat h3[data-section-icon="customize"] svg { display:none !important; }
+#echoes-chat h3[data-section-icon="customize"]::before { content:""; display:inline-block; width:14px; height:14px; background-image:url("./vapor-glasses.png"); background-size:contain; background-repeat:no-repeat; vertical-align:middle; margin-right:4px; }
+
+
+/* 多卷磁带替换显示与排版标题 */
+#echoes-chat h3[data-section-icon="display"] svg { display:none !important; }
+#echoes-chat h3[data-section-icon="display"]::before { content:""; display:inline-block; width:14px; height:14px; background-image:url("./vapor-cassettes.png"); background-size:contain; background-repeat:no-repeat; vertical-align:middle; margin-right:4px; }
+
+
+/* 手机替换浏览器刷新按钮图标 */
+#echoes-chat [data-app-link="浏览器刷新"] svg { display:none !important; }
+#echoes-chat [data-app-link="浏览器刷新"]::before { content:""; display:inline-block; width:18px; height:18px; background-image:url("./vapor-phone.png"); background-size:contain; background-repeat:no-repeat; vertical-align:middle; margin-right:6px; }
+
 /* 弹窗保持半透明 */
 #echoes-chat .fixed.inset-0 { background: rgba(0,0,0,0.5) !important; }
 #echoes-chat .bg-white\/90 { background: rgba(255,232,240,0.85) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
