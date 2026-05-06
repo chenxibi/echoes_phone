@@ -29,7 +29,7 @@ const OFFICIAL_SKINS = [
 #echoes-chat .bg-blue-50\/50 { background: #f0f7f8 !important; }
 #echoes-chat .bg-gray-100\/60 { background: #edf2f7 !important; }
 #echoes-chat .bg-gray-300\/50 { background: #e2e8f0 !important; }
-#echoes-chat .bg-white\/50 { background: rgba(255, 255, 255, 0.6) !important; }
+#echoes-chat .bg-white\\/50 { background: rgba(255, 255, 255, 0.6) !important; }
 
 /* 文字颜色：确保高可读性 */
 #echoes-chat .text-\[\#1a1a1a\] { color: #2c3e50 !important; }
@@ -108,7 +108,7 @@ const OFFICIAL_SKINS = [
 
 /* 弹窗保持半透明 */
 #echoes-chat .fixed.inset-0 { background: rgba(0,0,0,0.5) !important; }
-#echoes-chat .bg-white\/90 { background: rgba(255,255,255,0.85) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
+#echoes-chat .bg-white\\/90 { background: rgba(255,255,255,0.85) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
 #echoes-chat [class*="bg-white"].rounded-2xl { background: rgba(255,255,255,0.92) !important; }
 #echoes-chat .bg-black\/50 { background: rgba(0,0,0,0.5) !important; }
 #echoes-chat .bg-black\/40 { background: rgba(0,0,0,0.4) !important; }
@@ -237,7 +237,7 @@ const OFFICIAL_SKINS = [
 #echoes-chat .border-white\/20 { border-color: rgba(255,255,255,0.2) !important; }
 #echoes-chat .bg-black\/50 { background: rgba(0,0,0,0.5) !important; }
 #echoes-chat .fixed.inset-0 { background: rgba(0,0,0,0.5) !important; }
-#echoes-chat .bg-white\/90 { opacity:0.92 !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
+#echoes-chat .bg-white\\/90 { opacity:0.92 !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
 #echoes-chat [class*="bg-white"].rounded-2xl { opacity: 0.95 !important; }
 #echoes-chat .text-red-500 { color: #cc6666 !important; }
 
@@ -424,19 +424,19 @@ const OFFICIAL_SKINS = [
 /* 弹窗保持半透明 */
 #echoes-chat .fixed.inset-0 { background: rgba(0,0,0,0.5) !important; }
 /* 状态/设置按钮：纯白背景 */
-#echoes-chat .bg-white\/50 { background: rgba(255,255,255,0.9) !important; }
-#echoes-chat .bg-white\/90 { background: rgba(13,22,29,0.85) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
+#echoes-chat .bg-white\\/50 { background: rgba(255,255,255,0.9) !important; }
+#echoes-chat .bg-white\\/90 { background: rgba(13,22,29,0.85) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
 #echoes-chat [class*="bg-white"].rounded-2xl { background: rgba(13,22,29,0.92) !important; }
 /* 白色背景内文字加深（排除 hover:bg-white 等变体） */
 #echoes-chat .bg-white,
-#echoes-chat .bg-white\/90,
+#echoes-chat .bg-white\\/90,
 #echoes-chat [class*="bg-white rounded"],
 #echoes-chat [class*="bg-white border"],
 #echoes-chat [class*="bg-white shadow"],
 #echoes-chat [class*="bg-white p-"],
 #echoes-chat [class*="bg-white group"] { color: #111827 !important; }
 #echoes-chat .bg-white *,
-#echoes-chat .bg-white\/90 *,
+#echoes-chat .bg-white\\/90 *,
 #echoes-chat [class*="bg-white rounded"] *,
 #echoes-chat [class*="bg-white border"] *,
 #echoes-chat [class*="bg-white shadow"] *,
@@ -482,7 +482,7 @@ const OFFICIAL_SKINS = [
 #echoes-chat .bg-blue-50\/50 { background:#ffe0f0 !important; }
 #echoes-chat .bg-gray-100\/60 { background:#ffd8e8 !important; }
 #echoes-chat .bg-gray-300\/50 { background:#ffcce0 !important; }
-#echoes-chat .bg-white\/50 { background:#fff0f5 !important; }
+#echoes-chat .bg-white\\/50 { background:#fff0f5 !important; }
 #echoes-chat .text-\[\#1a1a1a\] { color:#554455 !important; }
 #echoes-chat .text-\[\#2C2C2C\] { color:#665566 !important; }
 #echoes-chat .text-gray-800 { color:#554455 !important; }
@@ -616,7 +616,7 @@ const OFFICIAL_SKINS = [
 
 /* 弹窗保持半透明 */
 #echoes-chat .fixed.inset-0 { background: rgba(0,0,0,0.5) !important; }
-#echoes-chat .bg-white\/90 { background: rgba(255,232,240,0.85) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
+#echoes-chat .bg-white\\/90 { background: rgba(255,232,240,0.85) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
 #echoes-chat [class*="bg-white"].rounded-2xl { background: rgba(255,240,245,0.92) !important; }
 #echoes-chat .bg-black\/50 { background: rgba(0,0,0,0.5) !important; }
 #echoes-chat .bg-black\/40 { background: rgba(0,0,0,0.4) !important; }
@@ -755,7 +755,7 @@ const OFFICIAL_SKINS = [
 #echoes-chat .border-white\/20 { border-color: rgba(255,255,255,0.2) !important; }
 #echoes-chat .bg-black\/50 { background: rgba(0,0,0,0.5) !important; }
 #echoes-chat .fixed.inset-0 { background: rgba(0,0,0,0.5) !important; }
-#echoes-chat .bg-white\/90 { opacity:0.92 !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
+#echoes-chat .bg-white\\/90 { opacity:0.92 !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
 #echoes-chat [class*="bg-white"].rounded-2xl { opacity: 0.95 !important; }
 #echoes-chat .text-red-500 { color: #ff7799 !important; }
 
@@ -879,7 +879,7 @@ const OFFICIAL_SKINS = [
 #echoes-chat [data-app-link="浏览器刷新"]::before { content:""; display:inline-block; width:16px; height:16px; background-image:url("./pink-toy.png"); background-size:contain; background-repeat:no-repeat; vertical-align:middle; margin-right:6px; }
 /* 弹窗保持半透明 */
 #echoes-chat .fixed.inset-0 { background: rgba(0,0,0,0.5) !important; }
-#echoes-chat .bg-white\/90 { background: rgba(250,245,248,0.85) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
+#echoes-chat .bg-white\\/90 { background: rgba(250,245,248,0.85) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
 #echoes-chat [class*="bg-white"].rounded-2xl { background: rgba(250,245,248,0.92) !important; }
 #echoes-chat .bg-black\/50 { background: rgba(0,0,0,0.5) !important; }
 #echoes-chat .bg-black\/40 { background: rgba(0,0,0,0.4) !important; }
