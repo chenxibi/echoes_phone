@@ -392,13 +392,21 @@ const OFFICIAL_SKINS = [
 #echoes-chat .text-gray-700 { color: #64ffda !important; }
 #echoes-chat .text-gray-600 { color: #a0b2b1 !important; }
 #echoes-chat .text-gray-500 { color: #a0b2b1 !important; }
-/* 身份档案标题：白底黑字 */
-#echoes-chat [class*="bg-white"] .text-gray-700,
-#echoes-chat [class*="bg-white"].text-gray-700 { color: #111827 !important; }
-#echoes-chat [class*="bg-white"] .text-gray-800,
-#echoes-chat [class*="bg-white"].text-gray-800 { color: #000000 !important; }
-#echoes-chat [class*="bg-white"] .text-gray-600 { color: #333333 !important; }
-#echoes-chat [class*="bg-white"] .text-gray-500 { color: #555555 !important; }
+/* 身份档案标题：白底黑字（仅匹配实际 bg-white，不含 hover 变体） */
+#echoes-chat .bg-white .text-gray-700,
+#echoes-chat .bg-white.text-gray-700,
+#echoes-chat [class*="bg-white rounded"] .text-gray-700,
+#echoes-chat [class*="bg-white border"] .text-gray-700 { color: #111827 !important; }
+#echoes-chat .bg-white .text-gray-800,
+#echoes-chat .bg-white.text-gray-800,
+#echoes-chat [class*="bg-white rounded"] .text-gray-800,
+#echoes-chat [class*="bg-white border"] .text-gray-800 { color: #000000 !important; }
+#echoes-chat .bg-white .text-gray-600,
+#echoes-chat [class*="bg-white rounded"] .text-gray-600,
+#echoes-chat [class*="bg-white border"] .text-gray-600 { color: #333333 !important; }
+#echoes-chat .bg-white .text-gray-500,
+#echoes-chat [class*="bg-white rounded"] .text-gray-500,
+#echoes-chat [class*="bg-white border"] .text-gray-500 { color: #555555 !important; }
 
 
 /* 图标处理：发光青色 */
@@ -419,9 +427,21 @@ const OFFICIAL_SKINS = [
 #echoes-chat .bg-white\/50 { background: rgba(255,255,255,0.9) !important; }
 #echoes-chat .bg-white\/90 { background: rgba(13,22,29,0.85) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
 #echoes-chat [class*="bg-white"].rounded-2xl { background: rgba(13,22,29,0.92) !important; }
-/* 白色背景内文字加深 */
-#echoes-chat [class*="bg-white"] { color: #111827 !important; }
-#echoes-chat [class*="bg-white"] * { color: #111827 !important; }
+/* 白色背景内文字加深（排除 hover:bg-white 等变体） */
+#echoes-chat .bg-white,
+#echoes-chat .bg-white\/90,
+#echoes-chat [class*="bg-white rounded"],
+#echoes-chat [class*="bg-white border"],
+#echoes-chat [class*="bg-white shadow"],
+#echoes-chat [class*="bg-white p-"],
+#echoes-chat [class*="bg-white group"] { color: #111827 !important; }
+#echoes-chat .bg-white *,
+#echoes-chat .bg-white\/90 *,
+#echoes-chat [class*="bg-white rounded"] *,
+#echoes-chat [class*="bg-white border"] *,
+#echoes-chat [class*="bg-white shadow"] *,
+#echoes-chat [class*="bg-white p-"] *,
+#echoes-chat [class*="bg-white group"] * { color: #111827 !important; }
 
 /* 角色气泡保持白色背景（排除 rounded-tl-none/rounded-tr-none 的气泡） */
 #echoes-chat [class*="bg-white"][class*="rounded-tl-none"] { background: #ffffff !important; border-radius: 0 !important; }
