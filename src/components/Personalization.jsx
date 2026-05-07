@@ -318,14 +318,11 @@ const OFFICIAL_SKINS = [
 
 #echoes-chat .glass-card label { color: #64ffda !important; font-weight: bold; }
 #echoes-chat .glass-card p, #echoes-chat .glass-card span { color: #a0b2b1 !important; }
-/* 模态内标题：深色文字 */
-/* 模态标题保持默认样式 */
 
 /* 身份档案等模态标题：白底黑字 */
 #echoes-chat h3.text-gray-700,
 #echoes-chat [class*="bg-white"] h3,
 #echoes-chat [class*="bg-white"] h2 { color: #000000 !important; }
-
 
 /* 按钮 */
 #echoes-chat [class*="bg-black"], #echoes-chat button.bg-black {
@@ -345,29 +342,23 @@ const OFFICIAL_SKINS = [
  transform: scale(1.02);
 }
 
-/* 次要按钮/辅助背景 */
-
-
-[class*="bg-gray-800"], #echoes-chat [class*="bg-\[\#2C2C2C\]"] {
+/* 次要按钮/辅助背景 - 修复了原代码的拼写错误 */
+[class*="bg-gray-800"], #echoes-chat [class*="bg-[#2C2C2C]"] {
  background: #1a262f !important;
  border: 1px solid #fcee0a !important;
  color: #fcee0a !important;
 }
-#echoes-chat [class*="bg-\[\#2C2C2C\]"] svg { stroke: #fcee0a !important; }
-/* bg-[#2C2C2C]强制黄色-优先级高于[class*="bg-black"] */\
-#echoes-chat button[class*="bg-\[\#2C2C2C\]"],\
-#echoes-chat [class*="bg-\[\#2C2C2C\]"] button,\
-#echoes-chat [class*="bg-\[\#2C2C2C\]"] .text-white,\
-#echoes-chat [class*="bg-\[\#2C2C2C\]"] [class*="text-white"] { color: #fcee0a !important; }\
-/* bg-[#2C2C2C]子元素强制黄色 手机不可hover */
-#echoes-chat [class*="bg-\[\#2C2C2C\]"] * { color: #fcee0a !important; }
+
+#echoes-chat [class*="bg-[#2C2C2C]"] svg { stroke: #fcee0a !important; }
+/* bg-[#2C2C2C]强制黄色 */
+#echoes-chat [class*="bg-[#2C2C2C]"] * { color: #fcee0a !important; }
 
 /* 模型下拉框：深色底蓝字 */
 #echoes-chat select,
 #echoes-chat select option { color: #00f3ff !important; background: rgba(0,243,255,0.05) !important; border: 1px solid rgba(0,243,255,0.5) !important; }
 
 /* 输入框：极简科技感 */
-#echoes-chat input, #echoes-chat textarea, #echoes-chat [contenteditable] {
+#echoes-chat input, #echoes-chat textarea {
  background: rgba(0, 243, 255, 0.05) !important;
  color: #00f3ff !important;
  border: 1px solid rgba(0, 243, 255, 0.5) !important;
@@ -379,7 +370,7 @@ const OFFICIAL_SKINS = [
 
 /* 状态色修改 */
 #echoes-chat .bg-green-500 { background: #64ffda !important; color: #050a0e !important; }
-#echoes-chat .text-red-500 { color: #ff2a6d !important; text-shadow: 0 0 5px #ff2a6d; } /* 霓虹粉红警告色 */
+#echoes-chat .text-red-500 { color: #ff2a6d !important; text-shadow: 0 0 5px #ff2a6d; }
 
 /* 特效：扫描线 */
 #echoes-chat::after {
@@ -392,7 +383,7 @@ const OFFICIAL_SKINS = [
  z-index: 100;
 }
 
-/* 装饰性伪元素：增加UI细节（角落的坐标文字感） */
+/* 装饰性伪元素 */
 #echoes-chat .glass-panel::before {
  content: "SEC-PROTOCOL // 0042";
  position: absolute;
@@ -402,108 +393,45 @@ const OFFICIAL_SKINS = [
  color: rgba(0, 243, 255, 0.5);
 }
 
-/* 文字层级 - 赛博亮色系 */
-/* Forum 帖子标题：黑色+黄色左侧装饰条 */
+/* Forum 帖子样式 */
 #echoes-chat .bg-white .text-gray-900,
 #echoes-chat [class*="bg-white"] .text-gray-900 { color: #000000 !important; }
-#echoes-chat .bg-white h2.text-gray-900,
-#echoes-chat [class*="bg-white"] h2[class*="text-gray-900"] { color: #000000 !important; }
-#echoes-chat .bg-white h2,
-#echoes-chat [class*="bg-white"] h2 { color: #000000 !important; }
-/* 帖子卡片左侧黄色装饰条 */
-#echoes-chat [class*="bg-white"].rounded-xl,
-#echoes-chat [class*="bg-white"][class*="rounded-xl"] { border-left: 4px solid #fcee0a !important; }
+#echoes-chat [class*="bg-white"].rounded-xl { border-left: 4px solid #fcee0a !important; }
 
-/* text-[#1a1a1a] 在白色/dark背景各自使用默认色，仅在深色模态中覆盖 */
-/* 锁屏时间：保留默认色，深色背景通过父容器处理 */
-/* .lock-time uses default text-[#1a1a1a] which is near-black */
 /* 锁屏深色背景下时间亮色 */
 #echoes-chat > div > .lock-time,
 #echoes-chat .max-w-md .lock-time { color: #e0f2f1 !important; }
-/* 主界面白色/浅色模态中时间保持深色 */
 #echoes-chat [class*="bg-white"] .lock-time,
 #echoes-chat .glass-card .lock-time { color: #1a1a1a !important; }
 
-#echoes-chat .text-\[\#2C2C2C\] { color: #e0f2f1 !important; }
+#echoes-chat .text-[#2C2C2C] { color: #e0f2f1 !important; }
 #echoes-chat .text-gray-900 { color: #fcee0a !important; }
 #echoes-chat .text-gray-800 { color: #00f3ff !important; }
 #echoes-chat .text-gray-700 { color: #64ffda !important; }
 #echoes-chat .text-gray-600 { color: #a0b2b1 !important; }
 #echoes-chat .text-gray-500 { color: #a0b2b1 !important; }
-/* 身份档案标题：白底黑字（仅匹配实际 bg-white，不含 hover 变体） */
+
+/* 身份档案等背景色容器文字处理 */
 #echoes-chat .bg-white .text-gray-700,
-#echoes-chat .bg-white.text-gray-700,
-#echoes-chat [class*="bg-white rounded"] .text-gray-700,
-#echoes-chat [class*="bg-white border"] .text-gray-700 { color: #111827 !important; }
-#echoes-chat .bg-white .text-gray-800,
-#echoes-chat .bg-white.text-gray-800,
-#echoes-chat [class*="bg-white rounded"] .text-gray-800,
-#echoes-chat [class*="bg-white border"] .text-gray-800 { color: #000000 !important; }
-#echoes-chat .bg-white .text-gray-600,
-#echoes-chat [class*="bg-white rounded"] .text-gray-600,
-#echoes-chat [class*="bg-white border"] .text-gray-600 { color: #333333 !important; }
-#echoes-chat .bg-white .text-gray-500,
-#echoes-chat [class*="bg-white rounded"] .text-gray-500,
-#echoes-chat [class*="bg-white border"] .text-gray-500 { color: #555555 !important; }
+#echoes-chat [class*="bg-white rounded"] .text-gray-700 { color: #111827 !important; }
 
-
-/* 图标处理：发光青色 */
+/* 图标处理 */
 #echoes-chat svg { stroke: #00f3ff !important; filter: drop-shadow(0 0 2px #00f3ff); }
-/* Plus图标按钮内SVG用深色文字色，避免在青色背景上消失 */
-#echoes-chat button.bg-black svg, #echoes-chat [class*="bg-black"] button svg, #echoes-chat button[class*="bg-black"] svg { stroke: #050a0e !important; filter: none !important; }
+/* 修正：Plus图标等按钮内图标保持深色 */
+#echoes-chat button.bg-black svg, #echoes-chat [class*="bg-black"] button svg { stroke: #050a0e !important; filter: none !important; }
 
+/* 核心修正点：白色背景内文字加深（排除按钮） */
+#echoes-chat .bg-white :not(button):not(button *),
+#echoes-chat .bg-white\/90 :not(button):not(button *),
+#echoes-chat [class*="bg-white rounded"] :not(button):not(button *),
+#echoes-chat [class*="bg-white border"] :not(button):not(button *),
+#echoes-chat [class*="bg-white shadow"] :not(button):not(button *),
+#echoes-chat [class*="bg-white p-"] :not(button):not(button *),
+#echoes-chat [class*="bg-white group"] :not(button):not(button *) { color: #111827 !important; }
 
-/* 非按钮文字保持白色 */
-/* 通讯按钮：明亮色图标 */
-[data-app-link="通讯"] svg { stroke: #e0f2f1 !important; filter: none !important; }
-
-#echoes-chat :not(button)[class*="text-white"] { color: #e0f2f1 !important; }
-
-/* 弹窗保持半透明 */
-#echoes-chat .fixed.inset-0 { background: rgba(0,0,0,0.5) !important; }
-/* 状态/设置按钮：纯白背景 */
-#echoes-chat .bg-white\\/50 { background: rgba(255,255,255,0.9) !important; }
-#echoes-chat /* 登出弹窗确定按钮：亮色文字 */
-#echoes-chat .bg-white\/90 button.bg-black,
-#echoes-chat .fixed.inset-0 button.bg-black,
-#echoes-chat [class*="bg-white\/90"] button.bg-black { color: #fcee0a !important; }
-
-.bg-white\\/90 { background: rgba(13,22,29,0.85) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
-#echoes-chat [class*="bg-white"].rounded-2xl { background: rgba(13,22,29,0.92) !important; }
-/* 白色背景内文字加深（排除 hover:bg-white 等变体） */
-#echoes-chat .bg-white,
-#echoes-chat .bg-white\\/90,
-#echoes-chat [class*="bg-white rounded"],
-#echoes-chat [class*="bg-white border"],
-#echoes-chat [class*="bg-white shadow"],
-#echoes-chat [class*="bg-white p-"],
-#echoes-chat [class*="bg-white group"] { color: #111827 !important; }
-#echoes-chat .bg-white *,
-#echoes-chat .bg-white\\/90 *,
-#echoes-chat [class*="bg-white rounded"] *,
-#echoes-chat [class*="bg-white border"] *,
-#echoes-chat [class*="bg-white shadow"] *,
-#echoes-chat [class*="bg-white p-"] *,
-#echoes-chat [class*="bg-white group"] * { color: #111827 !important; }
-
-/* 角色气泡保持白色背景（排除 rounded-tl-none/rounded-tr-none 的气泡） */
-#echoes-chat [class*="bg-white"][class*="rounded-tl-none"] { background: #ffffff !important; border-radius: 0 !important; }
-#echoes-chat [class*="bg-white"][class*="rounded-tr-none"] { background: #ffffff !important; border-radius: 0 !important; }
-/* 角色气泡：白底配黑字 */
-#echoes-chat [class*="bg-white"][class*="rounded-tl-none"] { color: #000000 !important; }
-#echoes-chat [class*="bg-white"][class*="rounded-tl-none"] .text-gray-800 { color: #000000 !important; }
-
-
-#echoes-chat .bg-black\/50 { background: rgba(0,0,0,0.5) !important; }
-#echoes-chat .bg-black\/40 { background: rgba(0,0,0,0.4) !important; }
-
-/* 开关主题色 */
-#echoes-chat .bg-green-500 { background: #64ffda !important; color: #050a0e !important; }
-#echoes-chat .bg-gray-300 { background: #1a262f !important; }
-/* 按钮选中态白字 - 霓虹用亮色底深色字 */
-#echoes-chat button.bg-black { color: #050a0e !important; }
-#echoes-chat button.bg-black:hover { color: #000 !important; }
-#echoes-chat [class*="bg-black"][class*="text-white"] { color: #050a0e !important; }
+/* 角色气泡保持白色背景 */
+#echoes-chat [class*="bg-white"][class*="rounded-tl-none"] { background: #ffffff !important; color: #000000 !important; }
+#echoes-chat [class*="bg-white"][class*="rounded-tl-none"] * { color: #000000 !important; }
 `,
   },
   {
