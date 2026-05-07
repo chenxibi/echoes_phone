@@ -20,7 +20,7 @@ export function getUserId() {
 
 // ── API 调用 ───────────────────────────────
 
-const API_BASE = "https://echoes-server.PLACEHOLDER.workers.dev";
+const API_BASE = "https://echoes-server.bcx0216.workers.dev";
 
 async function api(path, options = {}) {
   const res = await fetch(`${API_BASE}${path}`, {
@@ -83,7 +83,7 @@ export async function registerPush(uid) {
 
   if (!subscription) {
     // VAPID public key 需要从后端获取, 暂时留空
-    const vapidPublicKey = "PLACEHOLDER_VAPID_KEY";
+    const vapidPublicKey = "BH5azEAVggc-ab33IZ_VCa0DDJmci-c0WRxc-0mubUnkD9yxpdWJNMF8S4wmClLO2Yj3tjwMGpbsZBi_6Dg_Osk";
     subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),

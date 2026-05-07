@@ -78,6 +78,9 @@ const SettingsPanel = ({
   handleBulkImport,
   customPrompt,
 
+  activeMsgEnabled,
+  setActiveMsgEnabled,
+
   // --- 字体参数 ---
   fontName, // 当前字体文件名
   handleResetFont, // 恢复默认函数
@@ -461,6 +464,28 @@ const SettingsPanel = ({
                     <div
                       className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${
                         realTimeEnabled ? "left-4" : "left-0.5"
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* 主动消息 */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase text-gray-500">
+                      主动消息
+                    </label>
+                    <span className="text-[9px] text-gray-400">AI 会偶尔发来消息，像朋友突然想起你</span>
+                  </div>
+                  <button
+                    onClick={() => setActiveMsgEnabled(!activeMsgEnabled)}
+                    className={`w-10 h-5 rounded-full relative transition-colors ${
+                      activeMsgEnabled ? "bg-[#7A2A3A]" : "bg-gray-300"
+                    }`}
+                  >
+                    <div
+                      className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${
+                        activeMsgEnabled ? "left-4" : "left-0.5"
                       }`}
                     />
                   </button>

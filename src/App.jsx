@@ -118,7 +118,11 @@ import {
   Calendar,
   FolderInput,
   ArrowRightToLine,
+  Bell,
+  BellOff,
 } from "lucide-react";
+import { getUserId, fetchActiveMessages, clearActiveMessages } from "./utils/activeMessages";
+import ActiveMessageToast from "./components/ActiveMessageToast";
 
 // --- helpers moved to ./utils/appHelpers.jsx ---
 import {
@@ -602,6 +606,40 @@ const App = () => {
     initNotification(setNotification);
   }, []);
   const [showEditPersona, setShowEditPersona] = useState(false);
+
+  // Active Messages
+  const [activeMsgEnabled, setActiveMsgEnabled, activeMsgEnabledLoaded] =
+    useStickyState(false, "echoes_active_msg_enabled");
+  const [activeMessages, setActiveMessages] = useState([]);
+  const [activeMsgToast, setActiveMsgToast] = useState(null);
+
+  useEffect(() => {
+    if (!activeMsgEnabled) return;
+    const uid = getUserId();
+    const poll = async () => {
+      try {
+        const data = await fetchActiveMessages(uid);
+        if (data?.messages?.length) {
+          setActiveMessages(data.messages);
+          const unread = data.messages.filter((m) => !m.read);
+          if (unread.length > 0) {
+            setActiveMsgToast({ ...unread[0], id: unread[0].id || Date.now() });
+          }
+        }
+      } catch (e) { /* 静默失败 */ }
+    };
+    poll();
+    const timer = setInterval(poll, 5 * 60 * 1000);
+    return () => clearInterval(timer);
+  }, [activeMsgEnabled]);
+
+  const handleDismissActiveMsg = () => setActiveMsgToast(null);
+  const handleReadActiveMsg = async (message) => {
+    setActiveMsgToast(null);
+    try { await clearActiveMessages(getUserId()); } catch (e) { /* ignore */ }
+    setActiveApp("chat");
+  };
+
   const [connectionStatus, setConnectionStatus] = useState("idle");
   const [availableModels, setAvailableModels] = useState([]);
   const [isFetchingModels, setIsFetchingModels] = useState(false);
@@ -3446,6 +3484,13 @@ Requirements:
       
       <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] bg-blue-100/30 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-orange-50/40 rounded-full blur-3xl pointer-events-none"></div>
+      {activeMsgToast && (
+        <ActiveMessageToast
+          message={activeMsgToast}
+          onDismiss={handleDismissActiveMsg}
+          onRead={handleReadActiveMsg}
+        />
+      )}
       {notification && (
         <div
           className={`absolute top-8 left-0 right-0 z-[100] flex justify-center toast-enter pointer-events-none`}
@@ -4930,6 +4975,8 @@ Requirements:
                 addStickerGroup={addStickerGroup}
                 deleteStickerGroup={deleteStickerGroup}
                 renameStickerGroup={renameStickerGroup}
+                activeMsgEnabled={activeMsgEnabled}
+                setActiveMsgEnabled={setActiveMsgEnabled}
               />
             </div>
           </AppWindow>
