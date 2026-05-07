@@ -1,0 +1,21 @@
+name = "echoes-server"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+[vars]
+# APNs/web-push keys (fill in later)
+VAPID_SUBJECT = "mailto:your@email.com"
+
+# 填入你的 VAPID key-pair (生成后填)
+# VAPID_PUBLIC_KEY = ""
+# VAPID_PRIVATE_KEY = ""
+
+# LLM API 配置
+# API_KEY = ""
+# API_BASE_URL = ""
+# API_MODEL = ""
+
+[[kv_namespaces]]
+binding = "ECHOES_KV"
+id = "PLACEHOLDER"
+preview_id = "PLACEHOLDER"

@@ -26,3 +26,5 @@ pnpm-debug.log*
 *.local
 .cowork-temp/
 .openclaw/
+echoes-server/node_modules/
+echoes-server/.wrangler/
