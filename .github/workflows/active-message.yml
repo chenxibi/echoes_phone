@@ -24,5 +24,6 @@ jobs:
           ECHOES_API_BASE: ${{ secrets.ECHOES_API_BASE }}
           ECHOES_API_KEY: ${{ secrets.ECHOES_API_KEY }}
           ECHOES_API_URL: ${{ secrets.ECHOES_API_URL }}
-          ECHOES_MODEL: ${{ secrets.ECHOES_MODEL }}
+          ECHOES_API_MODEL: ${{ secrets.ECHOES_API_MODEL }}
+          ECHOES_LLM_API_KEY: ${{ secrets.ECHOES_LLM_API_KEY }}
         run: node echoes-server/scripts/active-message.js

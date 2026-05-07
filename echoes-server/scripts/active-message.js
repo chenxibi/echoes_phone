@@ -5,15 +5,18 @@
  *
  * 需要环境变量:
  *   ECHOES_API_BASE=https://echoes-server.xxx.workers.dev
- *   ECHOES_API_KEY=your-llm-api-key
- *   ECHOES_API_URL=https://api.deepseek.com/v1/chat/completions
- *   ECHOES_MODEL=deepseek-chat
+ *   ECHOES_API_KEY=internal-api-key
+ *   ECHOES_LLM_API_KEY=sk-...
+ *   ECHOES_API_URL=https://api.deepseek.com
+ *   ECHOES_API_MODEL=deepseek-v4-flash
  */
 
 const ECHOES_API_BASE = process.env.ECHOES_API_BASE;
-const ECHOES_API_URL = process.env.ECHOES_API_URL;
 const ECHOES_API_KEY = process.env.ECHOES_API_KEY;
-const ECHOES_MODEL = process.env.ECHOES_MODEL || "deepseek-chat";
+const ECHOES_LLM_API_KEY = process.env.ECHOES_LLM_API_KEY;
+const ECHOES_API_URL = process.env.ECHOES_API_URL;
+const ECHOES_API_MODEL = process.env.ECHOES_API_MODEL || "deepseek-chat";
+const LLM_ENDPOINT = `${ECHOES_API_URL}/v1/chat/completions`;
 
 // 可配置参数
 const MAX_DAILY_MESSAGES = 3;
@@ -161,14 +164,14 @@ async function main() {
 
       console.log(`  ${uid}: generating...`);
 
-      const llmRes = await fetch(ECHOES_API_URL, {
+      const llmRes = await fetch(LLM_ENDPOINT, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${ECHOES_API_KEY}`,
+          Authorization: `Bearer ${ECHOES_LLM_API_KEY}`,
         },
         body: JSON.stringify({
-          model: ECHOES_MODEL,
+          model: ECHOES_API_MODEL,
           messages: [
             { role: "system", content: "你正在扮演一个角色，你的回复就是角色说的话，不需要任何前缀或修饰。" },
             { role: "user", content: prompt },
