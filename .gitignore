@@ -1,3 +1,28 @@
-node_modules
-dist
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Logs
+npm/
+yarn.log
+pnpm-debug.log*
+
+# Environment
 .env
+.env.local
+.env.*.local
+
+# Editor
+.DS_Store
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Misc
+*.local
+.cowork-temp/
+.openclaw/
