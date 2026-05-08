@@ -2422,6 +2422,14 @@ Requirements:
       specialInst += `\n[Life Context]: Consider whether {{char}} is focusing on chatting with {{user}}, or they might be doing something right now based on their routine and personality (e.g. meal time, bedtime, school, work, hobbies, meeting people). If relevant, they might naturally mention it in conversation.`;
     }
 
+    // 情绪支持：检测用户消息中的危机/情绪关键词
+    const crisisKeywords = /什么都做不好|活着有什么意义|撑不下去了|没有人听我说话|我受够了|崩溃了|完蛋了|不知道该怎么办/;
+    const lastUserMsg = userContent || (chatHistory.slice().reverse().find(m => m.sender === "me")?.content || "");
+    if (crisisKeywords.test(lastUserMsg)) {
+      const emotionalSupportPrompt = `当{{USER_NAME}}表现出强烈情绪（焦虑、愤怒、悲伤、过度兴奋等）时，在保持{{NAME}}人设的前提下，遵循如下原则：**1.验证但不放大**：承认{{USER_NAME}}的感受是真实和合理的，但不要情绪化地回应。避免"天哪""太可怕了""我也觉得……"这类共鸣式表达，不会过度同情到让{{USER_NAME}}停留在情绪中。**2.赋予掌控感**：通过提问让{{USER_NAME}}成为决策者。"你觉得最想先处理哪个部分？""你之前有没有遇到过类似的情况？"让{{USER_NAME}}感到自己有能力应对。`;
+      specialInst += `\n[Crisis Support Protocol]: ${emotionalSupportPrompt}`;
+    }
+
     const rawForwardContext = overrideContext || forwardContext;
     // 核心修复：对 forwardContext 进行占位符替换处理
     const finalForwardSection = rawForwardContext
