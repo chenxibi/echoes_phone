@@ -168,6 +168,35 @@ JSON:
   "thought": "Internal monologue...",
   "time": "HH:MM"
 }`,
+
+  smartwatch_offline_batch: `The user has been away for {{GAP_DURATION}}. Generate {{EXPECTED_COUNT}} surveillance log entries showing {{NAME}}'s daily life during the user's absence.
+
+Known Locations: {{LOCATIONS_LIST}} (Choose IDs from this list. You may move between locations naturally.)
+Last Known Status Before User Left: {{LAST_LOG}}
+Last Conversation Before User Left: {{HISTORY}}
+
+CRITICAL INSTRUCTIONS:
+1. **Time Span**: Cover roughly {{GAP_DURATION}} of {{NAME}}'s life. Events should be spread across the time span, not clustered.
+2. **Location Transitions**: {{LOCATION_RULE}}
+3. **Natural Life**: Show {{NAME}} doing real daily things — eating, sleeping, working, hobbies, thinking about {{USER_NAME}}, going out, interacting with the world. Make it feel like a real person living their life, not just waiting for the user to return.
+4. **Emotional Arc**: {{NAME}} may miss {{USER_NAME}} at times, but also has their own independent life, routines, and distractions. Show both.
+5. **AV Data**: For each entry, write a detailed 3rd-person objective description (50-100 words) of what a camera/microphone would capture.
+6. **Thought**: For each entry, {{NAME}}'s uncensored inner thought.
+7. **Chronological Order**: Entries MUST be in chronological order (earliest first).
+8. All content must be in Chinese.
+
+JSON ARRAY:
+[
+  {
+    "locationId": "id_from_list_or_null",
+    "locationName": "Name of current place",
+    "action": "Brief action summary",
+    "avData": "Detailed 3rd person descriptive text...",
+    "thought": "Internal monologue...",
+    "time": "HH:MM"
+  },
+  ...
+]`,
   browser: `Generate the browser search history for {{NAME}}.
 Context: {{HISTORY}}
 User: {{USER_NAME}}.

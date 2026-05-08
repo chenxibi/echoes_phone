@@ -679,6 +679,8 @@ const App = () => {
   const userAvatarInputRef = useRef(null);
   const stickerInputRef = useRef(null);
   const lastUserSendTimeRef = useRef(Date.now());
+  const [lastInteractionTime, setLastInteractionTime, lastInteractionTimeLoaded] =
+    useStickyState(Date.now(), "echoes_last_interaction");
   const skipNextGapNoticeRef = useRef(false);
   const [realTimeEnabled, setRealTimeEnabled, realTimeEnabledLoaded] = useStickyState(
     true,
@@ -1795,6 +1797,17 @@ const App = () => {
     };
     setPersona(localPersona);
     setIsLocked(false);
+
+    // 离线智能家检测
+    if (smartWatchLocations.length > 0 && realTimeEnabled && lastInteractionTimeLoaded) {
+      const gapMs = Date.now() - lastInteractionTime;
+      if (gapMs > 2 * 3600000) {
+        setLastInteractionTime(Date.now());
+        setTimeout(() => {
+          generateOfflineSmartWatchUpdates(gapMs);
+        }, 500);
+      }
+    }
   };
 
   const unlockDevice = async () => {
@@ -1838,6 +1851,18 @@ const App = () => {
       setPersona(localPersona);
       setIsLocked(false);
       showToast("success", "终端已解锁");
+
+      // 离线智能家检测：三个条件都满足时自动生成角色离线生活轨迹
+      if (smartWatchLocations.length > 0 && realTimeEnabled && lastInteractionTimeLoaded) {
+        const gapMs = Date.now() - lastInteractionTime;
+        const twoHours = 2 * 3600000;
+        if (gapMs > twoHours) {
+          setLastInteractionTime(Date.now()); // 重置，避免重复触发
+          setTimeout(() => {
+            generateOfflineSmartWatchUpdates(gapMs);
+          }, 500);
+        }
+      }
 
       // 注意：已移除自动生成音乐的逻辑
     } catch (e) {
@@ -2217,11 +2242,13 @@ Requirements:
     if (skipNextGapNoticeRef.current) {
       skipNextGapNoticeRef.current = false;
       lastUserSendTimeRef.current = Date.now();
+      setLastInteractionTime(Date.now());
     }
 
     setChatHistory((prev) => [...prev, newMsg]);
     setChatInput("");
     lastUserSendTimeRef.current = Date.now();
+    setLastInteractionTime(Date.now());
     setMsgCountSinceSummary((prev) => prev + 1);
     setShowUserStickerPanel(false);
   };
@@ -2594,6 +2621,7 @@ Requirements:
 
           setIsTyping(false);
           setMessageQueue(finalizedMsgs);
+          setLastInteractionTime(Date.now());
 
           // 惊喜逻辑：概率触发发帖
           if (forumData.isInitialized && Math.random() < 0.3) {
@@ -3112,6 +3140,99 @@ Requirements:
         setSmartWatchLogs((prev) => [newLog, ...prev]);
         showToast("success", "行踪已更新");
       }
+    } finally {
+      setLoading((prev) => ({ ...prev, sw_update: false }));
+    }
+  };
+
+  // --- 离线批量生成智能家日志 ---
+  const generateOfflineSmartWatchUpdates = async (gapMs) => {
+    if (!persona || smartWatchLocations.length === 0) return;
+    setLoading((prev) => ({ ...prev, sw_update: true }));
+
+    try {
+      const gapH = Math.floor(gapMs / 3600000);
+      const gapM = Math.floor((gapMs % 3600000) / 60000);
+      const gapDesc = gapH > 0 ? `${gapH}小时${gapM > 0 ? gapM + "分钟" : ""}` : `${gapM}分钟`;
+
+      // 根据离开时长决定生成条数
+      let expectedCount;
+      if (gapMs < 12 * 3600000) {
+        expectedCount = Math.floor(Math.random() * 2) + 1; // 1-2
+      } else if (gapMs < 24 * 3600000) {
+        expectedCount = Math.floor(Math.random() * 3) + 2; // 2-4
+      } else {
+        expectedCount = Math.floor(Math.random() * 7) + 4; // 4-10
+      }
+
+      // 根据离开时长决定场景切换规则
+      let locationRule;
+      if (gapMs < 12 * 3600000) {
+        locationRule = "May stay in one location or move between 1-2 locations.";
+      } else if (gapMs < 24 * 3600000) {
+        locationRule = "Very likely to visit 2-3 different locations across the time span.";
+      } else {
+        locationRule = "Must visit 3+ different locations. Show a complete daily cycle (wake → activities → sleep).";
+      }
+
+      const effectiveUserName = userName || "User";
+      const cleanCharDesc = replacePlaceholders(inputKey, persona.name, effectiveUserName);
+      const cleanWorldInfo = replacePlaceholders(getWorldInfoString(worldBook), persona.name, effectiveUserName);
+
+      const systemPrompt = prompts.system
+        .replaceAll("{{NAME}}", persona.name)
+        .replaceAll("{{CHAR_DESCRIPTION}}", cleanCharDesc + "\n" + charTrackerContext)
+        .replaceAll("{{USER_PERSONA}}", userPersona + "\n" + trackerContext)
+        .replaceAll("{{USER_NAME}}", effectiveUserName)
+        .replaceAll("{{CUSTOM_RULES}}", customRules)
+        .replaceAll("{{WORLD_INFO}}", cleanWorldInfo)
+        .replaceAll("{{LONG_MEMORY}}", longMemory || "None");
+
+      const locList = smartWatchLocations.map((l) => `ID: ${l.id}, Name: ${l.name}`).join("\n");
+      const lastLog = smartWatchLogs.length > 0 ? JSON.stringify(smartWatchLogs[0]) : "None";
+
+      const prompt = prompts.smartwatch_offline_batch
+        .replaceAll("{{NAME}}", persona.name)
+        .replaceAll("{{USER_NAME}}", effectiveUserName)
+        .replaceAll("{{GAP_DURATION}}", gapDesc)
+        .replaceAll("{{EXPECTED_COUNT}}", expectedCount.toString())
+        .replaceAll("{{LOCATION_RULE}}", locationRule)
+        .replaceAll("{{LOCATIONS_LIST}}", locList)
+        .replaceAll("{{LAST_LOG}}", lastLog)
+        .replaceAll("{{HISTORY}}", getContextString(chatHistory, effectiveUserName, null, null, 5));
+
+      const data = await generateContent(
+        { prompt, systemInstruction: systemPrompt, isJson: true },
+        apiConfig,
+        (err) => showToast("error", err),
+      );
+
+      if (data && Array.isArray(data) && data.length > 0) {
+        const newLogs = data.map((item, i) => {
+          let fixedItem = item;
+          try {
+            let jsonString = JSON.stringify(item);
+            jsonString = jsonString.replaceAll("{{USER_NAME}}", effectiveUserName).replaceAll("{{user}}", effectiveUserName);
+            fixedItem = JSON.parse(jsonString);
+          } catch (e) { /* keep original */ }
+
+          return {
+            id: Date.now() - (data.length - 1 - i), // 保证按时间顺序排列，最新的 id 最大
+            timestamp: getCurrentTimeObj().toLocaleString(),
+            displayTime: formatTime(getCurrentTimeObj()),
+            locationId: fixedItem.locationId,
+            locationName: fixedItem.locationName,
+            action: fixedItem.action,
+            avData: fixedItem.avData,
+            thought: fixedItem.thought,
+          };
+        });
+
+        setSmartWatchLogs((prev) => [...newLogs, ...prev]);
+        showToast("success", `在你离开期间，智能家有 ${newLogs.length} 条新活动`);
+      }
+    } catch (e) {
+      console.error("Offline smartwatch update failed:", e);
     } finally {
       setLoading((prev) => ({ ...prev, sw_update: false }));
     }

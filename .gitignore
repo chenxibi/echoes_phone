@@ -56,4 +56,4 @@ features-design-principles-mapping.md
 user-study-design.md
 
 # Assets - keep only what's in public/
-assets/
+assets/.github/workflows/*.bak
