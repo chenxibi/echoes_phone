@@ -1038,16 +1038,15 @@ JSON:
   "avData": "Detailed 3rd person descriptive text...",
   "thought": "Internal monologue...",
   "time": "HH:MM"
-}`,smartwatch_offline_batch:`The user left after the last conversation shown below. Generate {{EXPECTED_COUNT}} surveillance log entries showing {{NAME}}'s daily life AFTER the user left (i.e., events happen in the {{GAP_DURATION}} between the last chat and now).
+}`,smartwatch_offline_batch:`{{USER_NAME}} left or has not replied after the last conversation shown below. Generate {{EXPECTED_COUNT}} surveillance log entries showing {{NAME}}'s daily life when {{USER_NAME}} is not present (i.e., events happen in the {{GAP_DURATION}} between the last chat and now).
 
 Known Locations: {{LOCATIONS_LIST}} (Choose IDs from this list. You may move between locations naturally.)
 Last Known Status Before User Left: {{LAST_LOG}}
 Last Conversation Before User Left (happened JUST BEFORE {{NAME}} began these activities): {{HISTORY}}
 
 CRITICAL INSTRUCTIONS:
-1. **Time Span**: All events happen AFTER the last conversation and cover roughly {{GAP_DURATION}}. Earliest entry is right after user left, latest entry is just before now.
-2. **NO FUTURE KNOWLEDGE**: The last conversation happened BEFORE all these events. {{NAME}} cannot reference the conversation content as if it already knows it — because these events are happening in {{NAME}}'s timeline while the user is gone. {{NAME}} may think about the user or their relationship in general, but must NOT reference specific things the user said in the last conversation unless those are things {{NAME}} would naturally reflect on later.
-3. **Location Transitions**: {{LOCATION_RULE}}
+1. **Time Span**: All events happen AFTER the last conversation and cover roughly {{GAP_DURATION}}. Earliest entry is right after user left.
+2. **Location Transitions**: {{LOCATION_RULE}}
 4. **Natural Life**: Show {{NAME}} doing real daily things — eating, sleeping, working, hobbies, thinking about {{USER_NAME}}, going out, interacting with the world. Make it feel like a real person living their life, not just waiting for the user to return.
 5. **Emotional Arc**: {{NAME}} may miss {{USER_NAME}} at times, but also has their own independent life, routines, and distractions. Show both.
 6. **AV Data**: For each entry, write a detailed 3rd-person objective description (50-100 words) of what a camera/microphone would capture.
