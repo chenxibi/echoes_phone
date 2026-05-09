@@ -3228,6 +3228,7 @@ Requirements:
       );
 
       if (data && Array.isArray(data) && data.length > 0) {
+        const now = new Date();
         const newLogs = data.map((item, i) => {
           let fixedItem = item;
           try {
@@ -3236,10 +3237,22 @@ Requirements:
             fixedItem = JSON.parse(jsonString);
           } catch (e) { /* keep original */ }
 
+          // 反向推算时间戳：LLM 返回的 "time" 字段（HH:MM）代表角色在离开期间某个时刻
+          // 最早的事件对应现在 - gapMs，最晚的事件接近现在
+          const frac = data.length > 1 ? i / (data.length - 1) : 1; // 0(最早) → 1(最晚)
+          const eventMs = now.getTime() - gapMs + frac * gapMs;
+          const eventDate = new Date(eventMs);
+          // 用 LLM 返回的 HH:MM 修正时分
+          const llmTime = fixedItem.time || (fixedItem.locationName && item.time) || item.time;
+          if (llmTime && /^(\d{1,2}):(\d{2})$/.test(llmTime.trim())) {
+            const [h, m] = llmTime.trim().split(":").map(Number);
+            eventDate.setHours(h, m, 0, 0);
+          }
+
           return {
-            id: Date.now() - (data.length - 1 - i), // 保证按时间顺序排列，最新的 id 最大
-            timestamp: getCurrentTimeObj().toLocaleString(),
-            displayTime: formatTime(getCurrentTimeObj()),
+            id: now.getTime() - (data.length - 1 - i), // 保证按时间顺序排列，最新的 id 最大
+            timestamp: eventDate.toLocaleString(),
+            displayTime: formatTime(eventDate),
             locationId: fixedItem.locationId,
             locationName: fixedItem.locationName,
             action: fixedItem.action,
@@ -3248,6 +3261,8 @@ Requirements:
           };
         });
 
+        // prompt 要求 LLM 返回最早→最晚，reverse 后 prepend 让最新在最前面
+        newLogs.reverse();
         setSmartWatchLogs((prev) => [...newLogs, ...prev]);
         showToast("success", `在你离开期间，智能家有 ${newLogs.length} 条新活动`);
       }
