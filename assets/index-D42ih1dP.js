@@ -1326,15 +1326,15 @@ Existing Char Facts: {{CHAR_FACTS}}
 
 ### RULES:
 1. **Target Identification**: 
-   - Extract **User Facts** ONLY when {{USER_NAME}} reveals something about themselves.
-   - Extract **Char Facts** ONLY when {{NAME}} reveals a specific habit, past, or preference about THEMSELVES.
+   - Extract **User Facts** ONLY when {{USER_NAME}} reveals absolute facts about themselves.
+   - Extract **Char Facts** ONLY when {{NAME}} reveals a specific habit, past, or absolute fact about THEMSELVES.
 2. **EXTREME FILTERING (CRITICAL)**: 
-   - **Ignore** trivial chit-chat, temporary moods, or context-dependent reactions (e.g. "ate an apple today", "is happy now", "will smile when feeling happy", "will dress formal when attending a meeting").
+   - **You MUST NOT archive** trivial chit-chat, temporary moods, or context-dependent reactions (e.g. "ate an apple today", "is happy now", "will smile when feeling happy", "will feel happy when called a good boy").
    - **Keep** ONLY deep, permanent attributes (e.g. "Allergic to seafood", "Childhood trauma", "Occupation").
-   - If the info is not significant enough to be remembered for a month, STRICTLY DO NOT record it.
+   - If the info is not significant enough to be remembered for a year, STRICTLY DO NOT record it.
 3. **QUANTITY LIMIT**:
    - **Maximum 2 new fact** per category per update. If there are multiple, pick the most significant ones.
-   - It is perfectly fine (and preferred) to return EMPTY arrays if no major info is revealed.
+   - If no major info is revealed, you MUST return EMPTY arrays.
 
 ### FORMAT
 - **Content**: Concise, objective truth (< 15 chars).
