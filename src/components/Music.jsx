@@ -156,6 +156,7 @@ const MusicApp = ({
   useStickyState,
   showToast,
   audioRef,
+  apiConfig,
 }) => {
   const [musicTab, setMusicTab] = useState("together");
   const [playlistName, setPlaylistName] = useStickyState(
@@ -435,13 +436,20 @@ const MusicApp = ({
                   )}
                 </button>
                 <button
+                  disabled={playlistTracks.length === 0 || !apiConfig?.baseUrl || !apiConfig?.key}
                   onClick={() => {
+                    if (playlistTracks.length === 0) { showToast("error", "歌单为空，请先添加音乐"); return; }
+                    if (!apiConfig?.baseUrl || !apiConfig?.key) { showToast("error", "未配置 API 信息，请在设置中输入 Base URL 和 Key"); return; }
                     isPlaying
                       ? audioRef.current.pause()
                       : audioRef.current.play();
                     setIsPlaying(!isPlaying);
                   }}
-                  className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center shadow-lg transition-all"
+                  className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all ${
+                    playlistTracks.length === 0 || !apiConfig?.baseUrl || !apiConfig?.key
+                      ? "bg-gray-300 text-gray-400 cursor-not-allowed"
+                      : "bg-black text-white"
+                  }`}
                 >
                   {isPlaying ? (
                     <Pause size={20} fill="white" />

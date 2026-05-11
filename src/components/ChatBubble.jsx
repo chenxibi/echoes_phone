@@ -45,6 +45,7 @@ const ChatBubble = ({
   const isTransfer = msg.isTransfer;
   const isVoice = msg.isVoice;
   const isLocation = msg.isLocation;
+  const isDice = msg.isDice;
   const isForward = msg.isForward;
   const isSticker = msg.sticker || msg.stickerId;
   const isRealImage = msg.isImage && msg.imageKey;
@@ -184,6 +185,16 @@ const ChatBubble = ({
           <LocationBubble name={msg.location?.name || "地点"} address={msg.location?.address || ""} />
         )}
 
+        {/* Dice */}
+        {isDice && !isTransfer && (
+          <div className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl ${
+            isMe ? "bg-[#7A2A3A] text-white" : "bg-white border border-gray-200 text-gray-800"
+          }`}>
+            <span className="text-2xl">🎲</span>
+            <span className="text-lg font-bold">{msg.dice?.result || "?"}</span>
+          </div>
+        )}
+
         {/* Real Image */}
         {isRealImage && !isTransfer && (
           <div
@@ -252,7 +263,7 @@ const ChatBubble = ({
         )}
 
         {/* Regular Text Bubble */}
-        {!isTransfer && !stickerUrl && !isVoice && !isLocation && !isForward && !isRealImage && !msg.text?.startsWith("[图片]") && (
+        {!isTransfer && !stickerUrl && !isVoice && !isLocation && !isDice && !isForward && !isRealImage && !msg.text?.startsWith("[图片]") && (
           <div
             className={`
               px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap select-text

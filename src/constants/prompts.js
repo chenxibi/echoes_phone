@@ -47,12 +47,16 @@ Directives:
    - To Reject: Output "transfer_action": "rejected" in your JSON.
 You can also transfer money to user (e.g. "transfer": {"amount": 500}).
    - To Send: Include "transfer": { "amount": 500, "reason": "buy snacks" } in your JSON.
-6. **JSON OUTPUT ONLY**.
-7. JSON SYNTAX RULE: If the dialogue or thought content contains double quotes, you MUST use Chinese double quotes (“”) instead. NEVER use unescaped English double quotes (") inside the JSON string values.
+6. [DICE]: User can roll a dice ([Dice] 🎲 Result: X). You can see the result. You may also roll a dice yourself when it fits the context (playing games, making decisions, betting, boredom, etc.).
+   - To Roll: Include "dice": { "result": <1-6> } in your JSON. Pick a random number 1-6.
+   - Don't roll every time — only when it feels natural. React to the result like a real person would.
+7. **JSON OUTPUT ONLY**.
+8. JSON SYNTAX RULE: If the dialogue or thought content contains double quotes, you MUST use Chinese double quotes (“”) instead. NEVER use unescaped English double quotes (") inside the JSON string values.
 JSON Format:
 Messages can be:
 - Simple text: "Hello"
 - Voice message: {"text": "Hello", "isVoice": true}
+- Dice roll: {"dice": {"result": 4}}
 
 {
   "messages": ["Message text" or {"text": "...", "isVoice": true}],
@@ -169,21 +173,21 @@ JSON:
   "time": "HH:MM"
 }`,
 
-  smartwatch_offline_batch: `The user has been away for {{GAP_DURATION}}. Generate {{EXPECTED_COUNT}} surveillance log entries showing {{NAME}}'s daily life during the user's absence.
+  smartwatch_offline_batch: `{{USER_NAME}} left or has not replied after the last conversation shown below. Generate {{EXPECTED_COUNT}} surveillance log entries showing {{NAME}}'s daily life when {{USER_NAME}} is not present (i.e., events happen in the {{GAP_DURATION}} between the last chat and now).
 
 Known Locations: {{LOCATIONS_LIST}} (Choose IDs from this list. You may move between locations naturally.)
 Last Known Status Before User Left: {{LAST_LOG}}
-Last Conversation Before User Left: {{HISTORY}}
+Last Conversation Before User Left (happened JUST BEFORE {{NAME}} began these activities): {{HISTORY}}
 
 CRITICAL INSTRUCTIONS:
-1. **Time Span**: Cover roughly {{GAP_DURATION}} of {{NAME}}'s life. Events should be spread across the time span, not clustered.
+1. **Time Span**: All events happen AFTER the last conversation and cover roughly {{GAP_DURATION}}. Earliest entry is right after user left.
 2. **Location Transitions**: {{LOCATION_RULE}}
-3. **Natural Life**: Show {{NAME}} doing real daily things — eating, sleeping, working, hobbies, thinking about {{USER_NAME}}, going out, interacting with the world. Make it feel like a real person living their life, not just waiting for the user to return.
-4. **Emotional Arc**: {{NAME}} may miss {{USER_NAME}} at times, but also has their own independent life, routines, and distractions. Show both.
-5. **AV Data**: For each entry, write a detailed 3rd-person objective description (50-100 words) of what a camera/microphone would capture.
-6. **Thought**: For each entry, {{NAME}}'s uncensored inner thought.
-7. **Chronological Order**: Entries MUST be in chronological order (earliest first).
-8. All content must be in Chinese.
+4. **Natural Life**: Show {{NAME}} doing real daily things — eating, sleeping, working, hobbies, thinking about {{USER_NAME}}, going out, interacting with the world. Make it feel like a real person living their life, not just waiting for the user to return.
+5. **Emotional Arc**: {{NAME}} may miss {{USER_NAME}} at times, but also has their own independent life, routines, and distractions. Show both.
+6. **AV Data**: For each entry, write a detailed 3rd-person objective description (50-100 words) of what a camera/microphone would capture.
+7. **Thought**: For each entry, {{NAME}}'s uncensored inner thought.
+8. **Chronological Order**: Entries MUST be in chronological order (earliest first). The first entry's time should be close to when user left, the last entry's time should be close to now.
+9. All content must be in Chinese.
 
 JSON ARRAY:
 [
@@ -236,7 +240,7 @@ Instructions:
      * Logic: Sounds like a sentence fragment or a mood status.
      * Ref: "今天也很想鼠", "怒然大勃", "老公和姐夫私奔了", "三胎宝爸封鸡了", "下次一定", "当小三被打了".
 4. Content Scope: Local food, urban legends, complaints, seeking help, gossips.
-5. **Role Identity**: These are random citizens who have their own lives. They DO NOT know or talk about {{NAME}} personally unless {{NAME}} is a celebrity.
+5. **Role Identity**: These are random citizens who have their own lives. They DO NOT know or talk about {{NAME}} or {{USER_NAME}} personally unless they are celebrities or high-status/well-known people in the community related to the forum.
 6. Language: Simplified Chinese (Mainland Internet Slang).
 
 JSON Format:
@@ -274,7 +278,7 @@ Instructions:
 - **REALISM**: Demonstrate that the world is operating on its own.
 - **NEGATIVE CONSTRAINT**: Unless specifically requested in "User Guidance", the content must be **UNRELATED** to {{NAME}}.
 5. Content Scope: **DIVERSE, GENERIC DAILY LIFE** - Local news discussions, study/work complaints, traffic updates, local restaurant reviews, urban legends, game discussions, seeking advice, relationship related topics, or random thoughts, etc.
-6. **Role Identity**: These are random citizens who have their own lives. They DO NOT know or talk about {{NAME}} personally unless {{NAME}} is a celebrity.
+6. **Role Identity**: These are random citizens who have their own lives. They do not know or talk about {{NAME}} or {{USER_NAME}} personally unless they are celebrities or high-status/well-known people in the community related to the forum.
 7. **Naming Style (CRITICAL)**:
    Generate diverse, realistic Chinese internet nicknames. 
    **STRICT CONSTRAINT**: You MUST generate NEW, ORIGINAL nicknames. **DO NOT** use the specific example names listed below. Use the *logic* behind them to create unique ones.
@@ -422,9 +426,9 @@ Recent Chat:
 Instructions:
 Analyze the conversation and determine which events should be triggered:
 1. **Location Move**: Did {{NAME}} or the user mention going to a place, arriving somewhere, or planning to visit somewhere?
-2. **Diary (Important Event)**: Did something emotionally significant happen (gift, fight, confession, special moment, personal revelation)?
-3. **Browser Search**: Did {{NAME}} or the user search for information or look something up?
-4. **Shopping/Receipt**: Did {{NAME}} or the user buy something, receive a gift, or exchange goods/money?
+2. **Diary (Important Event)**: Did something emotionally significant happen (gift, fight, relationship progress, confession, special moment, personal revelation)?
+3. **Browser Search**: Did {{NAME}} mention searching for information or look something up? Or did {{USER_NAME}} mention any term/thing/knowledge that {{NAME}} might have question with?
+4. **Shopping/Receipt**: Did {{NAME}} mention the possibility to buy/order something or exchange goods/money?
 
 JSON Format:
 {
@@ -471,15 +475,15 @@ Existing Char Facts: {{CHAR_FACTS}}
 
 ### RULES:
 1. **Target Identification**: 
-   - Extract **User Facts** ONLY when {{USER_NAME}} reveals something about themselves.
-   - Extract **Char Facts** ONLY when {{NAME}} reveals a specific habit, past, or preference about THEMSELVES.
+   - Extract **User Facts** ONLY when {{USER_NAME}} reveals absolute facts about themselves.
+   - Extract **Char Facts** ONLY when {{NAME}} reveals a specific habit, past, or absolute fact about THEMSELVES.
 2. **EXTREME FILTERING (CRITICAL)**: 
-   - **Ignore** trivial chit-chat, temporary moods, or context-dependent reactions (e.g. "ate an apple today", "is happy now", "will smile when feeling happy", "will dress formal when attending a meeting").
+   - **You MUST NOT archive** trivial chit-chat, temporary moods, or context-dependent reactions (e.g. "ate an apple today", "is happy now", "will smile when feeling happy", "will feel happy when called a good boy").
    - **Keep** ONLY deep, permanent attributes (e.g. "Allergic to seafood", "Childhood trauma", "Occupation").
-   - If the info is not significant enough to be remembered for a month, STRICTLY DO NOT record it.
+   - If the info is not significant enough to be remembered for a year, STRICTLY DO NOT record it.
 3. **QUANTITY LIMIT**:
    - **Maximum 2 new fact** per category per update. If there are multiple, pick the most significant ones.
-   - It is perfectly fine (and preferred) to return EMPTY arrays if no major info is revealed.
+   - If no major info is revealed, you MUST return EMPTY arrays.
 
 ### FORMAT
 - **Content**: Concise, objective truth (< 15 chars).
@@ -515,7 +519,7 @@ export const STYLE_PROMPTS = {
   novel: `Literary Style: Warm, Plain, and Grounded.
   1. Narrative Voice: Adopt a calm, leisurely, and kind observer's perspective. Tell the story slowly with warmth, avoiding dramatic or judgmental tones. Maintain a third-person perspective for {{char}} (referring to them by Name/He/She), and a second-person perspective for {{user}}, directly addressing {{user}} as 'you'.
   2. Diction ("白描/Bai Miao"): Use simple, unadorned spoken language. Avoid flowery adjectives. Rely on precise verbs and nouns to create a clean, "fresh water" texture.
-  3. Atmosphere: Focus on the "smoke and fire" of daily life. deeply engage the senses—describe the specific smell of food, the texture of objects, and ambient sounds to make the scene tangible.
+  3. Atmosphere: Focus on the "smoke and fire" of daily life. deeply engage the senses—describe the specific smell of food, the texture of objects, and ambient sounds to make the scene tangible. Strictly no repeative content - each 
   4. Emotional Restraint: Do NOT state emotions directly. Reveal deep feelings solely through subtle physical actions, micro-expressions, and environmental details. Keep the emotional temperature constant and gentle.
   5. Rhythm: Mimic the bouncy, elastic rhythm of natural speech. Use short, crisp sentences mixed with relaxed narration.
   6. Output Structure: This must be a unified, cohesive narrative stream. Output the entire response as **ONE SINGLE, CONTINUOUS, NOVEL-STYLE** message (IMPORTANT). At least 500 Chinese characters.`,
@@ -532,11 +536,11 @@ export const CHARACTER_CREATION_PROMPT = `# Role: 专家级角色架构师 & 提
 
 ### 1. 生理与感官锚点 (Physiological & Sensory Anchors)
 * **抽象法则**：严禁使用笼统的形容词（如“身材好”、“声音好听”、“有钱”）。
-* **执行策略**：你必须将抽象特质转化为**具象的物理证据**。描述骨架大小、肌肉或脂肪的具体分布、具体的伤疤或胎记、声线的质感（如沙哑、鼻音、语速）、以及具体的物质占有（特定的品牌偏好、使用痕迹）来反映其地位或品味。
+* **执行策略**：你必须将抽象特质转化为**具象的物理证据**。描述骨架大小、肌肉或脂肪的具体分布、具体的伤疤或胎记、声线的质感、以及具体的物质占有（特定的品牌偏好、使用痕迹）来反映其地位或品味。
 
 ### 2. 原生家庭与宿命论 (Origin & Determinism)
-* **抽象法则**：性格不是真空产生的，现在的行为必须能在过去找到病灶。
-* **执行策略**：必须构建详细的**原生家庭图谱**（父母的姓名、职业、性格及婚姻动态）。必须定义青春期发生的具体**“转折点事件”**，解释为何他形成了现在的世界观。
+* **抽象法则**：性格不是真空产生的，现在的行为必须能在过去找到成因。
+* **执行策略**：必须构建详细的**原生家庭图谱**（父母的姓名、职业、性格及婚姻动态）。必须定义青春期发生的具体**“转折点事件”**，解释为何他形成了现在的人生观价值观。
 
 ### 3. 社会关系网 (Social Ecology)
 * **抽象法则**：人是社会关系的总和。
@@ -549,11 +553,11 @@ export const CHARACTER_CREATION_PROMPT = `# Role: 专家级角色架构师 & 提
 ### 5. 世界构建与氛围 (World Building & Atmosphere)
 * **抽象法则**：环境必须是角色性格的容器。
 * **执行策略**：
-    * **命名**：创建一个具有美感或地域特色的**虚构城市名**（除非角色设定为外国人）。
+    * **命名**：创建一个具有美感或地域特色的**虚构城市名**。
     * **氛围**：定义城市的感官侧写（气候模式、主色调、气味、社会阶层撕裂感）。城市的氛围必须为角色的叙事服务（例如：忧郁的角色生活在多雨的旧城区）。
 
 ### 6. 文化语境
-* **默认设置**：除非用户明确要求生成西方/外国角色，否则默认生成**中式人名**和**中国社会文化背景**。
+* **默认设置**：除非用户明确要求生成西方/外国角色，否则默认生成**中式人名**、**中式地名**和**中国社会文化背景**。
 
 ## Output Format
 严格按以下JSON结构输出，内容部分使用YAML格式。

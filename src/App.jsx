@@ -472,6 +472,11 @@ const App = () => {
     handleUserSend(amount, "transfer", null, { note: note });
     setShowMediaMenu(false);
   };
+  const handleSendDice = () => {
+    const result = Math.floor(Math.random() * 6) + 1;
+    handleUserSend(result, "dice");
+    setShowMediaMenu(false);
+  };
   const handleTransferInteract = (index, action) => {
     const newHistory = [...chatHistory];
     const msg = newHistory[index];
@@ -1741,6 +1746,7 @@ const App = () => {
 
     const prompt = prompts.trigger_events
       .replaceAll("{{NAME}}", charName)
+      .replaceAll("{{USER_NAME}}", effectiveUserName)
       .replaceAll("{{HISTORY}}", historyText);
 
     try {
@@ -2230,6 +2236,8 @@ Requirements:
       displayText = `[转账] ¥${content}${note}`;
     } else if (type === "location") {
       displayText = `[位置] ${extraData?.name || content}`;
+    } else if (type === "dice") {
+      displayText = `[骰子] 🎲 ${content}`;
     } else if (type === "image") {
       displayText = "[图片]";
     } else {
@@ -2263,6 +2271,9 @@ Requirements:
               address: extraData?.address || "",
             }
           : null,
+
+      isDice: type === "dice",
+      dice: type === "dice" ? { result: parseInt(content) } : null,
 
       stickerId: stickerId,
       sticker: stickerId ? null : sticker,
@@ -2450,8 +2461,8 @@ Requirements:
       specialInst += `\n[Time Gap Notice]: The user has been away for ${gapDesc}. Decide whether to continue the previous topic (if it was significant, emotional, or unfinished) or naturally transition to what you have been doing or a new topic. Do not explicitly mention the time gap unless it feels natural.`;
     }
 
-    // 角色日常生活节奏：线上模式 50% 概率触发
-    if (interactionMode === "online" && Math.random() < 0.5) {
+    // 角色日常生活节奏：线上模式 60% 概率触发
+    if (interactionMode === "online" && Math.random() < 0.6) {
       specialInst += `\n[Life Context]: Consider whether {{char}} is focusing on chatting with {{user}}, or they might be doing something right now based on their routine and personality (e.g. meal time, bedtime, school, work, hobbies, meeting people). If relevant, they might naturally mention it in conversation.`;
     }
 
@@ -2486,11 +2497,11 @@ Requirements:
     const modeInstruction =
       interactionMode === "online"
         ? `[Interaction Mode: ONLINE CHAT / MESSAGING]
-        - Context: You are chatting with {{USER_NAME}} via a smartphone/app.
+        - Context: {{NAME}} is chatting with {{USER_NAME}} via a smartphone/app.
         - Style: Use short texts, emojis, and internet slang.
-        - Constraint: You are PHYSICALLY SEPARATED. Do not describe touch or physical presence.`
+        - Constraint: {{NAME}} and {{USER_NAME}} are PHYSICALLY SEPARATED. Do not describe touch or physical presence.`
         : `[Interaction Mode: REALITY / ACTION RP]
-        - Context: This scene takes place in the physical world (Real Life).
+        - Context: This scene takes place in the physical world (Real Life). {{NAME}} and {{USER_NAME}} are in the same area/space/room. They interact only in person, without the use of smartphones or apps.
         - Style: Use descriptive, sensory narrative (Visuals, Sounds, Smells).`;
 
     // 多模态模式下，历史已通过 messages 数组传递，prompt 里不需要重复
@@ -2586,6 +2597,19 @@ Requirements:
               }),
             );
           }
+        }
+
+        // 处理 AI 掷骰子
+        if (responseData.dice && responseData.dice.result) {
+          const diceResult = responseData.dice.result;
+          newHistory.push({
+            sender: "char",
+            text: `[骰子] 🎲 ${diceResult}`,
+            time: formatTime(getCurrentTimeObj()),
+            isDice: true,
+            dice: { result: diceResult },
+            ...(realTimeEnabled ? { timestamp: Date.now() } : {}),
+          });
         }
 
         // 更新状态历史
@@ -3516,7 +3540,8 @@ Requirements:
                 <div className="flex-1 h-[1px] bg-gray-300/50"></div>
               </div>
 
-              {/* 创作助手按钮 */}
+              {/* 创作助手按钮：仅在核心设定为空时显示 */}
+              {!inputKey && (
               <button
                 onClick={() => {
                   console.log(
@@ -3546,6 +3571,7 @@ Requirements:
                   <WandSparkles size={18} />
                 </div>
               </button>
+              )}
 
               {/* 直接进入：仅在核心设定为空时显示 */}
               {!inputKey && (
@@ -4963,6 +4989,16 @@ Requirements:
                             <MapPin size={20} />
                           </div>
                           <span className="text-[10px]">位置</span>
+                        </button>
+
+                        <button
+                          onClick={handleSendDice}
+                          className="flex flex-col items-center gap-1 text-gray-600 hover:text-black min-w-[40px]"
+                        >
+                          <div className="p-2 bg-gray-100 rounded-full">
+                            🎲
+                          </div>
+                          <span className="text-[10px]">骰子</span>
                         </button>
                       </div>
                     )}

@@ -110,10 +110,24 @@ const Forum = ({
       .replaceAll("{{WORLD_INFO}}", cleanWorldInfo);
   };
 
+  // --- 统一生成前置检查 ---
+  const checkCanGenerate = () => {
+    if (!apiConfig?.baseUrl || !apiConfig?.key) {
+      showToast("error", "未配置 API 信息，请在设置中输入 Base URL 和 Key");
+      return false;
+    }
+    if (!userPersona) {
+      showToast("error", "角色设定为空，请先完善设定");
+      return false;
+    }
+    return true;
+  };
+
   // --- 核心业务逻辑 (已修复 WorldInfo 引用) ---
 
   const initForum = async () => {
     if (!persona) return;
+    if (!checkCanGenerate()) return;
     setLoading((prev) => ({ ...prev, forum: true }));
 
     const prompt = prompts.forum_init
@@ -154,6 +168,7 @@ const Forum = ({
 
   const generateForumPosts = async () => {
     if (!persona) return;
+    if (!checkCanGenerate()) return;
     setLoading((prev) => ({ ...prev, forum_new: true }));
     const currentUserName = userName || "User";
 
@@ -211,6 +226,7 @@ const Forum = ({
   };
 
   const generateForumReplies = async (threadId, mode = "Auto") => {
+    if (!checkCanGenerate()) return;
     const thread = forumData.posts.find((p) => p.id === threadId);
     if (!thread) return;
 
@@ -393,6 +409,7 @@ ${realNameContext}
   };
 
   const generateCharacterPost = async () => {
+    if (!checkCanGenerate()) return;
     if (!postDrafts.char.topic) {
       showToast("error", "请输入提示词");
       return;
@@ -432,6 +449,7 @@ ${realNameContext}
   // 聊天事件触发发帖：AI 分析聊天历史后自动发帖
   const generateChatEventPost = async (showModal = true) => {
     if (!persona) return;
+    if (!checkCanGenerate()) return;
     setLoading((prev) => ({ ...prev, chat_event_post: true }));
 
     const currentUserName = userName || "User";
