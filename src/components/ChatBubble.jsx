@@ -23,7 +23,7 @@ import { echoesDB } from "../utils/appHelpers";
 
 // CSS 骰子组件
 const DiceFace = ({ value, rolling: externalRolling }) => {
-  const [autoRoll, setAutoRoll] = useState(true);
+  const [rolling, setRolling] = useState(false);
   const dotPositions = {
     1: [[1, 1]],
     2: [[0, 2], [2, 0]],
@@ -33,19 +33,20 @@ const DiceFace = ({ value, rolling: externalRolling }) => {
     6: [[0, 0], [0, 2], [1, 0], [1, 2], [2, 0], [2, 2]],
   };
   const dots = dotPositions[value] || dotPositions[1];
-  const isRolling = externalRolling ?? autoRoll;
 
   useEffect(() => {
-    if (autoRoll) {
-      const t = setTimeout(() => setAutoRoll(false), 650);
+    const raf = requestAnimationFrame(() => {
+      setRolling(true);
+      const t = setTimeout(() => setRolling(false), 600);
       return () => clearTimeout(t);
-    }
+    });
+    return () => cancelAnimationFrame(raf);
   }, []);
 
   return (
     <div
       className="relative w-10 h-10 bg-white rounded-lg shadow-md border border-gray-200"
-      style={{ animation: isRolling ? "diceRoll 0.6s ease-out" : "none" }}
+      style={rolling ? { animation: "diceRoll 0.6s ease-out" } : undefined}
     >
       <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 p-1.5">
         {dots.map(([r, c], i) => (
