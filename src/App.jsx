@@ -464,7 +464,7 @@ const App = () => {
     // 备注
     const noteInput = await customPrompt(
       "添加转账备注 (可选):",
-      "拿去买好吃的",
+      "",
       "转账备注",
     );
     const note = noteInput === null ? "" : noteInput;
