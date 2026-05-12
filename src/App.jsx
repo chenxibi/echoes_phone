@@ -179,19 +179,19 @@ const FaceDots = ({ n }) => {
   );
 };
 
-// 3D 骰子组件 — 微信风格
+// 3D 骰子组件 — 微信风格：结果面在顶面，从斜上方看
 const DiceFace = ({ value }) => {
-  const SIZE = 56;
+  const SIZE = 64;
   const H = SIZE / 2;
 
-  // 最终姿态：结果面朝前 + 透视倾斜（露出顶面和侧面）
+  // 结果面转到顶面所需的旋转（CSS 右到左执行）
   const targetAngles = {
-    1: `rotateX(-18deg) rotateY(22deg)`,
-    2: `rotateX(-18deg) rotateY(22deg) rotateX(90deg)`,
-    3: `rotateX(-18deg) rotateY(22deg) rotateY(90deg)`,
-    4: `rotateX(-18deg) rotateY(22deg) rotateY(-90deg)`,
-    5: `rotateX(-18deg) rotateY(22deg) rotateX(-90deg)`,
-    6: `rotateX(-18deg) rotateY(22deg) rotateY(180deg)`,
+    1: `rotateX(55deg) rotateY(30deg) rotateX(-90deg)`,   // 前面→顶面
+    2: `rotateX(55deg) rotateY(30deg) rotateX(90deg)`,    // 底面→顶面
+    3: `rotateX(55deg) rotateY(30deg) rotateX(-90deg) rotateY(90deg)`,  // 左面→顶面
+    4: `rotateX(55deg) rotateY(30deg) rotateX(-90deg) rotateY(-90deg)`, // 右面→顶面
+    5: `rotateX(55deg) rotateY(30deg)`,                    // 顶面本来就是顶面
+    6: `rotateX(55deg) rotateY(30deg) rotateX(-90deg) rotateY(180deg)`, // 后面→顶面
   };
   const target = targetAngles[value] || targetAngles[1];
 
@@ -200,26 +200,26 @@ const DiceFace = ({ value }) => {
 
   useEffect(() => {
     let count = 0;
-    const total = 7;
+    const total = 8;
     const interval = setInterval(() => {
       count++;
       if (count < total) {
-        const rx = Math.floor(Math.random() * 8) * 45 + Math.floor(Math.random() * 30);
-        const ry = Math.floor(Math.random() * 8) * 45 + Math.floor(Math.random() * 30);
+        const rx = Math.floor(Math.random() * 720) + 180;
+        const ry = Math.floor(Math.random() * 720) + 180;
         setAngle(`rotateX(${rx}deg) rotateY(${ry}deg)`);
       } else {
         setRolling(false);
         clearInterval(interval);
       }
-    }, 130);
+    }, 110);
     return () => clearInterval(interval);
   }, []);
 
-  const faceBase = `absolute inset-0 rounded-2xl border border-gray-200/80`;
-  const faceStyle = { width: SIZE, height: SIZE };
+  const faceCls = `absolute inset-0 rounded-2xl border border-gray-300/60 flex items-center justify-center`;
+  const fs = { width: SIZE, height: SIZE };
 
   return (
-    <div style={{ perspective: 220, width: SIZE, height: SIZE }}>
+    <div style={{ perspective: 180, width: SIZE, height: SIZE }}>
       <div
         className="relative"
         style={{
@@ -228,33 +228,33 @@ const DiceFace = ({ value }) => {
           transformStyle: "preserve-3d",
           transform: angle,
           transition: rolling
-            ? "transform 0.22s cubic-bezier(0.34, 1.4, 0.64, 1)"
-            : "transform 0.5s cubic-bezier(0.22, 0.89, 0.38, 1.05)",
+            ? "transform 0.18s cubic-bezier(0.25, 0.1, 0.25, 1)"
+            : "transform 0.55s cubic-bezier(0.22, 0.89, 0.38, 1.05)",
         }}
       >
-        {/* Front: 1 */}
-        <div className={faceBase} style={{ ...faceStyle, transform: `translateZ(${H}px)`, background: "linear-gradient(145deg, #ffffff 0%, #f0f0f0 100%)" }}>
-          <FaceDots n={1} />
-        </div>
-        {/* Back: 6 */}
-        <div className={faceBase} style={{ ...faceStyle, transform: `rotateY(180deg) translateZ(${H}px)`, background: "linear-gradient(145deg, #f5f5f5 0%, #e8e8e8 100%)" }}>
-          <FaceDots n={6} />
-        </div>
-        {/* Right: 4 */}
-        <div className={faceBase} style={{ ...faceStyle, transform: `rotateY(90deg) translateZ(${H}px)`, background: "linear-gradient(145deg, #fafafa 0%, #ececec 100%)" }}>
-          <FaceDots n={4} />
-        </div>
-        {/* Left: 3 */}
-        <div className={faceBase} style={{ ...faceStyle, transform: `rotateY(-90deg) translateZ(${H}px)`, background: "linear-gradient(145deg, #fafafa 0%, #ececec 100%)" }}>
-          <FaceDots n={3} />
-        </div>
-        {/* Top: 5 */}
-        <div className={faceBase} style={{ ...faceStyle, transform: `rotateX(90deg) translateZ(${H}px)`, background: "linear-gradient(145deg, #ffffff 0%, #f0f0f0 100%)" }}>
+        {/* 顶面(5) — 结果面最亮 */}
+        <div className={faceCls} style={{ ...fs, transform: `rotateX(90deg) translateZ(${H}px)`, background: "linear-gradient(135deg, #ffffff 0%, #f8f8f8 100%)" }}>
           <FaceDots n={5} />
         </div>
-        {/* Bottom: 2 */}
-        <div className={faceBase} style={{ ...faceStyle, transform: `rotateX(-90deg) translateZ(${H}px)`, background: "linear-gradient(145deg, #f0f0f0 0%, #e0e0e0 100%)" }}>
+        {/* 底面(2) — 最暗，基本看不到 */}
+        <div className={faceCls} style={{ ...fs, transform: `rotateX(-90deg) translateZ(${H}px)`, background: "linear-gradient(135deg, #d0d0d0 0%, #c0c0c0 100%)" }}>
           <FaceDots n={2} />
+        </div>
+        {/* 前面(1) — 侧面，较暗 */}
+        <div className={faceCls} style={{ ...fs, transform: `translateZ(${H}px)`, background: "linear-gradient(135deg, #e8e8e8 0%, #dcdcdc 100%)" }}>
+          <FaceDots n={1} />
+        </div>
+        {/* 后面(6) — 侧面，较暗 */}
+        <div className={faceCls} style={{ ...fs, transform: `rotateY(180deg) translateZ(${H}px)`, background: "linear-gradient(135deg, #e0e0e0 0%, #d4d4d4 100%)" }}>
+          <FaceDots n={6} />
+        </div>
+        {/* 右面(4) — 侧面，较暗 */}
+        <div className={faceCls} style={{ ...fs, transform: `rotateY(90deg) translateZ(${H}px)`, background: "linear-gradient(135deg, #e4e4e4 0%, #d8d8d8 100%)" }}>
+          <FaceDots n={4} />
+        </div>
+        {/* 左面(3) — 侧面，较暗 */}
+        <div className={faceCls} style={{ ...fs, transform: `rotateY(-90deg) translateZ(${H}px)`, background: "linear-gradient(135deg, #e4e4e4 0%, #d8d8d8 100%)" }}>
+          <FaceDots n={3} />
         </div>
       </div>
     </div>
