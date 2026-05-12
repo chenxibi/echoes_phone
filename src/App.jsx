@@ -4712,15 +4712,7 @@ Requirements:
                                     />
                                   );
                                 } else if (msg.isDice) {
-                                  return (
-                                    <div className={`p-2 rounded-2xl ${
-                                      msg.sender === "me"
-                                        ? "bg-[#2C2C2C]"
-                                        : "bg-white border border-gray-200"
-                                    }`}>
-                                      <StaticDice value={msg.dice?.result || 1} bg={msg.sender === "me" ? "#2a2a2a" : "#ffffff"} dotColor={msg.sender === "me" ? "#ffffff" : "#1a1a1a"} />
-                                    </div>
-                                  );
+                                  return <StaticDice value={msg.dice?.result || 1} />;
                                 }
 
                                 // E. 普通文本/转发卡片 (Fallback)

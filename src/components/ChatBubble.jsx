@@ -211,11 +211,7 @@ const ChatBubble = ({
 
         {/* Dice */}
         {isDice && !isTransfer && (
-          <div className={`p-2 rounded-2xl ${
-            isMe ? "bg-[#2C2C2C]" : "bg-white border border-gray-200"
-          }`}>
-            <DiceFace value={msg.dice?.result || 1} bg={isMe ? "#2a2a2a" : "#ffffff"} dotColor={isMe ? "#ffffff" : "#1a1a1a"} />
-          </div>
+          <DiceFace value={msg.dice?.result || 1} />
         )}
 
         {/* Real Image */}
