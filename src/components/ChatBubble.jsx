@@ -21,8 +21,8 @@ import { echoesDB } from "../utils/appHelpers";
    - Screen reader support
    ============================================ */
 
-// 3D 骰子面（1-6 点）
-const FaceDots = ({ n }) => {
+// 2D 骰子面（静态展示）
+const DiceFace = ({ value, bg = "#ffffff", dotColor = "#1a1a1a", className = "" }) => {
   const dots = {
     1: [[1,1]],
     2: [[0,2],[2,0]],
@@ -30,98 +30,16 @@ const FaceDots = ({ n }) => {
     4: [[0,0],[0,2],[2,0],[2,2]],
     5: [[0,0],[0,2],[1,1],[2,0],[2,2]],
     6: [[0,0],[0,2],[1,0],[1,2],[2,0],[2,2]],
-  }[n];
+  }[value];
   return (
-    <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 p-2">
+    <div className="w-14 h-14 rounded-2xl grid grid-cols-3 grid-rows-3 p-2.5 shadow-sm" style={{background:bg}}>
       {Array.from({length:9}).map((_,i)=>{
         const r=Math.floor(i/3), c=i%3;
         const active=dots.some(([dr,dc])=>dr===r&&dc===c);
         return <div key={i} className="flex items-center justify-center">
-          {active && <div className="w-2.5 h-2.5 rounded-full bg-gray-900" />}
+          {active && <div className="w-3 h-3 rounded-full" style={{background:dotColor}} />}
         </div>;
       })}
-    </div>
-  );
-};
-
-// 3D 骰子组件 — 微信风格：结果面在顶面，从斜上方看
-const DiceFace = ({ value }) => {
-  const SIZE = 64;
-  const H = SIZE / 2;
-
-  // 结果面转到顶面所需的旋转（CSS 右到左执行）
-  const targetAngles = {
-    1: `rotateX(55deg) rotateY(30deg) rotateX(-90deg)`,   // 前面→顶面
-    2: `rotateX(55deg) rotateY(30deg) rotateX(90deg)`,    // 底面→顶面
-    3: `rotateX(55deg) rotateY(30deg) rotateX(-90deg) rotateY(90deg)`,  // 左面→顶面
-    4: `rotateX(55deg) rotateY(30deg) rotateX(-90deg) rotateY(-90deg)`, // 右面→顶面
-    5: `rotateX(55deg) rotateY(30deg)`,                    // 顶面本来就是顶面
-    6: `rotateX(55deg) rotateY(30deg) rotateX(-90deg) rotateY(180deg)`, // 后面→顶面
-  };
-  const target = targetAngles[value] || targetAngles[1];
-
-  const [rolling, setRolling] = useState(true);
-  const [angle, setAngle] = useState(`rotateX(${Math.random()*360}deg) rotateY(${Math.random()*360}deg)`);
-
-  useEffect(() => {
-    let count = 0;
-    const total = 8;
-    const interval = setInterval(() => {
-      count++;
-      if (count < total) {
-        const rx = Math.floor(Math.random() * 720) + 180;
-        const ry = Math.floor(Math.random() * 720) + 180;
-        setAngle(`rotateX(${rx}deg) rotateY(${ry}deg)`);
-      } else {
-        setRolling(false);
-        clearInterval(interval);
-      }
-    }, 110);
-    return () => clearInterval(interval);
-  }, []);
-
-  const faceCls = `absolute inset-0 rounded-2xl border border-gray-300/60 flex items-center justify-center`;
-  const fs = { width: SIZE, height: SIZE };
-
-  return (
-    <div style={{ perspective: 180, width: SIZE, height: SIZE }}>
-      <div
-        className="relative"
-        style={{
-          width: SIZE,
-          height: SIZE,
-          transformStyle: "preserve-3d",
-          transform: angle,
-          transition: rolling
-            ? "transform 0.18s cubic-bezier(0.25, 0.1, 0.25, 1)"
-            : "transform 0.55s cubic-bezier(0.22, 0.89, 0.38, 1.05)",
-        }}
-      >
-        {/* 顶面(5) — 结果面最亮 */}
-        <div className={faceCls} style={{ ...fs, transform: `rotateX(90deg) translateZ(${H}px)`, background: "linear-gradient(135deg, #ffffff 0%, #f8f8f8 100%)" }}>
-          <FaceDots n={5} />
-        </div>
-        {/* 底面(2) — 最暗，基本看不到 */}
-        <div className={faceCls} style={{ ...fs, transform: `rotateX(-90deg) translateZ(${H}px)`, background: "linear-gradient(135deg, #d0d0d0 0%, #c0c0c0 100%)" }}>
-          <FaceDots n={2} />
-        </div>
-        {/* 前面(1) — 侧面，较暗 */}
-        <div className={faceCls} style={{ ...fs, transform: `translateZ(${H}px)`, background: "linear-gradient(135deg, #e8e8e8 0%, #dcdcdc 100%)" }}>
-          <FaceDots n={1} />
-        </div>
-        {/* 后面(6) — 侧面，较暗 */}
-        <div className={faceCls} style={{ ...fs, transform: `rotateY(180deg) translateZ(${H}px)`, background: "linear-gradient(135deg, #e0e0e0 0%, #d4d4d4 100%)" }}>
-          <FaceDots n={6} />
-        </div>
-        {/* 右面(4) — 侧面，较暗 */}
-        <div className={faceCls} style={{ ...fs, transform: `rotateY(90deg) translateZ(${H}px)`, background: "linear-gradient(135deg, #e4e4e4 0%, #d8d8d8 100%)" }}>
-          <FaceDots n={4} />
-        </div>
-        {/* 左面(3) — 侧面，较暗 */}
-        <div className={faceCls} style={{ ...fs, transform: `rotateY(-90deg) translateZ(${H}px)`, background: "linear-gradient(135deg, #e4e4e4 0%, #d8d8d8 100%)" }}>
-          <FaceDots n={3} />
-        </div>
-      </div>
     </div>
   );
 };
@@ -296,7 +214,7 @@ const ChatBubble = ({
           <div className={`p-2 rounded-2xl ${
             isMe ? "bg-[#2C2C2C]" : "bg-white border border-gray-200"
           }`}>
-            <DiceFace value={msg.dice?.result || 1} rolling={false} />
+            <DiceFace value={msg.dice?.result || 1} bg={isMe ? "#2a2a2a" : "#ffffff"} dotColor={isMe ? "#ffffff" : "#1a1a1a"} />
           </div>
         )}
 
