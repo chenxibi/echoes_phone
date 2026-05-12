@@ -32,76 +32,86 @@ const FaceDots = ({ n }) => {
     6: [[0,0],[0,2],[1,0],[1,2],[2,0],[2,2]],
   }[n];
   return (
-    <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 p-1.5">
+    <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 p-2">
       {Array.from({length:9}).map((_,i)=>{
         const r=Math.floor(i/3), c=i%3;
         const active=dots.some(([dr,dc])=>dr===r&&dc===c);
         return <div key={i} className="flex items-center justify-center">
-          {active && <div className="w-2 h-2 rounded-full bg-gray-800" />}
+          {active && <div className="w-2.5 h-2.5 rounded-full bg-gray-900" />}
         </div>;
       })}
     </div>
   );
 };
 
-// 3D 骰子组件
+// 3D 骰子组件 — 微信风格
 const DiceFace = ({ value }) => {
+  const SIZE = 56;
+  const H = SIZE / 2;
+
   const targetAngles = {
-    1: "rotateX(-90deg)",
-    2: "rotateX(180deg)",
-    3: "rotateY(90deg) rotateX(-90deg)",
-    4: "rotateY(-90deg) rotateX(-90deg)",
-    5: "",
-    6: "rotateX(90deg)",
+    1: `rotateX(-18deg) rotateY(22deg)`,
+    2: `rotateX(-18deg) rotateY(22deg) rotateX(90deg)`,
+    3: `rotateX(-18deg) rotateY(22deg) rotateY(90deg)`,
+    4: `rotateX(-18deg) rotateY(22deg) rotateY(-90deg)`,
+    5: `rotateX(-18deg) rotateY(22deg) rotateX(-90deg)`,
+    6: `rotateX(-18deg) rotateY(22deg) rotateY(180deg)`,
   };
-  const target = targetAngles[value] || "";
+  const target = targetAngles[value] || targetAngles[1];
 
   const [rolling, setRolling] = useState(true);
-  const [angle, setAngle] = useState(`${Math.random()*720}deg ${Math.random()*720}deg 0deg`);
+  const [angle, setAngle] = useState(`rotateX(${Math.random()*360}deg) rotateY(${Math.random()*360}deg)`);
 
   useEffect(() => {
     let count = 0;
-    const total = 8;
+    const total = 7;
     const interval = setInterval(() => {
       count++;
       if (count < total) {
-        const rx = Math.floor(Math.random() * 4) * 90;
-        const ry = Math.floor(Math.random() * 4) * 90;
-        setAngle(`rotateX(${rx + Math.random()*180}deg) rotateY(${ry + Math.random()*180}deg) rotateZ(0deg)`);
+        const rx = Math.floor(Math.random() * 8) * 45 + Math.floor(Math.random() * 30);
+        const ry = Math.floor(Math.random() * 8) * 45 + Math.floor(Math.random() * 30);
+        setAngle(`rotateX(${rx}deg) rotateY(${ry}deg)`);
       } else {
         setRolling(false);
         clearInterval(interval);
       }
-    }, 80);
+    }, 130);
     return () => clearInterval(interval);
   }, []);
 
-  const style = rolling
-    ? { transform: angle, transition: "none" }
-    : { transform: target, transition: "transform 0.4s cubic-bezier(0.22, 0.89, 0.38, 1.02)" };
+  const faceBase = `absolute inset-0 rounded-2xl border border-gray-200/80`;
+  const faceStyle = { width: SIZE, height: SIZE };
 
   return (
-    <div style={{ perspective: 120, width: 44, height: 44 }}>
+    <div style={{ perspective: 220, width: SIZE, height: SIZE }}>
       <div
-        className="relative w-full h-full"
-        style={{ transformStyle: "preserve-3d", ...style }}
+        className="relative"
+        style={{
+          width: SIZE,
+          height: SIZE,
+          transformStyle: "preserve-3d",
+          transform: angle,
+          transition: rolling
+            ? "transform 0.22s cubic-bezier(0.34, 1.4, 0.64, 1)"
+            : "transform 0.5s cubic-bezier(0.22, 0.89, 0.38, 1.05)",
+        }}
       >
-        <div className="absolute inset-0 bg-white rounded-lg shadow-inner border border-gray-200" style={{ transform: "translateZ(22px)" }}>
+        <div className={faceBase} style={{ ...faceStyle, transform: `translateZ(${H}px)`, background: "linear-gradient(145deg, #ffffff 0%, #f0f0f0 100%)" }}>
           <FaceDots n={1} />
         </div>
-        <div className="absolute inset-0 bg-white rounded-lg shadow-inner border border-gray-200" style={{ transform: "rotateY(180deg) translateZ(22px)" }}>
+        <div className={faceBase} style={{ ...faceStyle, transform: `rotateY(180deg) translateZ(${H}px)`, background: "linear-gradient(145deg, #f5f5f5 0%, #e8e8e8 100%)" }}>
           <FaceDots n={6} />
         </div>
-        <div className="absolute inset-0 bg-white rounded-lg shadow-inner border border-gray-200" style={{ transform: "rotateY(90deg) translateZ(22px)" }}>
+        <div className={faceBase} style={{ ...faceStyle, transform: `rotateY(90deg) translateZ(${H}px)`, background: "linear-gradient(145deg, #fafafa 0%, #ececec 100%)" }}>
           <FaceDots n={4} />
         </div>
-        <div className="absolute inset-0 bg-white rounded-lg shadow-inner border border-gray-200" style={{ transform: "rotateY(-90deg) translateZ(22px)" }}>
+        <div className={faceBase} style={{ ...faceStyle, transform: `rotateY(-90deg) translateZ(${H}px)`, background: "linear-gradient(145deg, #fafafa 0%, #ececec 100%)" }}>
           <FaceDots n={3} />
         </div>
-        <div className="absolute inset-0 bg-white rounded-lg shadow-inner border border-gray-200" style={{ transform: "rotateX(90deg) translateZ(22px)" }}>
+        <div className={faceBase} style={{ ...faceStyle, transform: `rotateX(90deg) translateZ(${H}px)`, background: "linear-gradient(145deg, #ffffff 0%, #f0f0f0 100%)" }}>
           <FaceDots n={5} />
         </div>
-        <div className="absolute inset-0 bg-white rounded-lg shadow-inner border border-gray-200" style={{ transform: "rotateX(-90deg) translateZ(22px)" }}>
+        <div className={faceBase} style={{ ...faceStyle, transform: `rotateX(-90deg) translateZ(${H}px)`, background: "linear-gradient(145deg, #f0f0f0 0%, #e0e0e0 100%)" }}>
           <FaceDots n={2} />
         </div>
       </div>
