@@ -253,7 +253,16 @@ const ChatBubble = ({
         )}
 
         {/* Forward Card */}
-        {isForward && !isTransfer && (
+        {isForward && !isTransfer && (() => {
+          const fwd = msg.forwardData;
+          const isForumType = fwd?.type === "post" || fwd?.type === "comment";
+          const labelMap = {
+            post: "帖子", comment: "评论",
+            diary: "日记", receipt: "消费", browser: "浏览",
+            incognito: "隐私浏览", smartwatch: "监控日志"
+          };
+          const typeLabel = labelMap[fwd?.type] || "转发";
+          return (
           <div
             className={`
               px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap
@@ -264,22 +273,31 @@ const ChatBubble = ({
               }
             `}
           >
-            <div className="text-left max-w-[240px] pl-3 border-l-2 border-white/30 my-1">
+            <div className="text-left max-w-[280px] pl-3 border-l-2 border-white/30 my-1">
               <div className="flex items-center gap-2 mb-1 opacity-70">
                 <Share size={10} aria-hidden="true" />
                 <span className="text-[10px] font-bold uppercase tracking-wider">
-                  {msg.forwardData?.type === "post" ? "帖子" : "评论"}
+                  {typeLabel}
                 </span>
               </div>
-              <div className="text-[10px] opacity-80 mb-1 font-bold">
-                @{msg.forwardData?.author}
-              </div>
-              <div className="text-xs opacity-80 line-clamp-3 leading-relaxed">
-                {msg.forwardData?.content}
-              </div>
+              {isForumType ? (
+                <>
+                  <div className="text-[10px] opacity-80 mb-1 font-bold">
+                    @{fwd?.author}
+                  </div>
+                  <div className="text-xs opacity-80 line-clamp-3 leading-relaxed">
+                    {fwd?.content}
+                  </div>
+                </>
+              ) : (
+                <div className="text-xs opacity-80 line-clamp-5 leading-relaxed">
+                  {msg.text}
+                </div>
+              )}
             </div>
           </div>
-        )}
+          );
+        })()}
 
         {/* Regular Text Bubble */}
         {!isTransfer && !stickerUrl && !isVoice && !isLocation && !isDice && !isForward && !isRealImage && !msg.text?.startsWith("[图片]") && (

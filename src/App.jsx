@@ -1846,12 +1846,25 @@ const App = () => {
 
       if (data) {
         if (type === "browser") {
+          const now = Date.now();
+          const addTimestamps = (items) =>
+            (items || []).map((item, i) => {
+              const frac = items.length > 1 ? i / (items.length - 1) : 1;
+              const pastMs = (1 + Math.random() * 4) * 86400000;
+              const id = now - pastMs + frac * pastMs;
+              return { ...item, id };
+            });
           const historyItem = {
             date: getCurrentTimeObj().toLocaleDateString(),
-            normal: data.normal || [],
-            incognito: data.incognito || [],
+            normal: addTimestamps(data.normal),
+            incognito: addTimestamps(data.incognito),
           };
           setter((prev) => [historyItem, ...prev]);
+        } else if (type === "receipt") {
+          const now = Date.now();
+          const pastMs = (1 + Math.random() * 4) * 86400000;
+          const id = now - pastMs + Math.random() * pastMs;
+          setter((prev) => [{ ...data, createdAt: id }, ...prev]);
         } else {
           setter((prev) => [data, ...prev]);
         }
@@ -2241,9 +2254,9 @@ const App = () => {
           // 处理转发
           if (m.isForward && m.forwardData) {
             const fwd = m.forwardData;
-            content += ` [Forwarded ${
-              fwd.type === "post" ? "Post" : "Comment"
-            }: "${fwd.content.slice(0, 50)}..."]`;
+            const summary = fwd.content || fwd.query || fwd.action || JSON.stringify(fwd).slice(0, 50);
+            const typeLabel = fwd.type === "post" ? "Post" : fwd.type === "comment" ? "Comment" : fwd.type || "Item";
+            content += ` [Forwarded ${typeLabel}: "${String(summary).slice(0, 50)}..."]`;
           }
           return `${senderName}: ${content}`;
         })
@@ -2507,7 +2520,9 @@ Requirements:
       }
       if (m.isForward && m.forwardData) {
         const fwd = m.forwardData;
-        content += ` [转发了${fwd.type === "post" ? "帖子" : "评论"}: "${fwd.content.slice(0, 50)}..."]`;
+        const summary = fwd.content || fwd.query || fwd.action || JSON.stringify(fwd).slice(0, 50);
+        const typeLabel = fwd.type === "post" ? "帖子" : fwd.type === "comment" ? "评论" : fwd.type || "内容";
+        content += ` [转发了${typeLabel}: "${String(summary).slice(0, 50)}..."]`;
       }
       return `${senderName}: ${content}`;
     };
@@ -5561,7 +5576,10 @@ Requirements:
                   className="bg-white p-6 shadow-md text-xs relative group rotate-1 hover:rotate-0 transition-transform duration-300"
                 >
                   <div className="flex justify-between items-center mb-4 border-b border-dashed pb-2">
-                    <span className="font-bold text-sm">{r.store}</span>
+                    <div>
+                      <span className="font-bold text-sm">{r.store}</span>
+                      {r.createdAt && <div className="text-[9px] text-gray-400 mt-0.5">{formatSmartTime(r.createdAt)}</div>}
+                    </div>
                     <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100">
                       <Share
                         size={12}
@@ -5570,9 +5588,9 @@ Requirements:
                           const itemsStr = r.items.map(item => `${item.name}: ${item.price}`).join("\n");
                           const newMsg = {
                             sender: "me",
-                            text: `【转发${persona?.name || "角色"}的消费记录】\n商家：${r.store}\n${itemsStr}\n合计：${r.total}${r.thought ? `\n\n${persona?.name || "角色"}在作出这笔消费时的心理活动：${r.thought}` : ""}`,
+                            text: `【转发${persona?.name || "角色"}的消费记录】\n${r.createdAt ? `时间：${formatSmartTime(r.createdAt)}\n` : ""}商家：${r.store}\n${itemsStr}\n合计：${r.total}${r.thought ? `\n\n${persona?.name || "角色"}在作出这笔消费时的心理活动：${r.thought}` : ""}`,
                             isForward: true,
-                            forwardData: { store: r.store, items: r.items, total: r.total, thought: r.thought, type: "receipt" },
+                            forwardData: { store: r.store, items: r.items, total: r.total, thought: r.thought, createdAt: r.createdAt, type: "receipt" },
                             time: formatTime(getCurrentTimeObj()),
                           };
                           setChatHistory((prev) => [...prev, newMsg]);
@@ -6008,7 +6026,7 @@ Requirements:
                             {item.query}
                           </div>
                           <div className="text-[9px] text-gray-400">
-                            {item.timestamp} - {item.detail}
+                            {item.id ? formatSmartTime(item.id) : item.timestamp} - {item.detail}
                           </div>
                         </div>
                         <Share
@@ -6017,9 +6035,9 @@ Requirements:
                           onClick={() => {
                             const newMsg = {
                               sender: "me",
-                              text: `【转发${persona?.name || "角色"}的浏览记录】\n搜索：${item.query}\n时间：${item.timestamp}\n详情：${item.detail}${item.thought ? `\n\n${persona?.name || "角色"}在搜索时的心理活动：${item.thought}` : ""}`,
+                              text: `【转发${persona?.name || "角色"}的浏览记录】\n搜索：${item.query}\n时间：${item.id ? formatSmartTime(item.id) : item.timestamp}\n详情：${item.detail}${item.thought ? `\n\n${persona?.name || "角色"}在搜索时的心理活动：${item.thought}` : ""}`,
                               isForward: true,
-                              forwardData: { query: item.query, timestamp: item.timestamp, detail: item.detail, thought: item.thought, type: "browser" },
+                              forwardData: { query: item.query, timestamp: item.timestamp, id: item.id, detail: item.detail, thought: item.thought, type: "browser" },
                               time: formatTime(getCurrentTimeObj()),
                             };
                             setChatHistory((prev) => [...prev, newMsg]);
@@ -6051,7 +6069,7 @@ Requirements:
                             {item.query}
                           </div>
                           <div className="text-[9px] text-gray-500">
-                            {item.timestamp} - {item.detail}
+                            {item.id ? formatSmartTime(item.id) : item.timestamp} - {item.detail}
                           </div>
                         </div>
                         <Share
@@ -6060,9 +6078,9 @@ Requirements:
                           onClick={() => {
                             const newMsg = {
                               sender: "me",
-                              text: `【转发${persona?.name || "角色"}的隐私浏览记录】\n搜索：${item.query}\n时间：${item.timestamp}\n详情：${item.detail}${item.thought ? `\n\n${persona?.name || "角色"}在隐私搜索时的心理活动：${item.thought}` : ""}`,
+                              text: `【转发${persona?.name || "角色"}的隐私浏览记录】\n搜索：${item.query}\n时间：${item.id ? formatSmartTime(item.id) : item.timestamp}\n详情：${item.detail}${item.thought ? `\n\n${persona?.name || "角色"}在隐私搜索时的心理活动：${item.thought}` : ""}`,
                               isForward: true,
-                              forwardData: { query: item.query, timestamp: item.timestamp, detail: item.detail, thought: item.thought, type: "incognito" },
+                              forwardData: { query: item.query, timestamp: item.timestamp, id: item.id, detail: item.detail, thought: item.thought, type: "incognito" },
                               time: formatTime(getCurrentTimeObj()),
                             };
                             setChatHistory((prev) => [...prev, newMsg]);
