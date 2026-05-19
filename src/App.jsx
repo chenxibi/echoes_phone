@@ -4424,7 +4424,7 @@ Requirements:
                     return (
                       <div
                         key={msgKey}
-                        className="relative group flex justify-center my-4 animate-in fade-in duration-300 px-4"
+                        className="relative group flex justify-center my-4 animate-in fade-in duration-300 px-4 mb-6"
                         onContextMenu={!isMultiSelectMode ? (e) => handleContextMenu(e, i) : undefined}
                         onTouchStart={!isMultiSelectMode ? () => handleTouchStart(i) : undefined}
                         onTouchEnd={!isMultiSelectMode ? handleTouchEnd : undefined}
@@ -4454,7 +4454,7 @@ Requirements:
                   const showGapMarker = prevMsg && !prevMsg.isSystem && msg.timestamp && prevMsg.timestamp && msg.timestamp - prevMsg.timestamp > 3600000;
 
                   return (
-                    <div key={msgKey} className="px-4 space-y-6">
+                    <div key={msgKey} className="px-4 space-y-6 mb-6">
                     {showGapMarker && (
                       <div className="flex justify-center my-3">
                         <span className="text-[10px] text-gray-400 bg-gray-100 px-3 py-1 rounded-full">
