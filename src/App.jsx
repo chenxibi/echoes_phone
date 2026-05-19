@@ -4413,7 +4413,7 @@ Requirements:
               <Virtuoso
                 ref={virtuosoRef}
                 data={chatHistory}
-                className="flex-grow overflow-y-auto overflow-x-hidden custom-scrollbar"
+                className="flex-grow overflow-y-auto overflow-x-hidden custom-scrollbar" style={{ paddingBottom: '1.5rem' }}
                 followOutput={expandedChatStatusIndex === null ? "smooth" : false}
                 initialTopMostItemIndex={chatHistory.length - 1}
                 itemContent={(i, msg) => {
@@ -4586,7 +4586,7 @@ Requirements:
                     </div>
                   ),
                   Footer: () => (
-                    <div className="pb-6">
+                    <div className="">
                       {(loading.chat || isTyping) && (
                         <div className="flex gap-2 items-center ml-12 pl-2 px-4 py-4">
                           <div className="w-1.5 h-1.5 bg-gray-400 rounded-full typing-dot" style={{ animationDelay: "0s" }}></div>
