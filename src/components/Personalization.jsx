@@ -3,7 +3,7 @@ import { Upload, RotateCcw, Asterisk, Type, Monitor, Grid, Palette } from "lucid
 
 // ============================================================
 // 官方皮肤预设
-// 每个皮肤是一个自包含的 CSS 片段, 通过 <style> 注入到 #echoes-chat
+// 每个皮肤是一个自包含�?CSS 片段, 通过 <style> 注入�?#echoes-chat
 // ============================================================
 const OFFICIAL_SKINS = [
   {
@@ -19,19 +19,19 @@ const OFFICIAL_SKINS = [
 /* 全局基础样式：采用无衬线现代字体，增加字间距带来的呼吸感 */
 #echoes-chat { background-color: #f2f7f9 !important; background-image: linear-gradient(180deg, #f2f7f9 0%, #e6eeee 100%) !important; color: #2c3e50 !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important; }
 
-/* 容器与背景 */
+/* 容器与背�?*/
 #echoes-chat .bg-\[\#F2F2F7\] { background-color: #f2f7f9 !important; }
 #echoes-chat .bg-\[\#EBEBF0\] { background: #e0eadd !important; background-color: #e2e8f0 !important; }
 #echoes-chat [class*="bg-\[\#F2F2F7"] { background-color: #f2f7f9 !important; }
 #echoes-chat [class*="bg-\[\#EBEBF0"] { background: #e2e8f0 !important; }
 
-/* 不同层级的淡色背景 */
+/* 不同层级的淡色背�?*/
 #echoes-chat .bg-blue-50\/50 { background: #f0f7f8 !important; }
 #echoes-chat .bg-gray-100\/60 { background: #edf2f7 !important; }
 #echoes-chat .bg-gray-300\/50 { background: #e2e8f0 !important; }
 #echoes-chat .bg-white\\/50 { background: rgba(255, 255, 255, 0.6) !important; }
 
-/* 文字颜色：确保高可读性 */
+/* 文字颜色：确保高可读�?*/
 #echoes-chat .text-\[\#1a1a1a\] { color: #2c3e50 !important; }
 #echoes-chat .text-\[\#2C2C2C\] { color: #34495e !important; }
 #echoes-chat .text-gray-800 { color: #2c3e50 !important; }
@@ -44,7 +44,7 @@ const OFFICIAL_SKINS = [
 /* 头部样式 */
 #echoes-chat header { color: #4a8d91 !important; font-weight: 600 !important; letter-spacing: 0.05em !important; }
 
-/* 面板与卡片：轻微阴影，模拟透明海水的质感 */
+/* 面板与卡片：轻微阴影，模拟透明海水的质�?*/
 #echoes-chat .glass-panel { background: rgba(255, 255, 255, 0.8) !important; backdrop-filter: blur(8px) !important; -webkit-backdrop-filter: blur(8px) !important; border: 1px solid rgba(93, 169, 173, 0.2) !important; color: #2c3e50 !important; border-radius: 12px !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important; }
 #echoes-chat .glass-card { background: #ffffff !important; border: 1px solid #e2e8f0 !important; border-radius: 12px !important; color: #2c3e50 !important; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02) !important; }
 #echoes-chat .glass-card label { color: #34495e !important; }
@@ -55,7 +55,7 @@ const OFFICIAL_SKINS = [
 #echoes-chat [class*="bg-gray-50"] { background: #f8fafc !important; }
 #echoes-chat [class*="bg-gray-100"] { background: #f1f5f9 !important; }
 
-/* 重点按钮：礁石灰/深海蓝 */
+/* 重点按钮：礁石灰/深海�?*/
 #echoes-chat [class*="bg-black"] { background: #5da9ad !important; border-color: #5da9ad !important; color: #ffffff !important; transition: all 0.3s ease !important; }
 #echoes-chat [class*="bg-black"]:hover { background: #4a8d91 !important; box-shadow: 0 4px 10px rgba(93, 169, 173, 0.3) !important; }
 #echoes-chat button.bg-black { background: #5da9ad !important; }
@@ -65,7 +65,7 @@ const OFFICIAL_SKINS = [
 #echoes-chat [class*="bg-gray-800"] { background: #34495e !important; }
 #echoes-chat :not(button)[class*="text-white"] { color: #ffffff !important; }
 
-/* 输入框样式 */
+/* 输入框样�?*/
 #echoes-chat input, #echoes-chat textarea, #echoes-chat [contenteditable] { background: #ffffff !important; color: #2c3e50 !important; border: 1px solid #cfd8dc !important; border-radius: 8px !important; transition: border-color 0.3s !important; }
 #echoes-chat input:focus, #echoes-chat textarea:focus { border-color: #5da9ad !important; ring: none !important; outline: none !important; }
 #echoes-chat input::placeholder, #echoes-chat textarea::placeholder { color: #bdc3c7 !important; }
@@ -87,9 +87,9 @@ const OFFICIAL_SKINS = [
 #echoes-chat [class*="bg-white"] svg { stroke: #5da9ad; }
 #echoes-chat [class*="rounded-\[24px\]"].glass-panel svg, #echoes-chat .flex.justify-around svg { stroke: #5da9ad; }
 
-/* 状态颜色 */
+/* 状态颜�?*/
 #echoes-chat .bg-green-500 { background: #81b29a !important; } /* 森林绿点缀 */
-#echoes-chat .text-red-500 { color: #e07a5f !important; } /* 晚霞橘提醒 */
+#echoes-chat .text-red-500 { color: #e07a5f !important; } /* 晚霞橘提�?*/
 #echoes-chat .bg-green-50\/50 { background: #f2f9f6 !important; }
 #echoes-chat .bg-green-100 { background: #e8f3ee !important; }
 #echoes-chat .text-green-700 { color: #6d9785 !important; }
@@ -112,7 +112,7 @@ const OFFICIAL_SKINS = [
 #echoes-chat [class*="bg-white"].rounded-2xl { background: rgba(255,255,255,0.92) !important; }
 #echoes-chat .bg-black\/50 { background: rgba(0,0,0,0.5) !important; }
 #echoes-chat .bg-black\/40 { background: rgba(0,0,0,0.4) !important; }
-/* 消息菜单：浅色主题匹配 */
+/* 消息菜单：浅色主题匹�?*/
 #echoes-chat [class*="bg-[#1a1a1a]"] { background: rgba(255,255,255,0.95) !important; color: #2c3e50 !important; }
 #echoes-chat [class*="bg-[#1a1a1a]"] * { color: #2c3e50 !important; }
 #echoes-chat .bg-\[\#1a1a1a\]\/95 { background: rgba(255,255,255,0.95) !important; color: #2c3e50 !important; }
@@ -126,7 +126,7 @@ const OFFICIAL_SKINS = [
 /* 开关主题色 */
 #echoes-chat .bg-green-500 { background: #81b29a !important; }
 #echoes-chat .bg-gray-300 { background: #d1e5dc !important; }
-/* 按钮选中态白字 */
+/* 按钮选中态白�?*/
 #echoes-chat button.bg-black { color: #fff !important; }
 #echoes-chat button.bg-black:hover { color: #fff !important; }
 #echoes-chat [class*="bg-black"][class*="text-white"] { color: #fff !important; }
@@ -232,7 +232,7 @@ const OFFICIAL_SKINS = [
 #echoes-chat .bg-white\\/90 { background: rgba(255,248,240,0.85) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
 #echoes-chat [class*="bg-white"].rounded-2xl { background: #fff8f0 !important; opacity: 0.95; }
 #echoes-chat .bg-black\\/50 { background: rgba(0,0,0,0.5) !important; }
-/* 操作菜单、表情面板、模态卡片保持原始深色样式 */
+/* 操作菜单、表情面板、模态卡片保持原始深色样�?*/
 #echoes-chat .bg-\[\#1a1a1a\]\/95 { background: rgba(26,26,26,0.95) !important; color: #fff !important; }
 #echoes-chat .bg-\[\#1a1a1a\]\/95 * { color: #fff !important; }
 #echoes-chat .bg-\[\#1a1a1a\]\\/95 { background: rgba(26,26,26,0.95) !important; color: #fff !important; }
@@ -250,7 +250,7 @@ const OFFICIAL_SKINS = [
 /* 开关主题色 */
 #echoes-chat .bg-green-500 { background: #c4a882 !important; }
 #echoes-chat .bg-gray-300 { background: #e8d5c0 !important; }
-/* 按钮选中态白字 */
+/* 按钮选中态白�?*/
 #echoes-chat button.bg-black { color: #fff !important; }
 #echoes-chat button.bg-black:hover { color: #fff !important; }
 #echoes-chat [class*="bg-black"][class*="text-white"] { color: #fff !important; }
@@ -259,7 +259,7 @@ const OFFICIAL_SKINS = [
   {
     id: "neon",
     name: "霓虹协议",
-    desc: "赛博朋克，霓虹青 + 警示黄",
+    desc: "赛博朋克，霓虹青 + 警示�?,
     preview: "bg-[#050a0e]",
     previewColor: "#050a0e",
     borderColor: "#00f3ff",
@@ -277,11 +277,11 @@ const OFFICIAL_SKINS = [
 /* 全局字体与切割感 */
 #echoes-chat, #echoes-chat *, #echoes-chat *::before, #echoes-chat *::after {
  font-family: "Orbitron", "Exo 2", "Share Tech Mono", "JetBrains Mono", monospace !important;
- border-radius: 0px !important; /* 科技风严禁圆角 */
+ border-radius: 0px !important; /* 科技风严禁圆�?*/
  letter-spacing: 0.05em;
 }
 
-/* 背景：深色层级感与数字网格 */
+/* 背景：深色层级感与数字网�?*/
 #echoes-chat {
  background-color: #050a0e !important;
  background-image:
@@ -301,7 +301,7 @@ const OFFICIAL_SKINS = [
  text-shadow: 2px 2px 0px rgba(0,0,0,1);
 }
 
-/* 核心面板：斜角切割与内发光 */
+/* 核心面板：斜角切割与内发�?*/
 #echoes-chat .glass-panel {
  background: rgba(13, 22, 29, 0.9) !important;
  backdrop-filter: blur(10px) !important;
@@ -333,7 +333,7 @@ const OFFICIAL_SKINS = [
 /* 按钮 */
 #echoes-chat [class*="bg-black"], #echoes-chat button.bg-black {
  background: #00f3ff !important;
- color: #050a0e !important; /* 深浅撞色：亮底深字 */
+ color: #050a0e !important; /* 深浅撞色：亮底深�?*/
  font-weight: 900 !important;
  text-transform: uppercase !important;
  clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%) !important;
@@ -348,7 +348,7 @@ const OFFICIAL_SKINS = [
  transform: scale(1.02);
 }
 
-/* 次要按钮/辅助背景 - 修复了原代码的拼写错误 */
+/* 次要按钮/辅助背景 - 修复了原代码的拼写错�?*/
 [class*="bg-gray-800"], #echoes-chat [class*="bg-[#2C2C2C]"] {
  background: #1a262f !important;
  border: 1px solid #fcee0a !important;
@@ -359,11 +359,11 @@ const OFFICIAL_SKINS = [
 /* bg-[#2C2C2C]强制黄色 */
 #echoes-chat [class*="bg-[#2C2C2C]"] * { color: #fcee0a !important; }
 
-/* 模型下拉框：深色底蓝字 */
+/* 模型下拉框：深色底蓝�?*/
 #echoes-chat select,
 #echoes-chat select option { color: #00f3ff !important; background: rgba(0,243,255,0.05) !important; border: 1px solid rgba(0,243,255,0.5) !important; }
 
-/* 输入框：极简科技感 */
+/* 输入框：极简科技�?*/
 #echoes-chat input, #echoes-chat textarea {
  background: rgba(0, 243, 255, 0.05) !important;
  color: #00f3ff !important;
@@ -404,7 +404,7 @@ const OFFICIAL_SKINS = [
 #echoes-chat [class*="bg-white"] .text-gray-900 { color: #000000 !important; }
 #echoes-chat [class*="bg-white"].rounded-xl { border-left: 4px solid #fcee0a !important; }
 
-/* 锁屏深色背景下时间亮色 */
+/* 锁屏深色背景下时间亮�?*/
 #echoes-chat > div > .lock-time,
 #echoes-chat .max-w-md .lock-time { color: #e0f2f1 !important; }
 #echoes-chat [class*="bg-white"] .lock-time,
@@ -426,7 +426,7 @@ const OFFICIAL_SKINS = [
 /* 修正：Plus图标等按钮内图标保持深色 */
 #echoes-chat button.bg-black svg, #echoes-chat [class*="bg-black"] button svg { stroke: #050a0e !important; filter: none !important; }
 
-/* 核心修正点：白色背景内文字加深（排除按钮） */
+/* 核心修正点：白色背景内文字加深（排除按钮�?*/
 #echoes-chat .bg-white :not(button):not(button *),
 #echoes-chat .bg-white\/90 :not(button):not(button *),
 #echoes-chat [class*="bg-white rounded"] :not(button):not(button *),
@@ -443,11 +443,11 @@ const OFFICIAL_SKINS = [
   {
     id: "pixel",
     name: "像素复古",
-    desc: "Soft Vaporwave，浅粉 + 荧光蓝",
+    desc: "Soft Vaporwave，浅�?+ 荧光�?,
     preview: "bg-[#ffe0ec]",
     previewColor: "#ffe0ec",
     borderColor: "#00e5ff",
-    css: `/* 像素复古 — Soft Vaporwave (Asset Integrated) */
+    css: `/* 像素复古 �?Soft Vaporwave (Asset Integrated) */
 #echoes-chat { --skin-bg: #ffe0ec; --skin-surface: #ffe8f0; --skin-card: #fff0f5; --skin-text: #554455; --skin-sub: #cc7799; --skin-accent: #00e5ff; --skin-accent-hover: #ff6b9d; }
 #echoes-chat, #echoes-chat *, #echoes-chat *::before, #echoes-chat *::after { font-family: "Courier New","Source Code Pro","Fira Code","IBM Plex Mono","JetBrains Mono",Consolas,monospace !important; border-radius:2px !important; }
 #echoes-chat [class*="rounded-full"] { border-radius:4px !important; }
@@ -515,20 +515,20 @@ const OFFICIAL_SKINS = [
 #echoes-chat [class*="bg-black"][class*="text-white"] { background: linear-gradient(135deg,#ff6b9d,#ff8fab) !important; color:#fff !important; border:2px solid #00e5ff !important; box-shadow:3px 3px 0 #00e5ff !important; }
 
 
-/* 蒸汽波网格背景 */
+/* 蒸汽波网格背�?*/
 #echoes-chat::before { content:""; position:fixed; inset:0; pointer-events:none; z-index:0; opacity:0.12; background-image: linear-gradient(#00e5ff 1px,transparent 1px),linear-gradient(90deg,#00e5ff 1px,transparent 1px); background-size:40px 40px; }
-/* 扫描线效果 */
+/* 扫描线效�?*/
 #echoes-chat::after { content:""; position:fixed; inset:0; pointer-events:none; z-index:9999; opacity:0.03; background: repeating-linear-gradient(0deg,transparent,transparent 2px,#ff6b9d 2px,#ff6b9d 4px); }
 /* 标题霓虹发光 */
 #echoes-chat header { color:#ff6b9d !important; background:#ffe0ec !important; text-shadow: 0 0 10px rgba(255,107,157,0.5), 2px 2px 0 #00e5ff !important; }
 
 
-/* --- 蒸汽波素材插入部分 --- */
+/* --- 蒸汽波素材插入部�?--- */
 
 
-/* 拓麻歌子替换生活圈图标 */
-#echoes-chat [data-app-link="生活圈"] svg { display:none !important; }
-#echoes-chat [data-app-link="生活圈"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./vapor-tamagotchi.png"); background-size:contain; background-repeat:no-repeat; background-position:center; filter: drop-shadow(2px 2px 0px #00e5ff); }
+/* 拓麻歌子替换生活圈图�?*/
+#echoes-chat [data-app-link="生活�?] svg { display:none !important; }
+#echoes-chat [data-app-link="生活�?] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./vapor-tamagotchi.png"); background-size:contain; background-repeat:no-repeat; background-position:center; filter: drop-shadow(2px 2px 0px #00e5ff); }
 
 
 /* 贝壳替换界面样式标题图标 */
@@ -546,9 +546,9 @@ const OFFICIAL_SKINS = [
 #echoes-chat [data-app-link="系统设置"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./vapor-mac.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
 
 
-/* IE图标替换浏览器图标 */
-#echoes-chat [data-app-link="浏览器"] svg { display:none !important; }
-#echoes-chat [data-app-link="浏览器"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./vapor-ie.png"); background-size:contain; background-repeat:no-repeat; background-position:center; filter: hue-rotate(20deg); }
+/* IE图标替换浏览器图�?*/
+#echoes-chat [data-app-link="浏览�?] svg { display:none !important; }
+#echoes-chat [data-app-link="浏览�?] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./vapor-ie.png"); background-size:contain; background-repeat:no-repeat; background-position:center; filter: hue-rotate(20deg); }
 
 
 /* iPod替换音乐图标 */
@@ -556,9 +556,9 @@ const OFFICIAL_SKINS = [
 #echoes-chat [data-app-link="共鸣旋律"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./vapor-ipod.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
 
 
-/* 蝴蝶替换智能家图标 */
-#echoes-chat [data-app-link="智能家"] svg { display:none !important; }
-#echoes-chat [data-app-link="智能家"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./vapor-butterfly.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
+/* 蝴蝶替换智能家图�?*/
+#echoes-chat [data-app-link="智能�?] svg { display:none !important; }
+#echoes-chat [data-app-link="智能�?] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./vapor-butterfly.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
 
 
 /* 磁带替换日记图标 */
@@ -572,11 +572,11 @@ const OFFICIAL_SKINS = [
 
 
 /* 十字架替换世界书图标 */
-#echoes-chat [data-app-link="世界书"] svg { display:none !important; }
-#echoes-chat [data-app-link="世界书"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./vapor-cross.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
+#echoes-chat [data-app-link="世界�?] svg { display:none !important; }
+#echoes-chat [data-app-link="世界�?] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./vapor-cross.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
 
 
-/* 翻盖手机替换底部通讯栏图标 */
+/* 翻盖手机替换底部通讯栏图�?*/
 #echoes-chat [data-icon="chat"] svg { display:none !important; }
 #echoes-chat [data-icon="chat"]::before { content:""; display:inline-block; width:26px; height:26px; background-image:url("./vapor-phone.png"); background-size:contain; background-repeat:no-repeat; vertical-align:middle; }
 
@@ -586,14 +586,14 @@ const OFFICIAL_SKINS = [
 #echoes-chat h3[data-section-icon="customize"]::before { content:""; display:inline-block; width:14px; height:14px; background-image:url("./vapor-glasses.png"); background-size:contain; background-repeat:no-repeat; vertical-align:middle; margin-right:4px; }
 
 
-/* 多卷磁带替换显示与排版标题 */
+/* 多卷磁带替换显示与排版标�?*/
 #echoes-chat h3[data-section-icon="display"] svg { display:none !important; }
 #echoes-chat h3[data-section-icon="display"]::before { content:""; display:inline-block; width:14px; height:14px; background-image:url("./vapor-cassettes.png"); background-size:contain; background-repeat:no-repeat; vertical-align:middle; margin-right:4px; }
 
 
-/* 手机替换浏览器刷新按钮图标 */
-#echoes-chat [data-app-link="浏览器刷新"] svg { display:none !important; }
-#echoes-chat [data-app-link="浏览器刷新"]::before { content:""; display:inline-block; width:18px; height:18px; background-image:url("./vapor-phone.png"); background-size:contain; background-repeat:no-repeat; vertical-align:middle; margin-right:6px; }
+/* 手机替换浏览器刷新按钮图�?*/
+#echoes-chat [data-app-link="浏览器刷�?] svg { display:none !important; }
+#echoes-chat [data-app-link="浏览器刷�?]::before { content:""; display:inline-block; width:18px; height:18px; background-image:url("./vapor-phone.png"); background-size:contain; background-repeat:no-repeat; vertical-align:middle; margin-right:6px; }
 
 /* 弹窗保持半透明 */
 #echoes-chat .fixed.inset-0 { background: rgba(0,0,0,0.5) !important; }
@@ -605,7 +605,7 @@ const OFFICIAL_SKINS = [
 /* 开关主题色 */
 #echoes-chat .bg-green-500 { background: linear-gradient(135deg,#ff6b9d,#ff8fab) !important; }
 #echoes-chat .bg-gray-300 { background: #ffcce0 !important; }
-/* 按钮选中态白字 */
+/* 按钮选中态白�?*/
 #echoes-chat button.bg-black { color: #fff !important; }
 #echoes-chat button.bg-black:hover { color: #fff !important; }
 #echoes-chat [class*="bg-black"][class*="text-white"] { color: #fff !important; }
@@ -614,7 +614,7 @@ const OFFICIAL_SKINS = [
   {
     id: "midnight",
     name: "午夜深蓝",
-    desc: "暗色界面，护眼柔和",
+    desc: "暗色界面，护眼柔�?,
     preview: "bg-[#1a1a2e]",
     previewColor: "#1a1a2e",
     borderColor: "#99aaff",
@@ -629,7 +629,7 @@ const OFFICIAL_SKINS = [
   --skin-accent-hover: #99aaff;
 }
 #echoes-chat { background: #1a1a2e !important; color: #d0d0e8 !important; }
-/* 主背景 */
+/* 主背�?*/
 #echoes-chat .bg-\\[\\#F2F2F7\\] { background: #1a1a2e !important; }
 #echoes-chat [class*="bg-\\[\\#F2F2F7"] { background: #1a1a2e !important; }
 #echoes-chat .bg-\\[\\#EBEBF0\\] { background: #14142a !important; }
@@ -655,7 +655,7 @@ const OFFICIAL_SKINS = [
 #echoes-chat .text-gray-500 { color: #8888aa !important; }
 #echoes-chat .text-gray-400 { color: #7777aa !important; }
 #echoes-chat .text-gray-300 { color: #6666aa !important; }
-/* 标题栏 */
+/* 标题�?*/
 #echoes-chat header { color: #aabbee !important; }
 /* 玻璃面板 - 暗色半透明 */
 #echoes-chat .glass-panel {
@@ -678,18 +678,18 @@ const OFFICIAL_SKINS = [
 #echoes-chat [class*="bg-white"] { background: #252540 !important; }
 #echoes-chat [class*="bg-gray-50"] { background: #1e1e38 !important; }
 #echoes-chat [class*="bg-gray-100"] { background: rgba(255,255,255,0.05) !important; }
-/* 按钮 - 黑色变紫色 */
+/* 按钮 - 黑色变紫�?*/
 #echoes-chat [class*="bg-black"] { background: #5566cc !important; border-color: #5566cc !important; }
 #echoes-chat [class*="bg-black"]:hover { background: #6b7aee !important; }
 #echoes-chat button.bg-black { background: #5566cc !important; }
 #echoes-chat button.bg-black:hover { background: #6b7aee !important; }
-/* 按钮 - #2C2C2C 暗灰变深紫 */
+/* 按钮 - #2C2C2C 暗灰变深�?*/
 #echoes-chat [class*="bg-\\[\\#2C2C2C\\]"] { background: #3a3a70 !important; }
 #echoes-chat [class*="bg-\\[\\#2C2C2C\\]"]:hover { background: #4a4a88 !important; }
 #echoes-chat [class*="bg-gray-800"] { background: #3a3a70 !important; }
 /* 按钮文字白变紫白 */
 #echoes-chat :not(button)[class*="text-white"] { color: #e0e0f0 !important; }
-/* 输入框 */
+/* 输入�?*/
 #echoes-chat input, #echoes-chat textarea, #echoes-chat [contenteditable] {
   background: #1e1e38 !important;
   color: #d0d0e8 !important;
@@ -725,7 +725,7 @@ const OFFICIAL_SKINS = [
 #echoes-chat .bg-white\\/90 { background: rgba(30,30,60,0.85) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
 #echoes-chat [class*="bg-white"].rounded-2xl { background: #252540 !important; opacity: 0.95; }
 #echoes-chat .bg-black\\/50 { background: rgba(0,0,0,0.5) !important; }
-/* 操作菜单、表情面板、模态卡片保持原始深色样式 */
+/* 操作菜单、表情面板、模态卡片保持原始深色样�?*/
 #echoes-chat .bg-\[\#1a1a1a\]\/95 { background: rgba(26,26,26,0.95) !important; color: #fff !important; }
 #echoes-chat .bg-\[\#1a1a1a\]\/95 * { color: #fff !important; }
 #echoes-chat .bg-\[\#1a1a1a\]\\/95 { background: rgba(26,26,26,0.95) !important; color: #fff !important; }
@@ -743,7 +743,7 @@ const OFFICIAL_SKINS = [
 /* 开关主题色 */
 #echoes-chat .bg-green-500 { background: #5566cc !important; }
 #echoes-chat .bg-gray-300 { background: #3a3a6a !important; }
-/* 按钮选中态白字 */
+/* 按钮选中态白�?*/
 #echoes-chat button.bg-black { color: #fff !important; }
 #echoes-chat button.bg-black:hover { color: #fff !important; }
 #echoes-chat [class*="bg-black"][class*="text-white"] { color: #fff !important; }
@@ -752,7 +752,7 @@ const OFFICIAL_SKINS = [
   {
     id: "sweet",
     name: "甜梦泡泡",
-    desc: "灰粉波点，小熊软萌氛围",
+    desc: "灰粉波点，小熊软萌氛�?,
     preview: "bg-[#f0e8ed]",
     previewColor: "#f0e8ed",
     borderColor: "#d4959a",
@@ -820,37 +820,37 @@ const OFFICIAL_SKINS = [
 #echoes-chat [class*="rounded-lg"],#echoes-chat [class*="rounded-xl"],#echoes-chat [class*="rounded-2xl"],#echoes-chat [class*="rounded-\\[16px\\]"],#echoes-chat [class*="rounded-\\[22px\\]"],#echoes-chat [class*="rounded-\\[24px\\]"],#echoes-chat [class*="rounded-full"],#echoes-chat [class*="rounded-\\[48px\\]"] { border-radius:18px !important; }
 #echoes-chat [class*="rounded-\\[48px\\]"] { border-radius:36px !important; }
 #echoes-chat [class*="rounded-full"] { border-radius:9999px !important; }
-/* 小熊替换生活圈图标 */
-#echoes-chat [data-app-link="生活圈"] svg { display:none !important; }
-#echoes-chat [data-app-link="生活圈"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./pink-bear.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
-/* 蝴蝶结替换界面样式标题图标 */
+/* 小熊替换生活圈图�?*/
+#echoes-chat [data-app-link="生活�?] svg { display:none !important; }
+#echoes-chat [data-app-link="生活�?] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./pink-bear.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
+/* 蝴蝶结替换界面样式标题图�?*/
 #echoes-chat h3[data-section-icon="palette"] svg { display:none !important; }
 #echoes-chat h3[data-section-icon="palette"]::before { content:""; display:inline-block; width:12px; height:12px; background-image:url("./bow.png"); background-size:contain; background-repeat:no-repeat; vertical-align:middle; }
 /* 蝴蝶结替换个性化App图标 */
 #echoes-chat [data-app-link="个性化"] svg { display:none !important; }
 #echoes-chat [data-app-link="个性化"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./bow.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
-/* 棒棒糖替换系统设置图标 */
+/* 棒棒糖替换系统设置图�?*/
 #echoes-chat [data-app-link="系统设置"] svg { display:none !important; }
 #echoes-chat [data-app-link="系统设置"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./pink-lollipop.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
-/* 电话替换浏览器图标 */
-#echoes-chat [data-app-link="浏览器"] svg { display:none !important; }
-#echoes-chat [data-app-link="浏览器"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./pink-telephone.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
+/* 电话替换浏览器图�?*/
+#echoes-chat [data-app-link="浏览�?] svg { display:none !important; }
+#echoes-chat [data-app-link="浏览�?] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./pink-telephone.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
 /* 爱心替换音乐图标 */
 #echoes-chat [data-app-link="共鸣旋律"] svg { display:none !important; }
 #echoes-chat [data-app-link="共鸣旋律"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./pink-heart.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
 /* 蝴蝶结替换智能家图标 */
-#echoes-chat [data-app-link="智能家"] svg { display:none !important; }
-#echoes-chat [data-app-link="智能家"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./pink-butterfly.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
-/* 草莓巧克力替换日记图标 */
+#echoes-chat [data-app-link="智能�?] svg { display:none !important; }
+#echoes-chat [data-app-link="智能�?] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./pink-butterfly.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
+/* 草莓巧克力替换日记图�?*/
 #echoes-chat [data-app-link="日记"] svg { display:none !important; }
 #echoes-chat [data-app-link="日记"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./strawberry-chocolate.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
 /* 蜡烛替换生活痕迹图标 */
 #echoes-chat [data-app-link="生活痕迹"] svg { display:none !important; }
 #echoes-chat [data-app-link="生活痕迹"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./pink-candle.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
-/* 蘑菇替换世界书图标 */
-#echoes-chat [data-app-link="世界书"] svg { display:none !important; }
-#echoes-chat [data-app-link="世界书"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./pink-mushroom.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
-/* 饮料替换底部通讯栏图标 */
+/* 蘑菇替换世界书图�?*/
+#echoes-chat [data-app-link="世界�?] svg { display:none !important; }
+#echoes-chat [data-app-link="世界�?] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./pink-mushroom.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
+/* 饮料替换底部通讯栏图�?*/
 #echoes-chat [data-icon="chat"] svg { display:none !important; }
 #echoes-chat [data-icon="chat"]::before { content:""; display:inline-block; width:24px; height:24px; background-image:url("./pink-drink.png"); background-size:contain; background-repeat:no-repeat; vertical-align:middle; }
 /* 发带替换图标定制标题 */
@@ -859,9 +859,9 @@ const OFFICIAL_SKINS = [
 /* 笔记本替换显示与排版标题 */
 #echoes-chat h3[data-section-icon="display"] svg { display:none !important; }
 #echoes-chat h3[data-section-icon="display"]::before { content:""; display:inline-block; width:12px; height:12px; background-image:url("./pink-laptop.png"); background-size:contain; background-repeat:no-repeat; vertical-align:middle; }
-/* 玩具替换浏览器刷新按钮图标 */
-#echoes-chat [data-app-link="浏览器刷新"] svg { display:none !important; }
-#echoes-chat [data-app-link="浏览器刷新"]::before { content:""; display:inline-block; width:16px; height:16px; background-image:url("./pink-toy.png"); background-size:contain; background-repeat:no-repeat; vertical-align:middle; margin-right:6px; }
+/* 玩具替换浏览器刷新按钮图�?*/
+#echoes-chat [data-app-link="浏览器刷�?] svg { display:none !important; }
+#echoes-chat [data-app-link="浏览器刷�?]::before { content:""; display:inline-block; width:16px; height:16px; background-image:url("./pink-toy.png"); background-size:contain; background-repeat:no-repeat; vertical-align:middle; margin-right:6px; }
 /* 弹窗保持半透明 */
 #echoes-chat .fixed.inset-0 { background: rgba(0,0,0,0.5) !important; }
 #echoes-chat .bg-white\\/90 { background: rgba(250,245,248,0.85) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
@@ -872,7 +872,7 @@ const OFFICIAL_SKINS = [
 /* 开关主题色 */
 #echoes-chat .bg-green-500 { background: #d4959a !important; }
 #echoes-chat .bg-gray-300 { background: #e0d0d8 !important; }
-/* 按钮选中态白字 */
+/* 按钮选中态白�?*/
 #echoes-chat button.bg-black { color: #fff !important; }
 #echoes-chat button.bg-black:hover { color: #fff !important; }
 #echoes-chat [class*="bg-black"][class*="text-white"] { color: #fff !important; }
@@ -906,10 +906,10 @@ const PersonalizationPanel = ({
 }) => {
   return (
     <div className="space-y-8 pt-4 pb-20 px-1">
-      {/* ---------------- SECTION 1: 显示与排版 ---------------- */}
+      {/* ---------------- SECTION 1: 显示与排�?---------------- */}
       <section>
         <h3 data-section-icon="display" className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3 border-b border-gray-200/50 pb-1 flex items-center gap-2">
-          <Monitor size={10} /> 显示与排版
+          <Monitor size={10} /> 显示与排�?
         </h3>
 
         {/* 沉浸模式 */}
@@ -975,7 +975,7 @@ const PersonalizationPanel = ({
 
       {/* ---------------- SECTION: 界面样式 ---------------- */}
       <section>
-        <h3 data-section-icon="palette" className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3 border-b border-gray-200/50 pb-1 flex items-center gap-2">
+        <h3 data-section-icon="palette" className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3 border-b border-gray-200/50 pb-1 flex items-center gap-2 relative z-10">
           <Palette size={10} /> 界面样式
         </h3>
 
@@ -1006,13 +1006,13 @@ const PersonalizationPanel = ({
           ))}
         </div>
 
-        {/* 自定义 CSS */}
+        {/* 自定�?CSS */}
         <div className="glass-card p-4 rounded-xl space-y-3">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <Type size={12} className="text-gray-500" />
               <label className="text-xs font-bold text-gray-700">
-                自定义样式
+                自定义样�?
               </label>
             </div>
             {skinCSS && (
@@ -1037,7 +1037,7 @@ const PersonalizationPanel = ({
             className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-xs font-mono outline-none focus:border-black resize-y"
           />
           <p className="text-[9px] text-gray-400">
-            使用 <code className="bg-gray-100 px-1 rounded">#echoes-chat</code> 作为选择器前缀，
+            使用 <code className="bg-gray-100 px-1 rounded">#echoes-chat</code> 作为选择器前缀�?
             <button
               onClick={() => {
                 const link = document.createElement('a');
