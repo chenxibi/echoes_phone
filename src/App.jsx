@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+﻿import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { Virtuoso } from "react-virtuoso";
 import { jsonrepair } from "jsonrepair";
 import { PRESET_LOCATION_IMAGES } from "./constants/assets";
 import Forum from "./components/Forum";
@@ -829,6 +830,11 @@ const App = () => {
     "echoes_real_time_enabled",
   );
   const chatScrollRef = useRef(null);
+  const virtuosoRef = useRef(null);
+
+  // sticker 查找 Map 缓存 (避免每条消息都 .find 遍历数组)
+  const charStickerMap = useMemo(() => new Map(charStickers.map(s => [s.id, s])), [charStickers]);
+  const userStickerMap = useMemo(() => new Map(userStickers.map(s => [s.id, s])), [userStickers]);
 
   // === 新增状态 ===
   const [showCreationAssistant, setShowCreationAssistant] = useState(false);
@@ -1102,9 +1108,12 @@ const App = () => {
   }, [notification]);
 
   useEffect(() => {
-    if (activeApp === "chat" && chatScrollRef.current) {
-      // 直接定位到底部，不做滚动动画
-      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+    if (activeApp === "chat" && virtuosoRef.current) {
+      // 切换到聊天时滚到底部
+      virtuosoRef.current.scrollToIndex({
+        index: chatHistory.length - 1,
+        behavior: "auto",
+      });
     }
   }, [chatHistory, activeApp, loading.chat, isTyping]);
 
@@ -4401,134 +4410,51 @@ Requirements:
                 </div>
               )}
 
-              <div
-                className="flex-grow overflow-y-auto overflow-x-hidden p-4 space-y-6 custom-scrollbar"
-                ref={chatScrollRef}
-              >
-                <div className="text-center py-4">
-                  <span className="text-[9px] text-gray-400 bg-gray-100/50 px-3 py-1 rounded-full">
-                    {formatDate(getCurrentTimeObj())}
-                  </span>
-                </div>
-                {chatHistory.map((msg, i) => {
+              <Virtuoso
+                ref={virtuosoRef}
+                data={chatHistory}
+                className="flex-grow overflow-y-auto overflow-x-hidden custom-scrollbar"
+                followOutput="smooth"
+                initialTopMostItemIndex={chatHistory.length - 1}
+                itemContent={(i, msg) => {
+                  const msgKey = msg.id || i;
                   const isSelected = selectedMsgs.has(i);
 
                   if (msg.isSystem) {
                     return (
                       <div
-                        key={i}
-                        className="relative group flex justify-center my-4 animate-in fade-in duration-300"
-                        // 绑定事件，支持菜单
-                        onContextMenu={
-                          !isMultiSelectMode
-                            ? (e) => handleContextMenu(e, i)
-                            : undefined
-                        }
-                        onTouchStart={
-                          !isMultiSelectMode
-                            ? () => handleTouchStart(i)
-                            : undefined
-                        }
-                        onTouchEnd={
-                          !isMultiSelectMode ? handleTouchEnd : undefined
-                        }
-                        onMouseDown={
-                          !isMultiSelectMode
-                            ? () => handleTouchStart(i)
-                            : undefined
-                        }
-                        onMouseUp={
-                          !isMultiSelectMode ? handleTouchEnd : undefined
-                        }
-                        onClick={() => {
-                          if (isMultiSelectMode) toggleMessageSelection(i);
-                        }}
+                        key={msgKey}
+                        className="relative group flex justify-center my-4 animate-in fade-in duration-300 px-4"
+                        onContextMenu={!isMultiSelectMode ? (e) => handleContextMenu(e, i) : undefined}
+                        onTouchStart={!isMultiSelectMode ? () => handleTouchStart(i) : undefined}
+                        onTouchEnd={!isMultiSelectMode ? handleTouchEnd : undefined}
+                        onMouseDown={!isMultiSelectMode ? () => handleTouchStart(i) : undefined}
+                        onMouseUp={!isMultiSelectMode ? handleTouchEnd : undefined}
+                        onClick={() => { if (isMultiSelectMode) toggleMessageSelection(i); }}
                       >
-                        {/* 胶囊本体 */}
-                        <div
-                          className={`
-                            bg-gray-200/60 backdrop-blur-sm text-gray-500 text-[10px] font-bold px-3 py-1 rounded-full shadow-sm cursor-pointer transition-all
-                            ${
-                              isMultiSelectMode && isSelected
-                                ? "ring-2 ring-[#7A2A3A] bg-white"
-                                : ""
-                            }
-                        `}
-                        >
+                        <div className={`bg-gray-200/60 backdrop-blur-sm text-gray-500 text-[10px] font-bold px-3 py-1 rounded-full shadow-sm cursor-pointer transition-all ${isMultiSelectMode && isSelected ? "ring-2 ring-[#7A2A3A] bg-white" : ""}`}>
                           {msg.text.replace("[系统通知] ", "")}
                         </div>
-
-                        {/* [新增] 菜单 (复用原有的菜单代码逻辑) */}
                         {!isMultiSelectMode && activeMenuIndex === i && (
                           <div className="absolute top-full mt-2 z-50 flex flex-col items-center animate-in fade-in zoom-in-95 duration-200">
                             <div className="bg-[#1a1a1a]/95 backdrop-blur-md text-white rounded-xl shadow-2xl p-1.5 flex gap-1 items-center border border-white/20">
-                              {/* 系统消息只需要删除和多选 */}
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setIsMultiSelectMode(true);
-                                  setSelectedMsgs(new Set([i]));
-                                  setActiveMenuIndex(null);
-                                }}
-                                className="flex flex-col items-center gap-1 p-2 hover:bg-white/20 rounded-lg min-w-[40px]"
-                              >
-                                <span className="text-[11px]">多选</span>
-                              </button>
+                              <button onClick={(e) => { e.stopPropagation(); setIsMultiSelectMode(true); setSelectedMsgs(new Set([i])); setActiveMenuIndex(null); }} className="flex flex-col items-center gap-1 p-2 hover:bg-white/20 rounded-lg min-w-[40px]"><span className="text-[11px]">多选</span></button>
                               <div className="w-[1px] h-4 bg-white/20"></div>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteWithConfirm(i);
-                                }}
-                                className="flex flex-col items-center gap-1 p-2 hover:bg-red-500/50 rounded-lg min-w-[40px] text-red-300 hover:text-white"
-                              >
-                                <span className="text-[11px]">删除</span>
-                              </button>
+                              <button onClick={(e) => { e.stopPropagation(); handleDeleteWithConfirm(i); }} className="flex flex-col items-center gap-1 p-2 hover:bg-red-500/50 rounded-lg min-w-[40px] text-red-300 hover:text-white"><span className="text-[11px]">删除</span></button>
                             </div>
-                            {/* 遮罩 */}
-                            <div
-                              className="fixed inset-0 z-[-1]"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setActiveMenuIndex(null);
-                              }}
-                            ></div>
+                            <div className="fixed inset-0 z-[-1]" onClick={(e) => { e.stopPropagation(); setActiveMenuIndex(null); }}></div>
                           </div>
                         )}
                       </div>
                     );
                   }
 
-                  let stickerUrl = null;
-
-                  if (msg.sticker && msg.sticker.url) {
-                    stickerUrl = msg.sticker.url;
-                  } else if (msg.stickerId) {
-                    if (msg.stickerSource === "user") {
-                      const found = userStickers.find(
-                        (s) => s.id === msg.stickerId,
-                      );
-                      if (found) stickerUrl = found.url;
-                    } else {
-                      const found = charStickers.find(
-                        (s) => s.id === msg.stickerId,
-                      );
-                      if (found) stickerUrl = found.url;
-                    }
-                  }
-
-                  // 时间分隔线：消息间隔超过 1 小时
+                  // 时间分隔线
                   const prevMsg = i > 0 ? chatHistory[i - 1] : null;
-                  const showGapMarker =
-                    !msg.isSystem &&
-                    prevMsg &&
-                    !prevMsg.isSystem &&
-                    msg.timestamp &&
-                    prevMsg.timestamp &&
-                    msg.timestamp - prevMsg.timestamp > 3600000;
+                  const showGapMarker = prevMsg && !prevMsg.isSystem && msg.timestamp && prevMsg.timestamp && msg.timestamp - prevMsg.timestamp > 3600000;
 
                   return (
-                    <React.Fragment key={i}>
+                    <div key={msgKey} className="px-4 space-y-6">
                     {showGapMarker && (
                       <div className="flex justify-center my-3">
                         <span className="text-[10px] text-gray-400 bg-gray-100 px-3 py-1 rounded-full">
@@ -4537,459 +4463,138 @@ Requirements:
                       </div>
                     )}
                     <div
-                      onClick={() => {
-                        // 如果在多选模式下，点击任何地方都是切换选中
-                        if (isMultiSelectMode) toggleMessageSelection(i);
-                      }}
-                      className={`flex flex-col gap-1 ${
-                        msg.sender === "me" ? "items-end" : "items-start"
-                      } group relative animate-in fade-in slide-in-from-bottom-2 ${
-                        // 多选模式下增加点击区域和样式提示
-                        isMultiSelectMode
-                          ? "cursor-pointer hover:bg-gray-100/50 p-2 rounded-xl transition-colors"
-                          : ""
-                      }`}
+                      onClick={() => { if (isMultiSelectMode) toggleMessageSelection(i); }}
+                      className={`flex flex-col gap-1 ${msg.sender === "me" ? "items-end" : "items-start"} group relative animate-in fade-in slide-in-from-bottom-2 ${isMultiSelectMode ? "cursor-pointer hover:bg-gray-100/50 p-2 rounded-xl transition-colors" : ""}`}
                     >
-                      {/* --- 第一行：头像 + 气泡 + (恢复)状态按钮 --- */}
-                      <div
-                        className={`flex gap-3 relative ${
-                          msg.sender === "me" ? "flex-row-reverse" : "flex-row"
-                        } max-w-full`}
-                      >
-                        {/* [新增] 多选模式下的 Checkbox */}
+                      <div className={`flex gap-3 relative ${msg.sender === "me" ? "flex-row-reverse" : "flex-row"} max-w-full`}>
                         {isMultiSelectMode && (
-                          <div
-                            className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-                              isSelected
-                                ? "bg-[#7A2A3A] border-[#7A2A3A]"
-                                : "border-gray-300 bg-white"
-                            }`}
-                          >
-                            {isSelected && (
-                              <Check size={14} className="text-white" />
-                            )}
+                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isSelected ? "bg-[#7A2A3A] border-[#7A2A3A]" : "border-gray-300 bg-white"}`}>
+                            {isSelected && <Check size={14} className="text-white" />}
                           </div>
                         )}
-                        {/* 1. 头像 */}
-                        <div
-                          className={`w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden shadow-sm ${
-                            msg.sender === "me"
-                              ? "bg-gray-200"
-                              : "bg-white border border-gray-100"
-                          }`}
-                        >
+                        <div className={`w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden shadow-sm ${msg.sender === "me" ? "bg-gray-200" : "bg-white border border-gray-100"}`}>
                           {msg.sender === "me" ? (
-                            userAvatar ? (
-                              <img
-                                src={userAvatar}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <User size={14} className="text-gray-500" />
-                            )
-                          ) : avatar ? (
-                            <img
-                              src={avatar}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <span className="text-gray-800 text-[10px] font-bold">
-                              {persona?.name?.[0]}
-                            </span>
-                          )}
+                            userAvatar ? <img src={userAvatar} className="w-full h-full object-cover" /> : <User size={14} className="text-gray-500" />
+                          ) : avatar ? <img src={avatar} className="w-full h-full object-cover" /> : <span className="text-gray-800 text-[10px] font-bold">{persona?.name?.[0]}</span>}
                         </div>
 
-                        <div
-                          className={`flex flex-col ${
-                            msg.sender === "me" ? "items-end" : "items-start"
-                          } max-w-[72%] relative`}
-                        >
-                          {/* 编辑模式 */}
+                        <div className={`flex flex-col ${msg.sender === "me" ? "items-end" : "items-start"} max-w-[72%] relative`}>
                           {editIndex === i ? (
                             <div className="flex flex-col gap-2 w-64 animate-in zoom-in-95">
-                              <textarea
-                                value={editContent}
-                                onChange={(e) => setEditContent(e.target.value)}
-                                className="w-full p-2 text-sm border border-gray-300 rounded-xl outline-none focus:border-black transition-colors resize-none h-24 bg-white/90"
-                              />
+                              <textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} className="w-full p-2 text-sm border border-gray-300 rounded-xl outline-none focus:border-black transition-colors resize-none h-24 bg-white/90" />
                               <div className="flex gap-2 justify-end">
-                                <button
-                                  onClick={() => setEditIndex(null)}
-                                  className="px-3 py-1 text-xs bg-gray-200 rounded-full text-gray-600"
-                                >
-                                  取消
-                                </button>
-                                <button
-                                  onClick={() => saveEdit(i)}
-                                  className="px-3 py-1 text-xs bg-black text-white rounded-full"
-                                >
-                                  保存
-                                </button>
+                                <button onClick={() => setEditIndex(null)} className="px-3 py-1 text-xs bg-gray-200 rounded-full text-gray-600">取消</button>
+                                <button onClick={() => saveEdit(i)} className="px-3 py-1 text-xs bg-black text-white rounded-full">保存</button>
                               </div>
                             </div>
                           ) : (
-                            // 正常显示模式：绑定长按事件 (使得转账也能长按删除)
-                            <div
-                              className={
-                                isMultiSelectMode ? "pointer-events-none" : ""
-                              }
-                              onContextMenu={
-                                !isMultiSelectMode
-                                  ? (e) => handleContextMenu(e, i)
-                                  : undefined
-                              }
-                              onTouchStart={
-                                !isMultiSelectMode
-                                  ? () => handleTouchStart(i)
-                                  : undefined
-                              }
-                              onTouchEnd={
-                                !isMultiSelectMode ? handleTouchEnd : undefined
-                              }
-                              onMouseDown={
-                                !isMultiSelectMode
-                                  ? () => handleTouchStart(i)
-                                  : undefined
-                              }
-                              onMouseUp={
-                                !isMultiSelectMode ? handleTouchEnd : undefined
-                              }
-                            >
-                              {/* === 内容分发逻辑 === */}
+                            <div className={isMultiSelectMode ? "pointer-events-none" : ""} onContextMenu={!isMultiSelectMode ? (e) => handleContextMenu(e, i) : undefined} onTouchStart={!isMultiSelectMode ? () => handleTouchStart(i) : undefined} onTouchEnd={!isMultiSelectMode ? handleTouchEnd : undefined} onMouseDown={!isMultiSelectMode ? () => handleTouchStart(i) : undefined} onMouseUp={!isMultiSelectMode ? handleTouchEnd : undefined}>
                               {(() => {
-                                // A. 转账渲染 (放在最优先)
-                                if (msg.isTransfer) {
-                                  return (
-                                    <TransferBubble
-                                      msg={msg}
-                                      isMe={msg.sender === "me"}
-                                      onInteract={(action) =>
-                                        handleTransferInteract(i, action)
-                                      }
-                                    />
-                                  );
-                                }
+                                if (msg.isTransfer) return <TransferBubble msg={msg} isMe={msg.sender === "me"} onInteract={(action) => handleTransferInteract(i, action)} />;
 
-                                // B. 图片/表情包逻辑
                                 let stickerUrl = msg.sticker?.url;
                                 if (!stickerUrl && msg.stickerId) {
-                                  let found = charStickers.find(
-                                    (s) => s.id === msg.stickerId,
-                                  );
-                                  if (!found)
-                                    found = userStickers.find(
-                                      (s) => s.id === msg.stickerId,
-                                    );
+                                  let found = charStickerMap.get(msg.stickerId);
+                                  if (!found) found = userStickerMap.get(msg.stickerId);
                                   if (found) stickerUrl = found.url;
                                 }
+                                if (stickerUrl) return <div className="w-32 rounded-xl overflow-hidden shadow-sm border border-gray-100"><img src={stickerUrl} className="w-full h-auto" /></div>;
 
-                                if (stickerUrl) {
-                                  return (
-                                    <div className="w-32 rounded-xl overflow-hidden shadow-sm border border-gray-100">
-                                      <img
-                                        src={stickerUrl}
-                                        className="w-full h-auto"
-                                      />
-                                    </div>
-                                  );
-                                }
+                                if (msg.isImage) return (
+                                  <div className="cursor-pointer overflow-hidden rounded-xl border-2 border-white shadow-sm bg-white relative group/img transition-transform active:scale-95">
+                                    {msg.imageData ? <img src={msg.imageData} alt="发送的图片" className="w-48 max-h-64 object-cover rounded-xl" /> : <div className="w-48 h-32 bg-gray-200 flex items-center justify-center"><Camera size={24} className="text-gray-400" /></div>}
+                                  </div>
+                                );
 
-                                // C. 真实图片
-                                if (msg.isImage) {
-                                  return (
-                                    <div className="cursor-pointer overflow-hidden rounded-xl border-2 border-white shadow-sm bg-white relative group/img transition-transform active:scale-95">
-                                      {msg.imageData ? (
-                                        <img
-                                          src={msg.imageData}
-                                          alt="发送的图片"
-                                          className="w-48 max-h-64 object-cover rounded-xl"
-                                        />
-                                      ) : (
-                                        <div className="w-48 h-32 bg-gray-200 flex items-center justify-center">
-                                          <Camera size={24} className="text-gray-400" />
-                                        </div>
-                                      )}
-                                    </div>
-                                  );
-                                }
-
-                                // D. 假图片逻辑
                                 const isFakeImg = isImageMsg(msg.text);
+                                if (isFakeImg) { const imgDesc = getImageDesc(msg.text); return <div className="cursor-pointer overflow-hidden rounded-xl border-2 border-white shadow-sm bg-white relative group/img transition-transform active:scale-95" onClick={() => customAlert(imgDesc, "图片内容")}><img src={PLACEHOLDER_IMG_BASE64} className="w-48 h-32 object-cover block bg-gray-200" /></div>; }
 
-                                if (isFakeImg) {
-                                  const imgDesc = getImageDesc(msg.text);
+                                if (msg.isLocation) return <LocationBubble name={msg.location?.name || "地点"} address={msg.location?.address || ""} />;
+                                if (msg.isVoice) return <VoiceMessageBubble msg={msg} isMe={msg.sender === "me"} />;
+                                if (msg.isDice) return <DiceFace value={msg.dice?.result || 1} animate={!msg.diceRolled} onDone={() => { msg.diceRolled = true; }} />;
 
-                                  return (
-                                    <div
-                                      className="cursor-pointer overflow-hidden rounded-xl border-2 border-white shadow-sm bg-white relative group/img transition-transform active:scale-95"
-                                      onClick={() =>
-                                        customAlert(imgDesc, "图片内容")
-                                      }
-                                    >
-                                      <img
-                                        src={PLACEHOLDER_IMG_BASE64} // 【改】：删掉那一长串 Base64，直接填这个变量名
-                                        className="w-48 h-32 object-cover block bg-gray-200"
-                                      />
-                                    </div>
-                                  );
-                                }
-
-                                let messageContent = null;
-
-                                if (msg.isLocation) {
-                                  return (
-                                    <LocationBubble
-                                      name={msg.location?.name || "地点"}
-                                      address={msg.location?.address || ""}
-                                    />
-                                  );
-                                } else if (msg.isVoice) {
-                                  return (
-                                    <VoiceMessageBubble
-                                      msg={msg}
-                                      isMe={msg.sender === "me"}
-                                    />
-                                  );
-                                } else if (msg.isDice) {
-                                  return (<DiceFace value={msg.dice?.result || 1} animate={!msg.diceRolled} onDone={() => { msg.diceRolled = true; }} />);
-                                }
-
-                                // E. 普通文本/转发卡片 (Fallback)
                                 return (
-                                  <div
-                                    className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap select-text ${
-                                      msg.sender === "me"
-                                        ? "bg-[#2C2C2C] text-white rounded-tr-none"
-                                        : "bg-white border border-gray-100 text-gray-800 rounded-tl-none"
-                                    }`}
-                                  >
+                                  <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap select-text ${msg.sender === "me" ? "bg-[#2C2C2C] text-white rounded-tr-none" : "bg-white border border-gray-100 text-gray-800 rounded-tl-none"}`}>
                                     {msg.isForward ? (() => {
                                       const fwd = msg.forwardData;
                                       const isForumType = fwd?.type === "post" || fwd?.type === "comment";
-                                      const labelMap = {
-                                        post: "帖子", comment: "评论",
-                                        diary: "日记", receipt: "消费", browser: "浏览",
-                                        incognito: "隐私浏览", smartwatch: "监控日志"
-                                      };
+                                      const labelMap = { post: "帖子", comment: "评论", diary: "日记", receipt: "消费", browser: "浏览", incognito: "隐私浏览", smartwatch: "监控日志" };
                                       const typeLabel = labelMap[fwd?.type] || "转发";
                                       return (
-                                      <div className="text-left max-w-[240px] pl-3 border-l-2 border-white/30 my-1">
-                                        <div className="flex items-center gap-2 mb-1 opacity-70">
-                                          <Share size={10} />
-                                          <span className="text-[10px] font-bold uppercase tracking-wider">
-                                            {typeLabel}
-                                          </span>
+                                        <div className="text-left max-w-[240px] pl-3 border-l-2 border-white/30 my-1">
+                                          <div className="flex items-center gap-2 mb-1 opacity-70"><Share size={10} /><span className="text-[10px] font-bold uppercase tracking-wider">{typeLabel}</span></div>
+                                          {isForumType ? (<><div className="text-[10px] text-white/80 mb-1 font-bold">@{fwd?.author}</div><div className="text-xs text-white/80 line-clamp-3 leading-relaxed font-light">{fwd?.content}</div></>) : <div className="text-xs text-white/80 line-clamp-5 leading-relaxed">{msg.text}</div>}
                                         </div>
-                                        {isForumType ? (
-                                          <>
-                                            <div className="text-[10px] text-white/80 mb-1 font-bold">
-                                              @{fwd?.author}
-                                            </div>
-                                            <div className="text-xs text-white/80 line-clamp-3 leading-relaxed font-light">
-                                              {fwd?.content}
-                                            </div>
-                                          </>
-                                        ) : (
-                                          <div className="text-xs text-white/80 line-clamp-5 leading-relaxed">
-                                            {msg.text}
-                                          </div>
-                                        )}
-                                      </div>
-                                    )})() : (
-                                      msg.text
-                                    )}
+                                      );
+                                    })() : msg.text}
                                   </div>
                                 );
                               })()}
                             </div>
                           )}
 
-                          {/* --- 长按弹出的菜单 (现在对转账也生效) --- */}
                           {!isMultiSelectMode && activeMenuIndex === i && (
-                            <div
-                              className="absolute top-full mt-2 z-[120] flex flex-col items-center animate-in fade-in zoom-in-95 duration-200"
-                              style={{
-                                left: msg.sender === "me" ? "auto" : "0",
-                                right: msg.sender === "me" ? "0" : "auto",
-                              }}
-                            >
+                            <div className="absolute top-full mt-2 z-[120] flex flex-col items-center animate-in fade-in zoom-in-95 duration-200" style={{ left: msg.sender === "me" ? "auto" : "0", right: msg.sender === "me" ? "0" : "auto" }}>
                               <div className="bg-[#1a1a1a]/95 backdrop-blur-md text-white rounded-xl shadow-2xl p-1.5 flex gap-1 items-center border border-white/20">
-                                {/* 1. 复制按钮 (无条件显示) */}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleCopy(msg.text); // 转账消息也有 text，完全可以复制
-                                  }}
-                                  className="flex flex-col items-center gap-1 p-2 hover:bg-white/20 rounded-lg min-w-[40px]"
-                                >
-                                  <span className="text-[11px]">复制</span>
-                                </button>
-
+                                <button onClick={(e) => { e.stopPropagation(); handleCopy(msg.text); }} className="flex flex-col items-center gap-1 p-2 hover:bg-white/20 rounded-lg min-w-[40px]"><span className="text-[11px]">复制</span></button>
                                 <div className="w-[1px] h-4 bg-white/20"></div>
-
-                                {/* 2. 改写按钮 (无条件显示) */}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    startEdit(i, msg.text); // 转账消息也可以进入编辑模式
-                                  }}
-                                  className="flex flex-col items-center gap-1 p-2 hover:bg-white/20 rounded-lg min-w-[40px]"
-                                >
-                                  <span className="text-[11px]">改写</span>
-                                </button>
-
+                                <button onClick={(e) => { e.stopPropagation(); startEdit(i, msg.text); }} className="flex flex-col items-center gap-1 p-2 hover:bg-white/20 rounded-lg min-w-[40px]"><span className="text-[11px]">改写</span></button>
                                 <div className="w-[1px] h-4 bg-white/20"></div>
-
-                                {/* 3. 多选按钮 */}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setIsMultiSelectMode(true);
-                                    setSelectedMsgs(new Set([i]));
-                                    setActiveMenuIndex(null);
-                                  }}
-                                  className="flex flex-col items-center gap-1 p-2 hover:bg-white/20 rounded-lg min-w-[40px]"
-                                >
-                                  <span className="text-[11px]">多选</span>
-                                </button>
-
+                                <button onClick={(e) => { e.stopPropagation(); setIsMultiSelectMode(true); setSelectedMsgs(new Set([i])); setActiveMenuIndex(null); }} className="flex flex-col items-center gap-1 p-2 hover:bg-white/20 rounded-lg min-w-[40px]"><span className="text-[11px]">多选</span></button>
                                 <div className="w-[1px] h-4 bg-white/20"></div>
-
-                                {/* 4. 删除按钮 */}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteWithConfirm(i);
-                                  }}
-                                  className="flex flex-col items-center gap-1 p-2 hover:bg-red-500/50 rounded-lg min-w-[40px] text-red-300 hover:text-white"
-                                >
-                                  <span className="text-[11px]">删除</span>
-                                </button>
+                                <button onClick={(e) => { e.stopPropagation(); handleDeleteWithConfirm(i); }} className="flex flex-col items-center gap-1 p-2 hover:bg-red-500/50 rounded-lg min-w-[40px] text-red-300 hover:text-white"><span className="text-[11px]">删除</span></button>
                               </div>
-
-                              {/* 遮罩 */}
-                              <div
-                                className="fixed inset-0 z-[-1]"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setActiveMenuIndex(null);
-                                }}
-                              ></div>
+                              <div className="fixed inset-0 z-[-1]" onClick={(e) => { e.stopPropagation(); setActiveMenuIndex(null); }}></div>
                             </div>
                           )}
                         </div>
 
-                        {/* 3. 状态按钮 */}
                         {msg.sender === "char" && msg.status && (
-                          <button
-                            onClick={() =>
-                              setExpandedChatStatusIndex(
-                                expandedChatStatusIndex === i ? null : i,
-                              )
-                            }
-                            className={`self-center p-1.5 rounded-full transition-all ${
-                              expandedChatStatusIndex === i
-                                ? "bg-[#7A2A3A] text-white shadow-md transform scale-110"
-                                : "text-gray-300 hover:text-[#7A2A3A] hover:bg-gray-100"
-                            }`}
-                          >
+                          <button onClick={() => setExpandedChatStatusIndex(expandedChatStatusIndex === i ? null : i)} className={`self-center p-1.5 rounded-full transition-all ${expandedChatStatusIndex === i ? "bg-[#7A2A3A] text-white shadow-md transform scale-110" : "text-gray-300 hover:text-[#7A2A3A] hover:bg-gray-100"}`}>
                             <Activity size={12} />
                           </button>
                         )}
                       </div>
 
-                      {/* --- 第二行：时间 + 重说 --- */}
                       {!isMultiSelectMode && (
-                        <div
-                          className={`flex gap-3 mt-1 items-center opacity-0 group-hover:opacity-100 transition-opacity ${
-                            msg.sender === "me"
-                              ? "mr-12 flex-row-reverse"
-                              : "ml-12 pl-1 flex-row"
-                          }`}
-                        >
-                          <span className="text-[9px] text-gray-300">
-                            {msg.timestamp ? formatSmartTime(msg.timestamp) : msg.time}
-                          </span>
-                          {msg.sender === "char" && !msg.isTransfer && (
-                            <button
-                              onClick={() => setRegenerateTarget(i)}
-                              className="text-gray-300 hover:text-black transition-colors p-1"
-                              title="重生成"
-                            >
-                              <RotateCcw size={11} />
-                            </button>
-                          )}
+                        <div className={`flex gap-3 mt-1 items-center opacity-0 group-hover:opacity-100 transition-opacity ${msg.sender === "me" ? "mr-12 flex-row-reverse" : "ml-12 pl-1 flex-row"}`}>
+                          <span className="text-[9px] text-gray-300">{msg.timestamp ? formatSmartTime(msg.timestamp) : msg.time}</span>
+                          {msg.sender === "char" && !msg.isTransfer && <button onClick={() => setRegenerateTarget(i)} className="text-gray-300 hover:text-black transition-colors p-1" title="重生成"><RotateCcw size={11} /></button>}
                         </div>
                       )}
 
-                      {/* --- 第三行：状态展开卡片 --- */}
                       {expandedChatStatusIndex === i && msg.status && (
                         <div className="ml-12 mt-1 w-64 glass-card p-3 rounded-xl animate-in slide-in-from-top-2 border border-gray-200/50 relative z-10">
-                          {/* ... 状态卡片内容 ... */}
                           <div className="space-y-2">
-                            <div className="flex items-start gap-2">
-                              <Shirt
-                                size={10}
-                                className="mt-0.5 text-gray-400 shrink-0"
-                              />
-                              <span className="text-[10px] text-gray-600 leading-tight">
-                                {msg.status.outfit}
-                              </span>
-                            </div>
-                            <div className="flex items-start gap-2">
-                              <Eye
-                                size={10}
-                                className="mt-0.5 text-gray-400 shrink-0"
-                              />
-                              <span className="text-[10px] text-gray-600 leading-tight">
-                                {msg.status.action}
-                              </span>
-                            </div>
-                            <div className="flex items-start gap-2">
-                              <Heart
-                                size={10}
-                                className="mt-0.5 text-blue-400 shrink-0"
-                              />
-                              <span className="text-[10px] text-blue-800 italic leading-tight">
-                                "{msg.status.thought}"
-                              </span>
-                            </div>
-                            <div className="flex items-start gap-2">
-                              <Ghost
-                                size={10}
-                                className="mt-0.5 text-red-400 shrink-0"
-                              />
-                              <span className="text-[10px] text-red-800 italic leading-tight">
-                                "{msg.status.desire}"
-                              </span>
-                            </div>
+                            <div className="flex items-start gap-2"><Shirt size={10} className="mt-0.5 text-gray-400 shrink-0" /><span className="text-[10px] text-gray-600 leading-tight">{msg.status.outfit}</span></div>
+                            <div className="flex items-start gap-2"><Eye size={10} className="mt-0.5 text-gray-400 shrink-0" /><span className="text-[10px] text-gray-600 leading-tight">{msg.status.action}</span></div>
+                            <div className="flex items-start gap-2"><Heart size={10} className="mt-0.5 text-blue-400 shrink-0" /><span className="text-[10px] text-blue-800 italic leading-tight">&quot;{msg.status.thought}&quot;</span></div>
+                            <div className="flex items-start gap-2"><Ghost size={10} className="mt-0.5 text-red-400 shrink-0" /><span className="text-[10px] text-red-800 italic leading-tight">&quot;{msg.status.desire}&quot;</span></div>
                           </div>
                         </div>
                       )}
                     </div>
-                    </React.Fragment>
+                    </div>
                   );
-                })}
-                {(loading.chat || isTyping) && (
-                  <div className="flex gap-2 items-center ml-12 pl-2">
-                    <div
-                      className="w-1.5 h-1.5 bg-gray-400 rounded-full typing-dot"
-                      style={{ animationDelay: "0s" }}
-                    ></div>
-                    <div
-                      className="w-1.5 h-1.5 bg-gray-400 rounded-full typing-dot"
-                      style={{ animationDelay: "0.2s" }}
-                    ></div>
-                    <div
-                      className="w-1.5 h-1.5 bg-gray-400 rounded-full typing-dot"
-                      style={{ animationDelay: "0.4s" }}
-                    ></div>
-                    <span className="text-xs text-gray-400 ml-1">
-                      对方正在输入...
-                    </span>
-                  </div>
-                )}
-              </div>
+                }}
+                components={{
+                  Header: () => (
+                    <div className="text-center py-4">
+                      <span className="text-[9px] text-gray-400 bg-gray-100/50 px-3 py-1 rounded-full">
+                        {formatDate(getCurrentTimeObj())}
+                      </span>
+                    </div>
+                  ),
+                  Footer: () => (loading.chat || isTyping) ? (
+                    <div className="flex gap-2 items-center ml-12 pl-2 px-4 py-4">
+                      <div className="w-1.5 h-1.5 bg-gray-400 rounded-full typing-dot" style={{ animationDelay: "0s" }}></div>
+                      <div className="w-1.5 h-1.5 bg-gray-400 rounded-full typing-dot" style={{ animationDelay: "0.2s" }}></div>
+                      <div className="w-1.5 h-1.5 bg-gray-400 rounded-full typing-dot" style={{ animationDelay: "0.4s" }}></div>
+                      <span className="text-xs text-gray-400 ml-1">对方正在输入...</span>
+                    </div>
+                  ) : null,
+                }}
+              />
 
               {/* 用户表情包面板 */}
               {showUserStickerPanel && (
