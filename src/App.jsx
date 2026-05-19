@@ -5489,11 +5489,30 @@ Requirements:
                         <span className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">
                           {d.date}
                         </span>
-                        <Trash2
-                          size={12}
-                          className="text-gray-300 cursor-pointer hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => handleDeleteDiary(i)}
-                        />
+                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Share
+                            size={12}
+                            className="text-gray-300 cursor-pointer hover:text-black"
+                            onClick={() => {
+                              const newMsg = {
+                                sender: "me",
+                                text: `【转发${persona?.name || "角色"}的日记】\n日期：${d.date}\n内容：${d.content.replace(/<[^>]*>/g, "")}`,
+                                isForward: true,
+                                forwardData: { content: d.content.replace(/<[^>]*>/g, ""), type: "diary", date: d.date },
+                                time: formatTime(getCurrentTimeObj()),
+                              };
+                              setChatHistory((prev) => [...prev, newMsg]);
+                              setMsgCountSinceSummary((prev) => prev + 1);
+                              setForwardContext(`${userName || "User"} forwarded ${persona?.name || "the character"}'s diary entry. ${persona?.name || "the character"} should react to their own personal thoughts and memories being read back to them.`);
+                              setActiveApp("chat");
+                            }}
+                          />
+                          <Trash2
+                            size={12}
+                            className="text-gray-300 cursor-pointer hover:text-red-400"
+                            onClick={() => handleDeleteDiary(i)}
+                          />
+                        </div>
                       </div>
                       <div
                         className="text-sm leading-loose text-gray-700 whitespace-pre-line diary-content"
@@ -5541,13 +5560,33 @@ Requirements:
                   key={i}
                   className="bg-white p-6 shadow-md text-xs relative group rotate-1 hover:rotate-0 transition-transform duration-300"
                 >
-                  <div className="flex justify-between mb-4 border-b border-dashed pb-2">
+                  <div className="flex justify-between items-center mb-4 border-b border-dashed pb-2">
                     <span className="font-bold text-sm">{r.store}</span>
-                    <Trash2
-                      size={12}
-                      className="cursor-pointer hover:text-red-500 opacity-0 group-hover:opacity-100"
-                      onClick={() => handleDeleteReceipt(i)}
-                    />
+                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100">
+                      <Share
+                        size={12}
+                        className="cursor-pointer hover:text-black text-gray-400"
+                        onClick={() => {
+                          const itemsStr = r.items.map(item => `${item.name}: ${item.price}`).join("\n");
+                          const newMsg = {
+                            sender: "me",
+                            text: `【转发${persona?.name || "角色"}的消费记录】\n商家：${r.store}\n${itemsStr}\n合计：${r.total}${r.thought ? `\n\n${persona?.name || "角色"}在作出这笔消费时的心理活动：${r.thought}` : ""}`,
+                            isForward: true,
+                            forwardData: { store: r.store, items: r.items, total: r.total, thought: r.thought, type: "receipt" },
+                            time: formatTime(getCurrentTimeObj()),
+                          };
+                          setChatHistory((prev) => [...prev, newMsg]);
+                          setMsgCountSinceSummary((prev) => prev + 1);
+                          setForwardContext(`${userName || "User"} forwarded ${persona?.name || "the character"}'s purchase receipt from ${r.store}. ${persona?.name || "the character"} should react to their own spending habits being read back to them.`);
+                          setActiveApp("chat");
+                        }}
+                      />
+                      <Trash2
+                        size={12}
+                        className="cursor-pointer hover:text-red-500"
+                        onClick={() => handleDeleteReceipt(i)}
+                      />
+                    </div>
                   </div>
                   <div className="space-y-1 mb-4 text-gray-600">
                     {r.items.map((item, idx) => (
@@ -5877,16 +5916,38 @@ Requirements:
                           )}
                         </div>
 
-                        <button
-                          onClick={() =>
-                            setSmartWatchLogs((prev) =>
-                              prev.filter((l) => l.id !== log.id),
-                            )
-                          }
-                          className="absolute top-3 right-3 text-gray-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <Trash2 size={12} />
-                        </button>
+                        <div className="absolute top-3 right-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => {
+                              const timeStr = formatSmartTime(log.id) || log.displayTime;
+                              const avSuffix = log.avData ? `\n音视频：${log.avData}` : "";
+                              const newMsg = {
+                                sender: "me",
+                                text: `【转发${persona?.name || "角色"}的监控日志】\n地点：${log.locationName}\n时间：${timeStr}\n状态：${log.action}${log.thought ? `\n\n${persona?.name || "角色"}当时的心理活动：${log.thought}` : ""}${avSuffix}`,
+                                isForward: true,
+                                forwardData: { locationName: log.locationName, action: log.action, time: timeStr, thought: log.thought, type: "smartwatch" },
+                                time: formatTime(getCurrentTimeObj()),
+                              };
+                              setChatHistory((prev) => [...prev, newMsg]);
+                              setMsgCountSinceSummary((prev) => prev + 1);
+                              setForwardContext(`${userName || "User"} forwarded ${persona?.name || "the character"}'s smart home surveillance log from ${log.locationName}. ${persona?.name || "the character"} should react to being tracked/watched in their own home.`);
+                              setActiveApp("chat");
+                            }}
+                            className="text-gray-300 hover:text-black"
+                          >
+                            <Share size={12} />
+                          </button>
+                          <button
+                            onClick={() =>
+                              setSmartWatchLogs((prev) =>
+                                prev.filter((l) => l.id !== log.id),
+                              )
+                            }
+                            className="text-gray-300 hover:text-red-400"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   {smartWatchLogs.length === 0 && (
@@ -5936,7 +5997,7 @@ Requirements:
                   {session.normal.map((item, idx) => (
                     <div
                       key={`n-${idx}`}
-                      className="glass-card p-3 rounded-xl flex flex-col gap-2 hover:bg-white/80 transition-colors"
+                      className="glass-card p-3 rounded-xl flex flex-col gap-2 hover:bg-white/80 transition-colors relative group"
                     >
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-gray-100 rounded-full text-gray-500">
@@ -5950,6 +6011,23 @@ Requirements:
                             {item.timestamp} - {item.detail}
                           </div>
                         </div>
+                        <Share
+                          size={12}
+                          className="text-gray-300 cursor-pointer hover:text-black opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                          onClick={() => {
+                            const newMsg = {
+                              sender: "me",
+                              text: `【转发${persona?.name || "角色"}的浏览记录】\n搜索：${item.query}\n时间：${item.timestamp}\n详情：${item.detail}${item.thought ? `\n\n${persona?.name || "角色"}在搜索时的心理活动：${item.thought}` : ""}`,
+                              isForward: true,
+                              forwardData: { query: item.query, timestamp: item.timestamp, detail: item.detail, thought: item.thought, type: "browser" },
+                              time: formatTime(getCurrentTimeObj()),
+                            };
+                            setChatHistory((prev) => [...prev, newMsg]);
+                            setMsgCountSinceSummary((prev) => prev + 1);
+                            setForwardContext(`${userName || "User"} forwarded ${persona?.name || "the character"}'s browser search history. ${persona?.name || "the character"} should react to their own search queries being read back to them.`);
+                            setActiveApp("chat");
+                          }}
+                        />
                       </div>
                       <CollapsibleThought
                         text={item.thought}
@@ -5962,7 +6040,7 @@ Requirements:
                   {session.incognito.map((item, idx) => (
                     <div
                       key={`i-${idx}`}
-                      className="bg-[#1a1a1a] text-gray-300 p-3 rounded-xl flex flex-col gap-2 shadow-lg border border-gray-700"
+                      className="bg-[#1a1a1a] text-gray-300 p-3 rounded-xl flex flex-col gap-2 shadow-lg border border-gray-700 relative group"
                     >
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-gray-800 rounded-full text-gray-400">
@@ -5976,6 +6054,23 @@ Requirements:
                             {item.timestamp} - {item.detail}
                           </div>
                         </div>
+                        <Share
+                          size={12}
+                          className="text-gray-500 cursor-pointer hover:text-white opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                          onClick={() => {
+                            const newMsg = {
+                              sender: "me",
+                              text: `【转发${persona?.name || "角色"}的隐私浏览记录】\n搜索：${item.query}\n时间：${item.timestamp}\n详情：${item.detail}${item.thought ? `\n\n${persona?.name || "角色"}在隐私搜索时的心理活动：${item.thought}` : ""}`,
+                              isForward: true,
+                              forwardData: { query: item.query, timestamp: item.timestamp, detail: item.detail, thought: item.thought, type: "incognito" },
+                              time: formatTime(getCurrentTimeObj()),
+                            };
+                            setChatHistory((prev) => [...prev, newMsg]);
+                            setMsgCountSinceSummary((prev) => prev + 1);
+                            setForwardContext(`${userName || "User"} forwarded ${persona?.name || "the character"}'s private/incognito browser search history. ${persona?.name || "the character"} might feel exposed (or not, depending on their personality) and react to their secret searches being revealed.`);
+                            setActiveApp("chat");
+                          }}
+                        />
                       </div>
                       <CollapsibleThought
                         text={item.thought}
