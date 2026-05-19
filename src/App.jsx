@@ -4585,14 +4585,18 @@ Requirements:
                       </span>
                     </div>
                   ),
-                  Footer: () => (loading.chat || isTyping) ? (
-                    <div className="flex gap-2 items-center ml-12 pl-2 px-4 py-4">
-                      <div className="w-1.5 h-1.5 bg-gray-400 rounded-full typing-dot" style={{ animationDelay: "0s" }}></div>
-                      <div className="w-1.5 h-1.5 bg-gray-400 rounded-full typing-dot" style={{ animationDelay: "0.2s" }}></div>
-                      <div className="w-1.5 h-1.5 bg-gray-400 rounded-full typing-dot" style={{ animationDelay: "0.4s" }}></div>
-                      <span className="text-xs text-gray-400 ml-1">对方正在输入...</span>
+                  Footer: () => (
+                    <div className="pb-4">
+                      {(loading.chat || isTyping) && (
+                        <div className="flex gap-2 items-center ml-12 pl-2 px-4 py-4">
+                          <div className="w-1.5 h-1.5 bg-gray-400 rounded-full typing-dot" style={{ animationDelay: "0s" }}></div>
+                          <div className="w-1.5 h-1.5 bg-gray-400 rounded-full typing-dot" style={{ animationDelay: "0.2s" }}></div>
+                          <div className="w-1.5 h-1.5 bg-gray-400 rounded-full typing-dot" style={{ animationDelay: "0.4s" }}></div>
+                          <span className="text-xs text-gray-400 ml-1">对方正在输入...</span>
+                        </div>
+                      )}
                     </div>
-                  ) : null,
+                  ),
                 }}
               />
 
