@@ -906,10 +906,10 @@ const PersonalizationPanel = ({
 }) => {
   return (
     <div className="space-y-8 pt-4 pb-20 px-1">
-      {/* ---------------- SECTION 1: 显示与排�?---------------- */}
+      {/* ---------------- SECTION 1: 显示与排版---------------- */}
       <section>
         <h3 data-section-icon="display" className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3 border-b border-gray-200/50 pb-1 flex items-center gap-2">
-          <Monitor size={10} /> 显示与排�?
+          <Monitor size={10} /> 显示与排版
         </h3>
 
         {/* 沉浸模式 */}
@@ -1006,13 +1006,13 @@ const PersonalizationPanel = ({
           ))}
         </div>
 
-        {/* 自定�?CSS */}
+        {/* 自定义CSS */}
         <div className="glass-card p-4 rounded-xl space-y-3">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <Type size={12} className="text-gray-500" />
               <label className="text-xs font-bold text-gray-700">
-                自定义样�?
+                自定义样式
               </label>
             </div>
             {skinCSS && (
@@ -1037,7 +1037,7 @@ const PersonalizationPanel = ({
             className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-xs font-mono outline-none focus:border-black resize-y"
           />
           <p className="text-[9px] text-gray-400">
-            使用 <code className="bg-gray-100 px-1 rounded">#echoes-chat</code> 作为选择器前缀�?
+            使用 <code className="bg-gray-100 px-1 rounded">#echoes-chat</code> 作为选择器前缀
             <button
               onClick={() => {
                 const link = document.createElement('a');
