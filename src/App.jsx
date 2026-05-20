@@ -2448,6 +2448,12 @@ Requirements:
 
     setChatHistory((prev) => [...prev, newMsg]);
     setChatInput("");
+    // 发送后主动滚到底部
+    setTimeout(() => {
+      if (virtuosoRef.current) {
+        virtuosoRef.current.scrollToIndex({ index: chatHistory.length, behavior: "smooth" });
+      }
+    }, 50);
     lastUserSendTimeRef.current = Date.now();
     setLastInteractionTime(Date.now());
     setMsgCountSinceSummary((prev) => prev + 1);
