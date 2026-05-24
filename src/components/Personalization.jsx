@@ -86,6 +86,8 @@ const OFFICIAL_SKINS = [
 #echoes-chat .glass-panel svg { stroke: #5da9ad; }
 #echoes-chat [class*="bg-white"] svg { stroke: #5da9ad; }
 #echoes-chat [class*="rounded-\[24px\]"].glass-panel svg, #echoes-chat .flex.justify-around svg { stroke: #5da9ad; }
+/* 保护深色发送按钮内图标为白色 */
+#echoes-chat [class*="bg-\[\#2C2C2C\]"] svg { stroke: #ffffff !important; }
 
 /* 状态颜色 */
 #echoes-chat .bg-green-500 { background: #81b29a !important; } /* 森林绿点缀 */
