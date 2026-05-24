@@ -4454,7 +4454,7 @@ Requirements:
                           {msg.text.replace("[系统通知] ", "")}
                         </div>
                         {!isMultiSelectMode && activeMenuIndex === i && (
-                          <div className="absolute top-full mt-2 z-50 flex flex-col items-center animate-in fade-in zoom-in-95 duration-200">
+                          <div className={`absolute ${i >= chatHistory.length - 2 ? 'bottom-full mb-2' : 'top-full mt-2'} z-50 flex flex-col items-center animate-in fade-in zoom-in-95 duration-200`}>
                             <div className="bg-[#1a1a1a]/95 backdrop-blur-md text-white rounded-xl shadow-2xl p-1.5 flex gap-1 items-center border border-white/20">
                               <button onClick={(e) => { e.stopPropagation(); setIsMultiSelectMode(true); setSelectedMsgs(new Set([i])); setActiveMenuIndex(null); }} className="flex flex-col items-center gap-1 p-2 hover:bg-white/20 rounded-lg min-w-[40px]"><span className="text-[11px]">多选</span></button>
                               <div className="w-[1px] h-4 bg-white/20"></div>
@@ -4552,7 +4552,7 @@ Requirements:
                           )}
 
                           {!isMultiSelectMode && activeMenuIndex === i && (
-                            <div className="absolute top-full mt-2 z-[120] flex flex-col items-center animate-in fade-in zoom-in-95 duration-200" style={{ left: msg.sender === "me" ? "auto" : "0", right: msg.sender === "me" ? "0" : "auto" }}>
+                            <div className={`absolute ${i >= chatHistory.length - 2 ? 'bottom-full mb-2' : 'top-full mt-2'} z-[120] flex flex-col items-center animate-in fade-in zoom-in-95 duration-200`} style={{ left: msg.sender === "me" ? "auto" : "0", right: msg.sender === "me" ? "0" : "auto" }}>
                               <div className="bg-[#1a1a1a]/95 backdrop-blur-md text-white rounded-xl shadow-2xl p-1.5 flex gap-1 items-center border border-white/20">
                                 <button onClick={(e) => { e.stopPropagation(); handleCopy(msg.text); }} className="flex flex-col items-center gap-1 p-2 hover:bg-white/20 rounded-lg min-w-[40px]"><span className="text-[11px]">复制</span></button>
                                 <div className="w-[1px] h-4 bg-white/20"></div>
