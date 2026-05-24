@@ -302,13 +302,21 @@ const OFFICIAL_SKINS = [
 }
 
 /* 核心面板：斜角切割与内发光 */
-#echoes-chat .glass-panel {
+#echoes-chat .glass-panel:not(.bottom-full) {
  background: rgba(13, 22, 29, 0.9) !important;
  backdrop-filter: blur(10px) !important;
  border: 1px solid #00f3ff !important;
  /* 斜切效果 */
  clip-path: polygon(15px 0%, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px) !important;
  box-shadow: inset 0 0 15px rgba(0, 243, 255, 0.2), 0 0 20px rgba(0, 0, 0, 0.5) !important;
+ color: #00f3ff !important;
+}
+
+/* 覆盖悬浮面板去除 clip-path 并恢复外发光 */
+#echoes-chat .bottom-full {
+ background: rgba(13, 22, 29, 0.95) !important;
+ border: 1px solid #00f3ff !important;
+ box-shadow: 0 0 20px rgba(0, 243, 255, 0.3) !important;
  color: #00f3ff !important;
 }
 
@@ -426,14 +434,14 @@ const OFFICIAL_SKINS = [
 /* 修正：Plus图标等按钮内图标保持深色 */
 #echoes-chat button.bg-black svg, #echoes-chat [class*="bg-black"] button svg { stroke: #050a0e !important; filter: none !important; }
 
-/* 核心修正点：白色背景内文字加深（排除按钮） */
-#echoes-chat .bg-white :not(button):not(button *),
-#echoes-chat .bg-white\/90 :not(button):not(button *),
-#echoes-chat [class*="bg-white rounded"] :not(button):not(button *),
-#echoes-chat [class*="bg-white border"] :not(button):not(button *),
-#echoes-chat [class*="bg-white shadow"] :not(button):not(button *),
-#echoes-chat [class*="bg-white p-"] :not(button):not(button *),
-#echoes-chat [class*="bg-white group"] :not(button):not(button *) { color: #111827 !important; }
+/* 核心修正点：白色背景内文字加深（排除按钮、图标等） */
+#echoes-chat .bg-white :not(button):not(button *):not(svg):not(path):not(.typing-dot),
+#echoes-chat .bg-white\/90 :not(button):not(button *):not(svg):not(path):not(.typing-dot),
+#echoes-chat [class*="bg-white rounded"] :not(button):not(button *):not(svg):not(path):not(.typing-dot),
+#echoes-chat [class*="bg-white border"] :not(button):not(button *):not(svg):not(path):not(.typing-dot),
+#echoes-chat [class*="bg-white shadow"] :not(button):not(button *):not(svg):not(path):not(.typing-dot),
+#echoes-chat [class*="bg-white p-"] :not(button):not(button *):not(svg):not(path):not(.typing-dot),
+#echoes-chat [class*="bg-white group"] :not(button):not(button *):not(svg):not(path):not(.typing-dot) { color: #111827 !important; }
 
 /* 角色气泡保持白色背景 */
 #echoes-chat [class*="bg-white"][class*="rounded-tl-none"] { background: #ffffff !important; color: #000000 !important; }
