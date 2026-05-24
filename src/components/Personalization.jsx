@@ -314,12 +314,13 @@ const OFFICIAL_SKINS = [
  color: #00f3ff !important;
 }
 
-/* 覆盖悬浮面板去除 clip-path 并恢复外发光 */
+/* 确保所有底部悬浮面板（包含媒体菜单、表情面板及带 .glass-panel 的悬浮菜单）可见，去除切角并恢复外发光 */
 #echoes-chat .bottom-full {
  background: rgba(13, 22, 29, 0.95) !important;
  border: 1px solid #00f3ff !important;
  box-shadow: 0 0 20px rgba(0, 243, 255, 0.3) !important;
  color: #00f3ff !important;
+ z-index: 1000 !important;
 }
 
 /* 卡片样式：深灰色底，青色侧边边框 */
