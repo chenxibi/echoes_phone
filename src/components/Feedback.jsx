@@ -1,8 +1,8 @@
 import React, { useState, useRef } from "react";
 import { MessageSquare, Send, Paperclip, X, Image } from "lucide-react";
 
-const MAX_FILES = 3;
-const MAX_SIZE_MB = 3;
+const MAX_FILES = 6;
+const MAX_SIZE_MB = 10;
 const TG_TOKEN = "8603400358:AAGDpK65rf4JRtEwBc5M2SkqyMznqxbQJxY";
 const TG_CHAT_ID = "6224897691";
 

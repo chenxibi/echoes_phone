@@ -558,7 +558,10 @@ const OFFICIAL_SKINS = [
 
 /* GameBoy替换个性化App图标 */
 #echoes-chat [data-app-link="个性化"] svg { display:none !important; }
-#echoes-chat [data-app-link="个性化"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./vapor-gameboy.png"); background-size:contain; background-repeat:no-repeat; background-position:center; filter: drop-shadow(2px 2px 0px #00e5ff); }
+#echoes-chat [data-app-link="个性化"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./vapor-ipod.png"); background-size:contain; background-repeat:no-repeat; background-position:center; filter: drop-shadow(2px 2px 0px #00e5ff); }
+/* Shell替换反馈App图标 */
+#echoes-chat [data-app-link="反馈"] svg { display:none !important; }
+#echoes-chat [data-app-link="反馈"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./vapor-shell.png"); background-size:contain; background-repeat:no-repeat; background-position:center; filter: drop-shadow(2px 2px 0px #00e5ff); }
 
 
 /* 复古电脑替换系统设置图标 */
@@ -886,6 +889,9 @@ const OFFICIAL_SKINS = [
 /* 玩具替换浏览器刷新按钮图标 */
 #echoes-chat [data-app-link="浏览器刷新"] svg { display:none !important; }
 #echoes-chat [data-app-link="浏览器刷新"]::before { content:""; display:inline-block; width:16px; height:16px; background-image:url("./pink-toy.png"); background-size:contain; background-repeat:no-repeat; vertical-align:middle; margin-right:6px; }
+/* 玩具替换反馈按钮图标 */
+#echoes-chat [data-app-link="反馈"] svg { display:none !important; }
+#echoes-chat [data-app-link="反馈"] .glass-panel::after { content:""; position:absolute; inset:6px; background-image:url("./pink-toy.png"); background-size:contain; background-repeat:no-repeat; background-position:center; }
 /* 弹窗保持半透明 */
 #echoes-chat .fixed.inset-0 { background: rgba(0,0,0,0.5) !important; }
 #echoes-chat .bg-white\\/90 { background: rgba(250,245,248,0.85) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
