@@ -514,8 +514,8 @@ export const STYLE_PROMPTS = {
     "Script/RP Style. Describe actions/expressions inside ( ). Dialogue outside. Be interactive.",
 
   dialogue: `Instant Messenger (IM) Burst Style.
-  1. CRITICAL: Break your response into MULTIPLE short bubbles (aim for 3 to 6 separate messages).
-  2. Fragment your thoughts. Do not write long paragraphs. Split one long sentence into 2-3 shorter messages.
+  1. CRITICAL: Break your response into MULTIPLE short bubbles (aim for 1-6 separate messages, could be longer but only when necessary).
+  2. Fragment your thoughts. Strictly no long sentences or paragraphs. Split one long sentence into 2-3 shorter messages.
   3. Mimic real-time texting behavior: send short bursts of text, separate ideas, and use casual punctuation.
   4. Pure dialogue ONLY. No brackets.`,
 
