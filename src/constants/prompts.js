@@ -430,13 +430,15 @@ Analyze the conversation and determine which events should be triggered:
 2. **Diary (Important Event)**: Did something emotionally significant happen (gift, fight, relationship progress, confession, special moment, personal revelation)?
 3. **Browser Search**: Did {{NAME}} mention searching for information or look something up? Or did {{USER_NAME}} mention any term/thing/knowledge that {{NAME}} might have question with?
 4. **Shopping/Receipt**: Did {{NAME}} mention the possibility to buy/order something or exchange goods/money?
+5. **Forum Post**: Did {{NAME}} or the user discuss something interesting, express a strong opinion, share a life update, or experience something worth posting about on a social forum?
 
 JSON Format:
 {
   "triggerLocation": true/false,
   "triggerDiary": true/false,
   "triggerBrowser": true/false,
-  "triggerReceipt": true/false
+  "triggerReceipt": true/false,
+  "post_event": true/false
 }
 
 Rules:

@@ -47,7 +47,7 @@ export const APP_LIST = [
   { id: "browser", label: "浏览器", icon: Globe },
   { id: "journal", label: "日记", icon: Book },
   { id: "traces", label: "生活痕迹", icon: Receipt },
-  { id: "music", label: "共鸣旋律", icon: Disc3 },
+// 
   { id: "worldbook", label: "世界书", icon: BookOpen },
   { id: "personalization", label: "个性化", icon: Wand },
   { id: "settings", label: "系统设置", icon: SlidersHorizontal },

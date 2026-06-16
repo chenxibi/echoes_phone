@@ -1937,6 +1937,13 @@ const App = () => {
         const savedCustomRules = customRules;
         const savedInputKey = inputKey;
 
+        // 发帖触发 → 生成论坛帖子，生成完成后弹窗
+        if (data.post_event && forumData.isInitialized) {
+            if (window.__forumGenerateChatEventPost) {
+              window.__forumGenerateChatEventPost(true);
+            }
+        }
+
         // 位置移动触发 → 更新智能家，生成完成后弹窗
         if (data.triggerLocation && savedSmartWatchLocations.length > 0) {
           setTimeout(async () => {
@@ -2875,15 +2882,7 @@ Requirements:
           setMessageQueue(finalizedMsgs);
           setLastInteractionTime(Date.now());
 
-          // 惊喜逻辑：概率触发发帖
-          if (forumData.isInitialized && Math.random() < 0.3) {
-            if (window.__forumGenerateChatEventPost) {
-              // 立即调用，Forum 组件内部异步处理，成功后自己弹 toast
-              window.__forumGenerateChatEventPost(true);
-            }
-          }
-
-          // 惊喜逻辑2：概率触发app事件更新（位置/日记/浏览器/账单）
+          // 惊喜逻辑：概率触发发帖或app事件更新（位置/日记/浏览器/账单）
           if (Math.random() < 0.1) {
             setTimeout(() => {
               triggerAppEvents();
@@ -4620,7 +4619,7 @@ Requirements:
 
               {/* 用户表情包面板 */}
               {showUserStickerPanel && (
-                <div className="absolute bottom-full mb-2 left-4 right-4 h-48 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl p-4 z-[110] overflow-y-auto custom-scrollbar border border-white animate-in slide-in-from-bottom-2">
+                <div className="absolute bottom-full mb-2 left-4 right-4 h-48 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl p-4 z-[9999] overflow-y-auto custom-scrollbar border border-white animate-in slide-in-from-bottom-2">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-[10px] font-bold uppercase text-gray-500">
                       我的表情
@@ -4739,7 +4738,7 @@ Requirements:
                   <div className="relative flex items-center gap-1.5 md:gap-2">
                     {/* [新增] 媒体菜单 (绝对定位在上方) */}
                     {showMediaMenu && (
-                      <div className="absolute bottom-full mb-2 left-0 bg-white/90 backdrop-blur-xl border border-gray-200 p-2 rounded-xl shadow-xl flex gap-4 animate-in slide-in-from-bottom-2 z-50">
+                      <div className="absolute bottom-full mb-2 left-0 bg-white/90 backdrop-blur-xl border border-gray-200 p-2 rounded-xl shadow-xl flex gap-4 animate-in slide-in-from-bottom-2 z-[9999]">
                         {/* 表情按钮 (搬到这里了) */}
                         <button
                           onClick={() => {
@@ -5741,27 +5740,6 @@ Requirements:
                 </div>
               ))}
             </div>
-          </AppWindow>
-
-          {/* APP: MUSIC */}
-          <AppWindow
-            isOpen={activeApp === "music"}
-            title="共鸣旋律"
-            onClose={() => setActiveApp(null)}
-          >
-            <MusicApp
-              persona={persona}
-              userAvatar={userAvatar}
-              charAvatar={avatar}
-              userName={userName}
-              chatHistory={chatHistory}
-              useStickyState={useStickyState} // 传入你的异步钩子
-              echoesDB={echoesDB} // 传入你的数据库工具
-              triggerAIResponse={triggerAIResponse}
-              showToast={showToast}
-              audioRef={audioRef}
-              apiConfig={apiConfig}
-            />
           </AppWindow>
           <AppWindow
             isOpen={activeApp === "status"}
