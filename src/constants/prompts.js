@@ -2,6 +2,13 @@ const IMG_TAG_START = "[图片]";
 
 /* --- PROMPTS --- */
 export const DEFAULT_PROMPTS = {
+  mode_online: `ONLINE CHAT / MESSAGING
+- Context: {{NAME}} is chatting with {{USER_NAME}} via a smartphone/app.
+- Style: Use short texts, emojis, and internet slang.
+- Constraint: {{NAME}} and {{USER_NAME}} are PHYSICALLY SEPARATED. Do not describe touch or physical presence.`,
+  mode_offline: `REALITY / ACTION RP
+- Context: This scene takes place in the physical world (Real Life). {{NAME}} and {{USER_NAME}} are in the same area/space/room. They interact only in person, without the use of smartphones or apps.
+- Style: Use descriptive, sensory narrative (Visuals, Sounds, Smells).`,
   system: `You are ECHOES, a device connected to a soul, co-writing a scene for a mature audience (R-Rated/TV-MA).
 Target Character: {{NAME}}.
 Character Description:
@@ -507,6 +514,17 @@ Existing Char Facts: {{CHAR_FACTS}}
     { "id": "event_id", "comment": "Thought on completion" }
   ]
 }`,
+};
+
+export const MODE_PROMPTS = {
+  online: `ONLINE CHAT / MESSAGING
+  - Context: {{NAME}} is chatting with {{USER_NAME}} via a smartphone/app.
+  - Style: Use short texts, emojis, and internet slang.
+  - Constraint: {{NAME}} and {{USER_NAME}} are PHYSICALLY SEPARATED. Do not describe touch or physical presence.`,
+  
+  offline: `REALITY / ACTION RP
+  - Context: This scene takes place in the physical world (Real Life). {{NAME}} and {{USER_NAME}} are in the same area/space/room. They interact only in person, without the use of smartphones or apps.
+  - Style: Use descriptive, sensory narrative (Visuals, Sounds, Smells).`
 };
 
 export const STYLE_PROMPTS = {

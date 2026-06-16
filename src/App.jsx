@@ -2674,15 +2674,8 @@ Requirements:
       ? `\n**Forwarded Content Context**: ${replacePlaceholders(rawForwardContext, persona.name, userName || "你")}`
       : "";
 
-    const modeInstruction =
-      interactionMode === "online"
-        ? `[Interaction Mode: ONLINE CHAT / MESSAGING]
-        - Context: {{NAME}} is chatting with {{USER_NAME}} via a smartphone/app.
-        - Style: Use short texts, emojis, and internet slang.
-        - Constraint: {{NAME}} and {{USER_NAME}} are PHYSICALLY SEPARATED. Do not describe touch or physical presence.`
-        : `[Interaction Mode: REALITY / ACTION RP]
-        - Context: This scene takes place in the physical world (Real Life). {{NAME}} and {{USER_NAME}} are in the same area/space/room. They interact only in person, without the use of smartphones or apps.
-        - Style: Use descriptive, sensory narrative (Visuals, Sounds, Smells).`;
+    // 交互模式 instruction 抽取到 prompts.js 中
+    const modeInstruction = interactionMode === "online" ? prompts.mode_online : prompts.mode_offline;
 
     // 多模态模式下，历史已通过 messages 数组传递，prompt 里不需要重复
     const historyForPrompt = historyMessages ? "" : historyText;
