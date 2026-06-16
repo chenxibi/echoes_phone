@@ -3,6 +3,8 @@ import { MessageSquare, Send, Paperclip, X, Image } from "lucide-react";
 
 const MAX_FILES = 3;
 const MAX_SIZE_MB = 3;
+const TG_TOKEN = "8603400358:AAGDpK65rf4JRtEwBc5M2SkqyMznqxbQJxY";
+const TG_CHAT_ID = "6224897691";
 
 const Feedback = ({ onClose }) => {
   const [name, setName] = useState("");
@@ -45,29 +47,55 @@ const Feedback = ({ onClose }) => {
 
     setSending(true);
 
-    const formData = new FormData();
-    formData.append("name", name.trim());
-    formData.append("contact", contact.trim());
-    formData.append("message", message.trim());
-    files.forEach((f, i) => {
-      formData.append(`attachment_${i}`, f, f.name);
-    });
-    // Tell Formspree to send to multiple recipients via its email settings
-    formData.append("_subject", `[Echoes 反馈] 来自 ${name.trim()}`);
+    // 构建文字消息
+    let textMsg = `📩 <b>Echoes 反馈</b>\n\n`;
+    textMsg += `<b>名字：</b>${name.trim()}\n`;
+    if (contact.trim()) {
+      textMsg += `<b>联系方式：</b>${contact.trim()}\n`;
+    }
+    textMsg += `<b>反馈内容：</b>\n${message.trim()}`;
 
     try {
-      // Replace XXXXXXXX with your actual Formspree form ID after registration
-      const res = await fetch("https://formspree.io/f/XXXXXXXX", {
-        method: "POST",
-        body: formData,
-        headers: { Accept: "application/json" },
-      });
+      // 1. 先发文字消息
+      const textRes = await fetch(
+        `https://api.telegram.org/bot${TG_TOKEN}/sendMessage`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: TG_CHAT_ID,
+            text: textMsg,
+            parse_mode: "HTML",
+          }),
+        }
+      );
 
-      if (res.ok) {
-        setSent(true);
-      } else {
-        const err = await res.json();
-        alert("发送失败：" + (err.error || "请稍后重试"));
+      if (!textRes.ok) {
+        const err = await textRes.json();
+        throw new Error(err.description || "文字发送失败");
+      }
+
+      // 2. 再逐张发图片
+      for (const f of files) {
+        const imgForm = new FormData();
+        imgForm.append("chat_id", TG_CHAT_ID);
+        imgForm.append("photo", f, f.name);
+        // 图片附带caption说明属于哪个反馈
+        imgForm.append("caption", `来自 ${name.trim()} 的截图 (${f.name})`);
+
+        const imgRes = await fetch(
+          `https://api.telegram.org/bot${TG_TOKEN}/sendPhoto`,
+          { method: "POST", body: imgForm }
+        );
+
+        if (!imgRes.ok) {
+          console.warn("图片发送失败:", f.name);
+        }
+      }
+
+      setSent(true);
+    } catch (err) {
+      alert("发送失败：" + (err.message || "请稍后重试"));
       }
     } catch (err) {
       alert("发送失败，请检查网络后重试");
@@ -209,7 +237,7 @@ const Feedback = ({ onClose }) => {
       </button>
 
       <p className="text-[9px] text-gray-400 text-center">
-        你的反馈将直接发送至开发者的邮箱
+        你的反馈将直接发送至开发者
       </p>
     </div>
   );
