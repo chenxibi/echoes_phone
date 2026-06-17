@@ -271,6 +271,9 @@ JSON Format:
   forum_gen_posts: `Generate NEW forum threads.
 World Info: {{WORLD_INFO}}
 User Guidance: {{GUIDANCE}}
+
+**CRITICAL GUIDANCE RULE**: The User Guidance above DEFINES the mandatory theme for ALL generated threads. Every single thread MUST relate to, revolve around, or be directly inspired by this guidance. Do NOT generate random/irrelevant topics unrelated to the guidance.
+
 [Background Information Reference Only - DO NOT USE AS TOPIC]:
 """
 {{CHAR_DESCRIPTION}}
