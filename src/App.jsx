@@ -291,6 +291,36 @@ const DiceFace = ({ value, animate = false, onDone }) => {
   );
 };
 
+// 从文本中提取角色名（启发式规则）
+// 优先级：1. Name:/name：/名字：/姓名：模式 2. 纯文本第一行（需通过启发式判定） 3. null
+const extractNameFromText = (text) => {
+  if (!text) return null;
+
+  // 1. 匹配显式 Name: 前缀
+  const namePatterns = [
+    /^name:\s*(.+?)(\n|$)/im,
+    /^name：\s*(.+?)(\n|$)/im,
+    /^名字：\s*(.+?)(\n|$)/im,
+    /^姓名：\s*(.+?)(\n|$)/im,
+  ];
+  for (const p of namePatterns) {
+    const m = text.match(p);
+    if (m) return m[1].trim();
+  }
+
+  // 2. 兜底：取第一行，用启发式规则判定
+  const firstLine = text.replace(/<[^>]+>/g, "").split("\n").find(l => l.trim().length > 0);
+  const candidate = firstLine ? firstLine.trim() : null;
+  const isFieldLabel = (str) =>
+    /^[A-Z][a-z]+:\s*$/.test(str) ||
+    /^(appearance|personality|background|description|default|private_romantic|social_status|lifestyle|nsfw_information|family_origin|childhood|adolescence|present|reputation|diet|routine|hobbies|living|orientation|experience|anatomy|sexual_role|sexual_habits|kinks|limits|name|名字|姓名|外观|性格|背景|描述|外貌|设定):/i.test(str);
+  if (candidate && candidate.length >= 2 && candidate.length <= 20 && !candidate.includes(":") && !isFieldLabel(candidate) && !candidate.startsWith("<")) {
+    return candidate;
+  }
+
+  return null;
+};
+
 const App = () => {
   const [charStickers, setCharStickers, charStickersLoaded] = useStickyState(
     DEFAULT_CHAR_STICKERS,
@@ -883,28 +913,11 @@ const App = () => {
 
     const cleaned = cleanCharacterJson(generatedPreview);
     const finalDescription = generatedPreview.description || cleaned.rawText;
-    // 优先级：generatedPreview.name > cleaned.name > 从description正则提取 > "Unknown"
-    // 支持标准格式 "Name: xxx" 和 YAML 格式 "角色名:\n  Chinese_name:"
-    const raw = finalDescription || "";
-    // 标准 Name: xxx 格式
-    const nameFromStandard = raw.match(/^Name:\s*(.+)/m);
-    // YAML 格式：取 description 里第一个 "角色名:\n" 后紧跟 Chinese_name 的模式
-    const nameFromYaml = raw.match(/^([^\n:]{2,20}):\s*\n\s+Chinese_name:/m);
-    // 兜底：直接取 description 第一行（去掉 <info> 等标签后的第一行内容）
-    const firstLineRaw = raw.replace(/<[^>]+>/g, "").split("\n").find(l => l.trim().length > 0);
-    // 改进：匹配第一行，排除明显是字段标签的行（如 "Appearance:"、"Personality:"）
-    const nameFromFirstLine = firstLineRaw
-      ? firstLineRaw.trim().match(/^([^\n:]{2,20})$/)
-      : null;
-    const isLikelyFieldLabel = (str) => /^[A-Z][a-z]+:\s*$/.test(str) || /^(appearance|personality|background|description):/i.test(str);
-    const firstLineCandidate = firstLineRaw ? firstLineRaw.trim() : null;
-    const safeFirstLineName = (firstLineCandidate && firstLineCandidate.length >= 2 && firstLineCandidate.length <= 20 && !isLikelyFieldLabel(firstLineCandidate)) ? firstLineCandidate : null;
+    // 优先级：generatedPreview.name > cleaned.name > 从 finalDescription 文本提取 > "Unknown"
     const finalName =
       (generatedPreview.name && generatedPreview.name !== "Unknown" ? generatedPreview.name : null) ||
       (cleaned.name && cleaned.name !== "Unknown" ? cleaned.name : null) ||
-      (nameFromStandard ? nameFromStandard[1].trim() : null) ||
-      (nameFromYaml ? nameFromYaml[1].trim() : null) ||
-      (safeFirstLineName && !isLikelyFieldLabel(safeFirstLineName) ? safeFirstLineName : null) ||
+      extractNameFromText(finalDescription || "") ||
       "Unknown";
     setPersona({
       name: finalName,
@@ -1203,9 +1216,8 @@ const App = () => {
             const { rawText, worldBook, name } = cleanCharacterJson(json);
             setInputKey(rawText);
             setWorldBook(worldBook);
-            // 从 rawText 中提取 Name: xxx 格式的名字，兜底用 cleanCharacterJson 返回的 name
-            const nameMatch = rawText.match(/^Name:\s*(.+)/m);
-            const finalName = nameMatch ? nameMatch[1].trim() : (name && name !== "Unknown" ? name : "角色");
+            // 从 rawText 提取名字（双轨兼容：Name: 模式 + 第一行启发式），兜底用 cleanCharacterJson 返回的 name
+            const finalName = extractNameFromText(rawText) || (name && name !== "Unknown" ? name : "角色");
             setPersona((prev) => ({
               ...prev,
               name: finalName,
@@ -2026,24 +2038,10 @@ const App = () => {
     if (!inputKey) return;
     // 不再检查 apiConfig，也不设置 isConnecting 状态，实现秒开
     try {
-      // 1. 本地简易解析 (只提取名字)
-      let extractedName = "Unknown";
-      // 匹配多种格式: Name: xxx / Name：xxx / 名字：xxx / 姓名：xxx
-      const namePatterns = [
-        /^name:\s*(.+?)(\n|$)/im,
-        /^name：\s*(.+?)(\n|$)/im,
-        /^名字：\s*(.+?)(\n|$)/im,
-        /^姓名：\s*(.+?)(\n|$)/im,
-      ];
-      let nameMatch = null;
-      for (const p of namePatterns) {
-        nameMatch = inputKey.match(p);
-        if (nameMatch) break;
-      }
-      if (nameMatch) {
-        extractedName = nameMatch[1].trim();
-      } else {
-        // 如果没匹配到，尝试用 JSON 解析看看原本的 name 字段
+      // 1. 本地解析名字（双轨兼容：Name: 模式 + 第一行启发式 + JSON 兜底）
+      let extractedName = extractNameFromText(inputKey) || "Unknown";
+      // 如果提取失败且 inputKey 本身是合法 JSON，尝试从 JSON name 字段获取
+      if (extractedName === "Unknown") {
         try {
           const temp = JSON.parse(inputKey);
           if (temp.name) extractedName = temp.name;
