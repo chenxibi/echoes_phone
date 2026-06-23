@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Virtuoso } from "react-virtuoso";
 import { jsonrepair } from "jsonrepair";
 import { PRESET_LOCATION_IMAGES } from "./constants/assets";
@@ -980,8 +980,8 @@ const App = () => {
       .replaceAll("{{PENDING_EVENTS}}", pendingEventsStr)
       .replaceAll("{{USER_FACTS}}", userFactsStr)
       .replaceAll("{{CHAR_FACTS}}", charFactsStr) // [新增]
-      .replaceAll("{{USER_NAME}}", userName || "User")
-      .replaceAll("{{NAME}}", persona.name);
+      .replaceAll("{{user}}", userName || "User")
+      .replaceAll("{{char}}", persona.name);
 
     try {
       const data = await generateContent(
@@ -1849,22 +1849,22 @@ const App = () => {
     );
 
     let finalSystemPrompt = prompts.system
-      .replaceAll("{{NAME}}", p.name)
+      .replaceAll("{{char}}", p.name)
       .replaceAll(
         "{{CHAR_DESCRIPTION}}",
         cleanCharDesc + "\n" + charTrackerContext,
       )
       .replaceAll("{{USER_PERSONA}}", userPersona + "\n" + trackerContext)
-      .replaceAll("{{USER_NAME}}", effectiveUserName)
+      .replaceAll("{{user}}", effectiveUserName)
       .replaceAll("{{CUSTOM_RULES}}", customRules)
       .replaceAll("{{WORLD_INFO}}", cleanWorldInfo);
 
     const prompt = promptTemplate
-      .replaceAll("{{NAME}}", p.name)
+      .replaceAll("{{char}}", p.name)
       .replaceAll("{{TIME}}", getCurrentTimeObj().toLocaleString())
       .replaceAll("{{HISTORY}}", getContextString(chatHistory, effectiveUserName, p, null, contextLimit))
       .replaceAll("{{USER_PERSONA}}", userPersona + "\n" + trackerContext)
-      .replaceAll("{{USER_NAME}}", effectiveUserName);
+      .replaceAll("{{user}}", effectiveUserName);
 
     try {
       const data = await generateContent(
@@ -1923,8 +1923,8 @@ const App = () => {
     const historyText = getContextString(chatHistory, effectiveUserName, persona, null, 10);
 
     const prompt = prompts.trigger_events
-      .replaceAll("{{NAME}}", charName)
-      .replaceAll("{{USER_NAME}}", effectiveUserName)
+      .replaceAll("{{char}}", charName)
+      .replaceAll("{{user}}", effectiveUserName)
       .replaceAll("{{HISTORY}}", historyText);
 
     try {
@@ -1962,16 +1962,16 @@ const App = () => {
           setTimeout(async () => {
             setLoading((prev) => ({ ...prev, sw_update: true }));
             const prompt = prompts.smartwatch_update
-              .replaceAll("{{NAME}}", savedPersonaName)
+              .replaceAll("{{char}}", savedPersonaName)
               .replaceAll("{{TIME}}", getCurrentTimeObj().toLocaleString())
               .replaceAll("{{HISTORY}}", getContextString(chatHistory, savedUserName, null, null, 5))
               .replaceAll("{{LOCATIONS_LIST}}", savedSmartWatchLocations.map((l) => `ID: ${l.id}, Name: ${l.name}`).join("\n"))
               .replaceAll("{{LAST_LOG}}", savedSmartWatchLogs.length > 0 ? JSON.stringify(savedSmartWatchLogs[0]) : "None");
             const systemPrompt = prompts.system
-              .replaceAll("{{NAME}}", savedPersonaName)
+              .replaceAll("{{char}}", savedPersonaName)
               .replaceAll("{{CHAR_DESCRIPTION}}", savedInputKey + "\n" + savedCharTrackerContext)
               .replaceAll("{{USER_PERSONA}}", savedUserPersona + "\n" + savedTrackerContext)
-              .replaceAll("{{USER_NAME}}", savedUserName)
+              .replaceAll("{{user}}", savedUserName)
               .replaceAll("{{CUSTOM_RULES}}", savedCustomRules)
               .replaceAll("{{WORLD_INFO}}", getWorldInfoString(savedWorldBook));
             try {
@@ -2219,12 +2219,12 @@ const App = () => {
 
     // 2. 替换系统模板中的所有大项占位符
     return prompts.system
-      .replaceAll("{{NAME}}", persona.name)
+      .replaceAll("{{char}}", persona.name)
       .replaceAll(
         "{{CHAR_DESCRIPTION}}",
         cleanCharDesc + "\n" + charTrackerContext,
       )
-      .replaceAll("{{USER_NAME}}", effectiveUserName)
+      .replaceAll("{{user}}", effectiveUserName)
       .replaceAll("{{USER_PERSONA}}", userPersona + "\n" + trackerContext)
       .replaceAll("{{CUSTOM_RULES}}", customRules)
       .replaceAll("{{WORLD_INFO}}", cleanWorldInfo)
@@ -2294,15 +2294,15 @@ const App = () => {
 
       const systemInstruction = `
 You are an advanced creative writing AI.
-You are playing the role of ${effectiveUserName}.
+You are playing the role of {{user}}.
 
 [Target Character (Interaction Partner)]
-Name: ${charName}
+Name: {{char}}
 Description:
 ${cleanCharDesc}
 
 [Your Role (The User)]
-Name: ${effectiveUserName}
+Name: {{user}}
 Persona: ${userPersona || "A special person to " + charName}
 
 [World Info]
@@ -2614,7 +2614,12 @@ Requirements:
 
     // 当短信风格 + 现实模式同时开启时，强调面对面相处的语境
     if (chatStyle === "dialogue" && interactionMode === "offline") {
-      styleInst += `\n\n[CRITICAL REALITY NOTE]: The IM/burst texting style above is a LANGUAGE convention, NOT a physical setting. {{NAME}} and {{USER_NAME}} are PHYSICALLY TOGETHER in the same space right now. Do NOT describe them looking at phones, texting each other, or typing messages. All actions and dialogue happen face-to-face in the real world. Use the short, fragmented IM language style to convey natural speech, not digital messaging.`;
+      styleInst += `\n\n[CRITICAL REALITY NOTE]: The IM/burst texting style above is a LANGUAGE convention, NOT a physical setting. {{char}} and {{user}} are PHYSICALLY TOGETHER in the same space right now. Do NOT describe them looking at phones, texting each other, or typing messages. All actions and dialogue happen face-to-face in the real world. Use the short, fragmented IM language style to convey natural speech, not digital messaging.`;
+
+    // Pre-replace {{char}}/{{user}} in styleInst before it gets injected via {{STYLE_INSTRUCTION}}
+    styleInst = styleInst
+      .replaceAll("{{char}}", persona.name)
+      .replaceAll("{{user}}", effectiveUserName)
     }
 
     const lastCharMsg = [...newHistory]
@@ -2648,6 +2653,10 @@ Requirements:
     // 角色日常生活节奏：线上模式 60% 概率触发
     if (interactionMode === "online" && Math.random() < 0.6) {
       specialInst += `\n[Life Context]: Consider whether {{char}} is focusing on chatting with {{user}}, or they might be doing something right now based on their routine and personality (e.g. meal time, bedtime, school, work, hobbies, meeting people). If relevant, they might naturally mention it in conversation.`;
+
+    // Pre-replace {{char}}/{{user}} in specialInst before it gets injected via {{SPECIAL_INSTRUCTION}}
+    // Note: any code that appends to specialInst after this point will NOT get auto-replaced.
+    // Currently: Life Context is above this, Crisis Support is below — we handle crisis separately.
     }
 
     // 情绪支持：检测用户消息中的危机/情绪关键词
@@ -2668,7 +2677,7 @@ Requirements:
       return regex.test(lastUserMsg);
     });
     if (crisisMatched) {
-      const emotionalSupportPrompt = `情感支持指令：如果{{USER_NAME}}表现出负面情绪（焦虑、愤怒、悲伤、绝望等），在保持{{NAME}}人设的前提下，遵循如下原则：**1.验证但不放大**：承认{{USER_NAME}}的感受是真实和合理的，但不要情绪化地回应。避免"天哪""太可怕了""我也觉得……"这类共鸣式表达，不会过度共情到让{{USER_NAME}}停留在情绪中。**2.赋予掌控感**：通过提问让{{USER_NAME}}成为决策者。"你觉得最想先处理哪个部分？""你之前有没有遇到过类似的情况？"让{{USER_NAME}}感到自己有能力应对。如{{USER_NAME}}没有表露出负面情绪，则忽略本指令。`;
+      const emotionalSupportPrompt = `情感支持指令：如果{{user}}表现出负面情绪（焦虑、愤怒、悲伤、绝望等），在保持{{char}}人设的前提下，遵循如下原则：**1.验证但不放大**：承认{{user}}的感受是真实和合理的，但不要情绪化地回应。避免"天哪""太可怕了""我也觉得……"这类共鸣式表达，不会过度共情到让{{user}}停留在情绪中。**2.赋予掌控感**：通过提问让{{user}}成为决策者。"你觉得最想先处理哪个部分？""你之前有没有遇到过类似的情况？"让{{user}}感到自己有能力应对。如{{user}}没有表露出负面情绪，则忽略本指令。`;
       specialInst += `\n[Crisis Support Protocol]: ${emotionalSupportPrompt}`;
     }
 
@@ -2678,6 +2687,13 @@ Requirements:
       ? `\n**Forwarded Content Context**: ${replacePlaceholders(rawForwardContext, persona.name, userName || "你")}`
       : "";
 
+    // 对 specialInst 中的 {{char}}/{{user}} 进行预替换（注入 prompt 时外层的同名替换已发生）
+    if (specialInst) {
+      specialInst = specialInst
+        .replaceAll("{{char}}", persona.name)
+        .replaceAll("{{user}}", effectiveUserName);
+    }
+
     // 交互模式 instruction 抽取到 prompts.js 中
     const modeInstruction = interactionMode === "online" ? prompts.mode_online : prompts.mode_offline;
 
@@ -2685,7 +2701,7 @@ Requirements:
     const historyForPrompt = historyMessages ? "" : historyText;
 
     const prompt = prompts.chat
-      .replaceAll("{{NAME}}", persona.name)
+      .replaceAll("{{char}}", persona.name)
       .replaceAll("{{TIME}}", getCurrentTimeObj().toLocaleString())
       .replaceAll("{{HISTORY}}", historyForPrompt)
       .replaceAll(
@@ -2697,19 +2713,19 @@ Requirements:
       .replaceAll("{{STYLE_INSTRUCTION}}", styleInst)
       .replaceAll("{{STICKER_INSTRUCTION}}", stickerInst)
       .replaceAll("{{USER_PERSONA}}", userPersona + "\n" + trackerContext)
-      .replaceAll("{{USER_NAME}}", effectiveUserName)
+      .replaceAll("{{user}}", effectiveUserName)
       .replaceAll("{{MODE_INSTRUCTION}}", modeInstruction)
       .replaceAll("{{FORWARD_CONTEXT}}", finalForwardSection)
       .replaceAll("{{SPECIAL_INSTRUCTION}}", specialInst);
 
     const systemPrompt = prompts.system
-      .replaceAll("{{NAME}}", persona.name)
+      .replaceAll("{{char}}", persona.name)
       .replaceAll(
         "{{CHAR_DESCRIPTION}}",
         cleanCharDesc + "\n" + charTrackerContext,
       )
       .replaceAll("{{USER_PERSONA}}", userPersona + "\n" + trackerContext)
-      .replaceAll("{{USER_NAME}}", effectiveUserName)
+      .replaceAll("{{user}}", effectiveUserName)
       .replaceAll("{{CUSTOM_RULES}}", customRules)
       .replaceAll("{{WORLD_INFO}}", cleanWorldInfo)
       .replaceAll(
@@ -3227,7 +3243,7 @@ Requirements:
       );
 
       const systemPrompt = prompts.system
-        .replaceAll("{{NAME}}", persona.name)
+        .replaceAll("{{char}}", persona.name)
         // 修复：添加角色描述和 Tracker 上下文
         .replaceAll(
           "{{CHAR_DESCRIPTION}}",
@@ -3235,7 +3251,7 @@ Requirements:
         )
         // 修复：添加用户人设
         .replaceAll("{{USER_PERSONA}}", userPersona + "\n" + trackerContext)
-        .replaceAll("{{USER_NAME}}", effectiveUserName)
+        .replaceAll("{{user}}", effectiveUserName)
         // 修复：添加自定义规则
         .replaceAll("{{CUSTOM_RULES}}", customRules)
         .replaceAll("{{WORLD_INFO}}", cleanWorldInfo)
@@ -3243,8 +3259,8 @@ Requirements:
         .replaceAll("{{LONG_MEMORY}}", longMemory || "None");
 
       const genPrompt = prompts.smartwatch_step1_gen
-        .replaceAll("{{NAME}}", persona.name)
-        .replaceAll("{{USER_NAME}}", effectiveUserName);
+        .replaceAll("{{char}}", persona.name)
+        .replaceAll("{{user}}", effectiveUserName);
 
       // 第一发请求：生成地点
       const step1Data = await generateContent(
@@ -3341,20 +3357,20 @@ Requirements:
     );
 
     const systemPrompt = prompts.system
-      .replaceAll("{{NAME}}", persona.name)
+      .replaceAll("{{char}}", persona.name)
       .replaceAll(
         "{{CHAR_DESCRIPTION}}",
         cleanCharDesc + "\n" + charTrackerContext,
       )
       .replaceAll("{{USER_PERSONA}}", userPersona + "\n" + trackerContext)
-      .replaceAll("{{USER_NAME}}", effectiveUserName)
+      .replaceAll("{{user}}", effectiveUserName)
       .replaceAll("{{CUSTOM_RULES}}", customRules)
       .replaceAll("{{WORLD_INFO}}", cleanWorldInfo)
       .replaceAll("{{LONG_MEMORY}}", longMemory || "None");
 
     const prompt = prompts.smartwatch_update
-      .replaceAll("{{NAME}}", persona.name)
-      .replaceAll("{{USER_NAME}}", effectiveUserName)
+      .replaceAll("{{char}}", persona.name)
+      .replaceAll("{{user}}", effectiveUserName)
       .replaceAll("{{HISTORY}}", getContextString(chatHistory, effectiveUserName, null, null, 5))
       .replaceAll("{{LOCATIONS_LIST}}", locList)
       .replaceAll("{{LAST_LOG}}", lastLog);
@@ -3372,7 +3388,7 @@ Requirements:
         let jsonString = JSON.stringify(data);
 
         jsonString = jsonString
-          .replaceAll("{{USER_NAME}}", effectiveUserName)
+          .replaceAll("{{user}}", effectiveUserName)
           .replaceAll("{{user}}", effectiveUserName);
 
         const fixedData = JSON.parse(jsonString);
@@ -3431,10 +3447,10 @@ Requirements:
       const cleanWorldInfo = replacePlaceholders(getWorldInfoString(worldBook), persona.name, effectiveUserName);
 
       const systemPrompt = prompts.system
-        .replaceAll("{{NAME}}", persona.name)
+        .replaceAll("{{char}}", persona.name)
         .replaceAll("{{CHAR_DESCRIPTION}}", cleanCharDesc + "\n" + charTrackerContext)
         .replaceAll("{{USER_PERSONA}}", userPersona + "\n" + trackerContext)
-        .replaceAll("{{USER_NAME}}", effectiveUserName)
+        .replaceAll("{{user}}", effectiveUserName)
         .replaceAll("{{CUSTOM_RULES}}", customRules)
         .replaceAll("{{WORLD_INFO}}", cleanWorldInfo)
         .replaceAll("{{LONG_MEMORY}}", longMemory || "None");
@@ -3443,8 +3459,8 @@ Requirements:
       const lastLog = smartWatchLogs.length > 0 ? JSON.stringify(smartWatchLogs[0]) : "None";
 
       const prompt = prompts.smartwatch_offline_batch
-        .replaceAll("{{NAME}}", persona.name)
-        .replaceAll("{{USER_NAME}}", effectiveUserName)
+        .replaceAll("{{char}}", persona.name)
+        .replaceAll("{{user}}", effectiveUserName)
         .replaceAll("{{GAP_DURATION}}", gapDesc)
         .replaceAll("{{EXPECTED_COUNT}}", expectedCount.toString())
         .replaceAll("{{LOCATION_RULE}}", locationRule)
@@ -3464,7 +3480,7 @@ Requirements:
           let fixedItem = item;
           try {
             let jsonString = JSON.stringify(item);
-            jsonString = jsonString.replaceAll("{{USER_NAME}}", effectiveUserName).replaceAll("{{user}}", effectiveUserName);
+            jsonString = jsonString.replaceAll("{{user}}", effectiveUserName).replaceAll("{{user}}", effectiveUserName);
             fixedItem = JSON.parse(jsonString);
           } catch (e) { /* keep original */ }
 
@@ -3830,7 +3846,7 @@ Requirements:
     }
 
     const prompt = prompts.summary
-      .replaceAll("{{NAME}}", persona.name)
+      .replaceAll("{{char}}", persona.name)
       .replaceAll("{{EXISTING_MEMORY}}", longMemory || "None")
       .replaceAll("{{RECENT_HISTORY}}", recentHistoryText);
 

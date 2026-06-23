@@ -96,12 +96,12 @@ const Forum = ({
     const cleanWorldInfo = worldInfoString || "";
 
     return getFinalSystemPrompt()
-      .replaceAll("{{NAME}}", persona?.name || "")
+      .replaceAll("{{char}}", persona?.name || "")
       .replaceAll(
         "{{CHAR_DESCRIPTION}}",
         (userPersona || "") + "\n" + (charTrackerContext || ""),
       )
-      .replaceAll("{{USER_NAME}}", currentUserName)
+      .replaceAll("{{user}}", currentUserName)
       .replaceAll(
         "{{USER_PERSONA}}",
         (userPersona || "") + "\n" + (trackerContext || ""),
@@ -131,7 +131,7 @@ const Forum = ({
     setLoading((prev) => ({ ...prev, forum: true }));
 
     const prompt = prompts.forum_init
-      .replaceAll("{{NAME}}", persona.name)
+      .replaceAll("{{char}}", persona.name)
       .replaceAll("{{CHAR_DESCRIPTION}}", userPersona)
       .replaceAll("{{WORLD_INFO}}", worldInfoString || "");
 
@@ -187,8 +187,8 @@ const Forum = ({
       )
       .replaceAll("{{GUIDANCE}}", finalGuidance)
       .replaceAll("{{FORUM_NAME}}", forumData.name)
-      .replaceAll("{{NAME}}", persona.name)
-      .replaceAll("{{USER_NAME}}", currentUserName)
+      .replaceAll("{{char}}", persona.name)
+      .replaceAll("{{user}}", currentUserName)
       .replaceAll("{{WORLD_INFO}}", cleanWorldInfo);
 
     try {
@@ -333,12 +333,12 @@ ${realNameContext}
     }
 
     const finalSystemPrompt = getFinalSystemPrompt()
-      .replaceAll("{{NAME}}", persona.name)
+      .replaceAll("{{char}}", persona.name)
       .replaceAll(
         "{{CHAR_DESCRIPTION}}",
         userPersona + "\n" + charTrackerContext,
       )
-      .replaceAll("{{USER_NAME}}", currentUserName)
+      .replaceAll("{{user}}", currentUserName)
       .replaceAll("{{USER_PERSONA}}", userPersona + "\n" + trackerContext)
       .replaceAll("{{CUSTOM_RULES}}", customRules)
       .replaceAll("{{WORLD_INFO}}", cleanWorldInfo);
@@ -349,7 +349,7 @@ ${realNameContext}
       .replaceAll("{{AUTHOR}}", thread.author)
       .replaceAll("{{EXISTING_REPLIES}}", existingRepliesStr || "None")
       .replaceAll("{{RELATIONSHIP_CONTEXT}}", relationshipContextBlock)
-      .replaceAll("{{NAME}}", persona.name)
+      .replaceAll("{{char}}", persona.name)
       .replaceAll("{{CHAR_NICK}}", charNick)
       .replaceAll(
         "{{CHAR_DESCRIPTION}}",
@@ -419,7 +419,7 @@ ${realNameContext}
     const cleanWorldInfo = worldInfoString || "";
 
     const prompt = prompts.forum_char_post
-      .replaceAll("{{NAME}}", persona.name)
+      .replaceAll("{{char}}", persona.name)
       .replaceAll(
         "{{CHAR_DESCRIPTION}}",
         userPersona + "\n" + charTrackerContext,
@@ -427,7 +427,7 @@ ${realNameContext}
       .replaceAll("{{WORLD_INFO}}", cleanWorldInfo)
       .replaceAll("{{TOPIC}}", postDrafts.char.topic)
       .replaceAll("{{HISTORY}}", getContextString(10))
-      .replaceAll("{{USER_NAME}}", currentUserName);
+      .replaceAll("{{user}}", currentUserName);
 
     try {
       const data = await generateContent(
@@ -457,14 +457,14 @@ ${realNameContext}
     const cleanWorldInfo = worldInfoString || "";
 
     const prompt = prompts.forum_chat_event
-      .replaceAll("{{NAME}}", persona.name)
+      .replaceAll("{{char}}", persona.name)
       .replaceAll(
         "{{CHAR_DESCRIPTION}}",
         userPersona + "\n" + charTrackerContext,
       )
       .replaceAll("{{WORLD_INFO}}", cleanWorldInfo)
       .replaceAll("{{HISTORY}}", getContextString(15))
-      .replaceAll("{{USER_NAME}}", currentUserName);
+      .replaceAll("{{user}}", currentUserName);
 
     try {
       const data = await generateContent(
