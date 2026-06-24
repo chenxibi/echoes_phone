@@ -92,7 +92,7 @@ const Forum = ({
   const getForumName = (type) => {
     if (type === "me") return forumSettings.userNick || "User本U";
     if (type === "char")
-      return forumSettings.charNick || persona?.name || "匿名用户";
+      return forumSettings.charNick || "匿名用户";
     return "匿名网友";
   };
 
@@ -252,7 +252,7 @@ const Forum = ({
 
     // 声明网名变量（后续 map 回调里用到，必须在声明之前引用）
     const userNick = forumSettings.userNick || "User本U";
-    const charNick = forumSettings.charNick || persona.name || "匿名用户";
+    const charNick = forumSettings.charNick || "匿名用户";
 
         if (allReplies.length > MAX_AI_REPLY_CONTEXT) {
       showToast("warning", `当前帖子评论超过${MAX_AI_REPLY_CONTEXT}条，将仅使用最新的${MAX_AI_REPLY_CONTEXT}条评论。建议删除靠前的旧评论以获得更好的互动体验。`);
@@ -488,7 +488,7 @@ ${realNameContext}
     setLoading((prev) => ({ ...prev, chat_event_post: true }));
 
     const currentUserName = userName || "User";
-    const charNick = forumSettings.charNick || persona.name || "匿名用户";
+    const charNick = forumSettings.charNick || "匿名用户";
     const cleanWorldInfo = worldInfoString || "";
 
     const prompt = prompts.forum_chat_event
@@ -908,7 +908,7 @@ ${realNameContext}
                     </div>
                     {reply.replyTo && (() => {
                       // 动态映射 replyTo 为正确的显示名
-                      const charNick = forumSettings.charNick || persona?.name || "匿名用户";
+                      const charNick = forumSettings.charNick || "匿名用户";
                       const userNick = forumSettings.userNick || "User本U";
                       let displayReplyTo = reply.replyTo;
                       // 检查 replyTo 是否指向 char（比较真名或 isCharacter）
