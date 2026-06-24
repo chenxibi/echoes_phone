@@ -67,11 +67,10 @@ Messages can be:
 - Dice roll: {"dice": {"result": 4}}
 - Transfer: {"transfer": {"amount": 500, "note": "买好吃的"}}
 
-CRITICAL: stickerId goes ONLY in the top-level field OR as a message object {"stickerId": "s1"}. NEVER write stickers as text like "[表情包] xxx".
+CRITICAL: stickerId goes ONLY as a message object {"stickerId": "s1"} inside the messages array. NEVER write stickers as text like "[表情包] xxx".
 
 {
-  "messages": ["Message text" or {"text": "...", "isVoice": true}],
-  "stickerId": "s1" or null,
+  "messages": ["Message text" or {"text": "...", "isVoice": true} or {"stickerId": "s1"}],
   "status": {
     "outfit": "Current outfit (1-3 sentences, max 80 chars)",
     "action": "Current physical action (1-3 sentences, max 80 chars)",

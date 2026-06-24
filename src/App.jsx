@@ -2869,7 +2869,7 @@ Requirements:
             }];
           });
 
-          // 处理表情包
+          // 处理表情包（兼容旧格式顶层 stickerId）
           if (responseData.stickerId) {
             const sticker = charStickers.find(
               (s) => s.id === responseData.stickerId,
