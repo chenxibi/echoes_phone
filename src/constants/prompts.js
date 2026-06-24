@@ -249,7 +249,7 @@ Instructions:
      * Ref: "今天也很想鼠", "怒然大勃", "老公和姐夫私奔了", "三胎宝爸封鸡了", "下次一定", "当小三被打了".
    - **Sarcastic/Troll (USE SPARINGLY)**: Use ONLY when the thread content is bizarre, stupid, or infuriating. The nickname itself subtly mocks the OP or the situation.
      * Logic: A short quip that expresses speechlessness, secondhand embarrassment, or "what did I just read".
-     * Must design original names, NOT copy examples. Ref: "我不知道您是怎么了" (OP is incomprehensible), "仙人之兮列如麻" (you people are insane), "投胎错为猪" (OP is dumb), "审猪积累" (OP is dumb+1), "好晕你加了什么" (dizzy from reading), "别逗我笑了" (OP is ridiculous), "笑死层主的id好应景" (meta-joke on other commenters' names).
+     * Must design original names, NOT copy examples. Ref: "我不知道您是怎么了" (OP is incomprehensible), "仙人之兮列如麻" (you people are insane), "投胎错为猪" (OP is dumb), "审猪积累" (OP is dumb+1), "好晕你加了什么" (dizzy from reading), "别逗我笑了" (OP is ridiculous), "笑死层主的id好应景" (this is a REPLY from another NPC, NOT a nickname - example of NPCs calling out funny usernames).
 4. Content Scope: Local food, urban legends, complaints, seeking help, gossips.
 5. **Role Identity**: These are random citizens who have their own lives. They DO NOT know or talk about {{char}} or {{user}} personally unless they are celebrities or high-status/well-known people in the community related to the forum.
 6. Language: Simplified Chinese (Mainland Internet Slang).
@@ -310,7 +310,7 @@ Instructions:
      * Ref: "今天也很想鼠", "睡觉觉", "老公和姐夫私奔了", "三胎宝爸封鸡了", "下次一定", "当小三被打了".
    - **Sarcastic/Troll (USE SPARINGLY)**: Use ONLY when the thread content is bizarre, stupid, or infuriating. The nickname itself subtly mocks the OP or the situation.
      * Logic: A short quip that expresses speechlessness, secondhand embarrassment, or "what did I just read".
-     * Must design original names, NOT copy examples. Ref: "我不知道您是怎么了" (OP is incomprehensible), "仙人之兮列如麻" (you people are insane), "投胎错为猪" (OP is dumb), "审猪积累" (OP is dumb+1), "好晕你加了什么" (dizzy from reading), "别逗我笑了" (OP is ridiculous), "笑死层主的id好应景" (meta-joke on other commenters' names).
+     * Must design original names, NOT copy examples. Ref: "我不知道您是怎么了" (OP is incomprehensible), "仙人之兮列如麻" (you people are insane), "投胎错为猪" (OP is dumb), "审猪积累" (OP is dumb+1), "好晕你加了什么" (dizzy from reading), "别逗我笑了" (OP is ridiculous), "笑死层主的id好应景" (REPLY from another NPC, NOT a nickname - example of NPCs calling out funny usernames' names).
 
 JSON Format:
 {
@@ -359,7 +359,7 @@ Instructions:
    - **Casual/Meme**: Spoken phrases, mental states, self-deprecating humor, or lazy vibes.
      * Ref: "今天也很想鼠", "怒然大勃", "老公和姐夫私奔了", "三胎宝爸封鸡了", "下次一定", "当小三被打了".
    - **Sarcastic/Troll (USE SPARINGLY)**: Use ONLY when the thread content is bizarre, stupid, or infuriating.
-     * Ref: "我不知道您是怎么了" (OP is incomprehensible), "仙人之兮列如麻" (you people are insane), "投胎错为猪" (OP is dumb), "审猪积累" (OP is dumb+1), "好晕你加了什么" (dizzy from reading), "别逗我笑了" (OP is ridiculous), "笑死层主的id好应景" (meta-joke on other commenters' names).
+     * Ref: "我不知道您是怎么了" (OP is incomprehensible), "仙人之兮列如麻" (you people are insane), "投胎错为猪" (OP is dumb), "审猪积累" (OP is dumb+1), "好晕你加了什么" (dizzy from reading), "别逗我笑了" (OP is ridiculous), "笑死层主的id好应景" (REPLY from another NPC, NOT a nickname - example of NPCs calling out funny usernames' names).
 4. **Character Logic**:
    - If Mode is "Manual": {{char}} MUST reply.
    - If Mode is "Auto": {{char}} should ONLY reply if the topic is *directly* related to their specific interests. Otherwise, return NO character reply.
@@ -430,7 +430,7 @@ Instructions:
    - **Casual/Meme**: Spoken phrases, mental states, self-deprecating humor, or lazy vibes.
      * Ref: "今天也很想鼠", "怒然大勃", "老公和姐夫私奔了", "三胎宝爸封鸡了", "下次一定", "当小三被打了".
    - **Sarcastic/Troll (USE SPARINGLY)**: Use ONLY when the thread content is bizarre, stupid, or infuriating.
-     * Ref: "我不知道您是怎么了" (OP is incomprehensible), "仙人之兮列如麻" (you people are insane), "投胎错为猪" (OP is dumb), "审猪积累" (OP is dumb+1), "好晕你加了什么" (dizzy from reading), "别逗我笑了" (OP is ridiculous), "笑死层主的id好应景" (meta-joke on other commenters' names).
+     * Ref: "我不知道您是怎么了" (OP is incomprehensible), "仙人之兮列如麻" (you people are insane), "投胎错为猪" (OP is dumb), "审猪积累" (OP is dumb+1), "好晕你加了什么" (dizzy from reading), "别逗我笑了" (OP is ridiculous), "笑死层主的id好应景" (REPLY from another NPC, NOT a nickname - example of NPCs calling out funny usernames' names).
 5. JSON SYNTAX RULE: If the dialogue or thought content contains double quotes, you MUST use Chinese double quotes ("�? instead. NEVER use unescaped English double quotes (") inside the JSON string values.
 6. Language: Simplified Chinese.
 
