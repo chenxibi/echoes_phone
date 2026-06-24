@@ -384,6 +384,9 @@ ${realNameContext}
         "{{CHAR_DESCRIPTION}}",
         userPersona + "\n" + charTrackerContext,
       )
+      .replaceAll("{{CHARACTER_INSTRUCTION}}", aiPromptMode === "Manual"
+        ? "{{char}} MUST reply to this thread. You are REQUIRED to include a reply from {{char}}."
+        : "{{char}} should ONLY reply if the topic is *directly* related to their specific interests. Otherwise, return NO character reply.")
       .replaceAll("{{WORLD_INFO}}", cleanWorldInfo)
       .replaceAll("{{MODE}}", aiPromptMode);
 

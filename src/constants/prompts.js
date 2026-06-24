@@ -362,9 +362,7 @@ Instructions:
      * Ref: "今天也很想鼠", "怒然大勃", "老公和姐夫私奔了", "三胎宝爸封鸡了", "下次一定", "当小三被打了".
    - **Sarcastic/Troll (USE SPARINGLY)**: Use ONLY when the thread content is bizarre, stupid, or infuriating.
      * Ref: "我不知道您是怎么了" (OP is incomprehensible), "仙人之兮列如麻" (you people are insane), "投胎错为猪" (OP is dumb), "审猪积累" (OP is dumb+1), "好晕你加了什么" (dizzy from reading), "别逗我笑了" (OP is ridiculous), "笑死层主的id好应景" (REPLY from another NPC, NOT a nickname - example of NPCs calling out funny usernames' names).
-4. **Character Logic**:
-   - If Mode is "Manual": {{char}} MUST reply.
-   - If Mode is "Auto": {{char}} should ONLY reply if the topic is *directly* related to their specific interests. Otherwise, return NO character reply.
+4. {{CHARACTER_INSTRUCTION}}
 5. JSON SYNTAX RULE: If the dialogue or thought content contains double quotes, you MUST use Chinese double quotes ("�? instead. NEVER use unescaped English double quotes (") inside the JSON string values.
 6. - Create interactions, arguments, agreements, or ridicule between netizens.
 7. **FORMAT RULE (CRITICAL)**: 
