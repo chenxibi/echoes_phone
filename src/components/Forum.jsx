@@ -308,7 +308,7 @@ const Forum = ({
     } else if (userLastReplyIndex === -1) {
       targetInstruction = `
         - **Targeting Constraint**: The user "${userNick}" has NOT commented in this thread yet.
-        - **Action**: Do NOT reply to "${userNick} or ${charNick}". Interact with other netizens instead.
+        - **Action**: Do NOT reply to "${userNick}" or "${charNick}". Interact with other netizens instead.
         `;
     } else if (!charHasRepliedToUser) {
       targetInstruction = `
