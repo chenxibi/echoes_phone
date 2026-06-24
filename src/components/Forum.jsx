@@ -259,9 +259,16 @@ const Forum = ({
 
     const existingRepliesStr = contextList
       .map((r) => {
-        // 动态替换 char 的显示名，避免改网名后出现新旧两个名字
-        const displayAuthor = r.isCharacter ? charNick : r.author;
-        const displayReplyTo = r.replyTo && contextList.find(c => c.author === r.replyTo && c.isCharacter) ? charNick : r.replyTo;
+        // 动态替换 char/user 的显示名，避免改网名后出现新旧名字
+        let displayAuthor = r.author;
+        if (r.isCharacter) displayAuthor = charNick;
+        else if (r.isUser || r.authorType === "me") displayAuthor = userNick;
+        let displayReplyTo = r.replyTo;
+        if (displayReplyTo) {
+          const target = contextList.find(c => c.author === r.replyTo);
+          if (target?.isCharacter) displayReplyTo = charNick;
+          else if (target?.isUser || target?.authorType === "me") displayReplyTo = userNick;
+        }
         if (displayReplyTo) {
           return `${displayAuthor} → ${displayReplyTo}: ${r.content}`;
         }
