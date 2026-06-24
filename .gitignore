@@ -55,5 +55,21 @@ error.png
 features-design-principles-mapping.md
 user-study-design.md
 
+# Irrelevant project files
+*.ttf
+*.pdf
+Echoes_Phone_7Day_Workbook*
+PRD.md
+fix.cjs
+fix.js
+fix_list.*
+fix_skin.*
+fix_feedback.*
+fix_icons.*
+gen_pdf.py
+user_evaluation_probes_v2.md
+echoes-server/
+"-1)console.log(c.substring(idx-200"
+
 # Assets - keep only what's in public/
 assets/.github/workflows/*.bak
