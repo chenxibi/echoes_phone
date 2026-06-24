@@ -377,6 +377,7 @@ ${realNameContext}
       .replaceAll("{{EXISTING_REPLIES}}", existingRepliesStr || "None")
       .replaceAll("{{RELATIONSHIP_CONTEXT}}", relationshipContextBlock)
       .replaceAll("{{char}}", persona.name)
+      .replaceAll("{{user}}", currentUserName)
       .replaceAll("{{CHAR_NICK}}", charNick)
       .replaceAll("{{USER_NICK}}", userNick)
       .replaceAll(
