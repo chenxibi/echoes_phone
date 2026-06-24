@@ -2683,8 +2683,14 @@ Requirements:
 
     const rawForwardContext = overrideContext || forwardContext;
     // 核心修复：对 forwardContext 进行占位符替换处理
-    const finalForwardSection = rawForwardContext
-      ? `\n**Forwarded Content Context**: ${replacePlaceholders(rawForwardContext, persona.name, userName || "你")}`
+    // 如果是论坛转发，附上完整帖子上下文
+    let forwardFullContext = "";
+    const lastForwardMsg = [...newHistory].reverse().find((m) => m.isForward && m.forwardData?.fullContext);
+    if (lastForwardMsg) {
+      forwardFullContext = `\n\n[Forwarded Post Full Context]:\n${lastForwardMsg.forwardData.fullContext}`;
+    }
+    const finalForwardSection = (rawForwardContext || forwardFullContext)
+      ? `\n**Forwarded Content Context**: ${replacePlaceholders(rawForwardContext || "", persona.name, userName || "你")}${replacePlaceholders(forwardFullContext, persona.name, userName || "你")}`
       : "";
 
     // 对 specialInst 中的 {{char}}/{{user}} 进行预替换（注入 prompt 时外层的同名替换已发生）

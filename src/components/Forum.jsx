@@ -637,17 +637,22 @@ ${realNameContext}
     }
   };
 
-  const handleForwardToChat = (item, type = "post", parentTitle = "") => {
+  const handleForwardToChat = (item, type = "post", parentTitle = "", thread = null) => {
     const content =
       type === "post"
         ? `【转发帖子】\n标题：${item.title}\n作者：${item.author}\n内容：${item.content}`
         : `【转发评论】\n来源帖子：${parentTitle}\n评论人：${item.author}\n内容：${item.content}`;
 
+    // 转发时附带上完整帖子上下文（标题+内容+所有评论），方便 AI 理解前因后果
+    const fullContext = thread
+      ? `【帖子】${thread.title}\n楼主：${thread.author}\n${thread.content}\n\n--- 评论区 ---\n${(thread.replies || []).map((r) => `${r.author}${r.replyTo ? ' → ' + r.replyTo : ''}: ${r.content}`).join('\n')}`
+      : item.content;
+
     const newMsg = {
       sender: "me",
       text: content,
       isForward: true,
-      forwardData: { ...item, type, parentTitle },
+      forwardData: { ...item, type, parentTitle, fullContext },
       time: formatTime(getCurrentTimeObj()),
     };
 
@@ -655,11 +660,12 @@ ${realNameContext}
     setMsgCountSinceSummary((prev) => prev + 1);
 
     const isUserAuthor =
-      item.author === getForumName("me") || item.authorType === "me";
+      item.author === getForumName("me") || item.authorType === "me" || item.isUser;
     const isCharAuthor =
-      item.author === getForumName("char") ||
+      item.isCharacter ||
       item.authorType === "char" ||
-      item.isCharacter;
+      item.author === getForumName("char") ||
+      item.author === (persona?.name || "");
 
     let contextStr = "";
     if (isUserAuthor) {
