@@ -247,6 +247,9 @@ const Forum = ({
       userLastReplyIndex !== -1 ? allReplies[userLastReplyIndex] : null;
     const isSmurfReply = userLastReply && userLastReply.authorType === "smurf";
 
+    // 取最近的评论作为 AI 上下文
+    let contextList = allReplies.slice(-MAX_AI_REPLY_CONTEXT);
+
         if (allReplies.length > MAX_AI_REPLY_CONTEXT) {
       showToast("warning", `当前帖子评论超过${MAX_AI_REPLY_CONTEXT}条，将仅使用最新的${MAX_AI_REPLY_CONTEXT}条评论。建议删除靠前的旧评论以获得更好的互动体验。`);
     }
