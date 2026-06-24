@@ -316,6 +316,7 @@ ${recentHistory}
 [USER IDENTITY INFO - CRITICAL]:
 - Real User Name: "${currentUserName}"
 - User's Current Forum Nickname: "${userNick}"
+${isUserThread ? `- **CRITICAL**: "${userNick}" IS the author (OP) of this thread. The OP and the commenter "${userNick}" are the SAME PERSON. Netizens MUST treat them as one identity and NOT compare or contrast them with each other.` : ""}
 - **ABSOLUTE RULE**: "${persona.name}" KNOWS that "${userNick}" is "${currentUserName}".
 - **Netizen Logic**: Random NPCs should react to "${userNick}" if they comment.
 ${realNameContext}
