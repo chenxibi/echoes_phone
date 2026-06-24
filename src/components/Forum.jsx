@@ -351,6 +351,7 @@ ${realNameContext}
       .replaceAll("{{RELATIONSHIP_CONTEXT}}", relationshipContextBlock)
       .replaceAll("{{char}}", persona.name)
       .replaceAll("{{CHAR_NICK}}", charNick)
+      .replaceAll("{{USER_NICK}}", userNick)
       .replaceAll(
         "{{CHAR_DESCRIPTION}}",
         userPersona + "\n" + charTrackerContext,
