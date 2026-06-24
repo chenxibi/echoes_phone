@@ -20,6 +20,10 @@ import useStickyState from "../hooks/useStickyState";
 // 假设这些工具函数在 utils/helpers.js，请根据实际情况调整引用
 import { replacePlaceholders, formatTime, formatSmartTime, getTimeBasedGuidance } from "../utils/helpers";
 
+
+// Maximum number of replies to include in AI context
+const MAX_AI_REPLY_CONTEXT = 30;
+
 const Forum = ({
   isOpen,
   onClose,
@@ -63,7 +67,8 @@ const Forum = ({
   // 聊天事件触发发帖的弹窗状态
   const [showChatEventModal, setShowChatEventModal] = useState(false);
   const [chatEventPostData, setChatEventPostData] = useState(null); // 存储 AI 生成的发帖内容
-  const [replyIdentity, setReplyIdentity] = useState("me"); // 'me' or 'smurf'
+  const [replyIdentity, setReplyIdentity] = useState("me");
+  const [replyTarget, setReplyTarget] = useState(null); // { author: string } // 'me' or 'smurf'
   const [forumGuidance, setForumGuidance] = useState("");
 
   // Loading 状态集合
@@ -242,13 +247,20 @@ const Forum = ({
       userLastReplyIndex !== -1 ? allReplies[userLastReplyIndex] : null;
     const isSmurfReply = userLastReply && userLastReply.authorType === "smurf";
 
-    let contextList = allReplies.slice(-5);
+        if (allReplies.length > MAX_AI_REPLY_CONTEXT) {
+      showToast("warning", `当前帖子评论超过${MAX_AI_REPLY_CONTEXT}条，将仅使用最新的${MAX_AI_REPLY_CONTEXT}条评论。建议删除靠前的旧评论以获得更好的互动体验。`);
+    }
     if (userLastReply && !contextList.find((r) => r.id === userLastReply.id)) {
       contextList = [userLastReply, ...contextList];
     }
 
     const existingRepliesStr = contextList
-      .map((r) => `${r.author}: ${r.content}`)
+      .map((r) => {
+        if (r.replyTo) {
+          return `${r.author} → ${r.replyTo}: ${r.content}`;
+        }
+        return `${r.author}: ${r.content}`;
+      })
       .join("\n");
 
     let charHasRepliedToUser = false;
@@ -374,6 +386,7 @@ ${realNameContext}
             ? forumSettings.charNick || "匿名用户"
             : r.author,
           content: r.content,
+          replyTo: r.replyTo || null,
           createdAt: Date.now() - (0.5 + Math.random() * 3) * 86400000,
           isCharacter: r.isCharacter || false,
           isUser: false,
@@ -491,6 +504,7 @@ ${realNameContext}
             id: `r_${Date.now()}_${idx}`,
             author: r.author,
             content: r.content,
+            replyTo: r.replyTo || null,
             isCharacter: r.isCharacter || false,
             isUser: false,
           })),
@@ -566,11 +580,22 @@ ${realNameContext}
       type === "smurf"
         ? forumSettings.smurfNick || "马甲用户"
         : getForumName("me");
+    
+    // Extract replyTo from "回复 xxx: " prefix
+    let replyTo = null;
+    let finalContent = content;
+    const replyPrefixMatch = content.match(/^回复\s+(.+?)[:：]\s*/);
+    if (replyPrefixMatch) {
+      replyTo = replyPrefixMatch[1].trim();
+      finalContent = content.substring(replyPrefixMatch[0].length).trim();
+    }
+    
     const newReply = {
       id: `ur_${Date.now()}`,
       author: replyAuthor,
       authorType: type,
-      content: content,
+      content: finalContent || content,
+      replyTo: replyTo,
       isUser: true,
     };
     setForumData((prev) => ({
@@ -809,7 +834,8 @@ ${realNameContext}
                 {(thread.replies || []).map((reply, idx) => (
                   <div
                     key={reply.id || idx}
-                    className={`p-3 rounded-xl text-sm relative group ${reply.isUser ? "bg-blue-50 ml-8" : reply.isCharacter ? "bg-[#7A2A3A]/5 border border-[#7A2A3A]/20" : "bg-white/60"}`}
+                    onClick={() => setReplyTarget({ author: reply.author })}
+                    className={`p-3 rounded-xl text-sm relative group cursor-pointer ${reply.isUser ? "bg-blue-50 ml-8" : reply.isCharacter ? "bg-[#7A2A3A]/5 border border-[#7A2A3A]/20" : "bg-white/60"}`}
                   >
                     <div className="flex justify-between items-center mb-1 min-h-[18px]">
                       <span
@@ -854,6 +880,11 @@ ${realNameContext}
                         </span>
                       </div>
                     </div>
+                    {reply.replyTo && (
+                      <span className="text-[10px] font-medium text-gray-400 mr-1">
+                        回复 {reply.replyTo}：
+                      </span>
+                    )}
                     <p className="text-gray-800 leading-relaxed break-words">
                       {reply.content}
                     </p>
@@ -884,19 +915,26 @@ ${realNameContext}
                       id="forum-reply-input"
                       type="text"
                       placeholder={
-                        replyIdentity === "me"
+                        replyTarget
+                          ? `回复 ${replyTarget.author}...`
+                          : replyIdentity === "me"
                           ? `以 ${forumSettings.userNick} 回复`
                           : `以 ${forumSettings.smurfNick} 回复`
                       }
                       className={`flex-grow backdrop-blur shadow-lg p-3 rounded-full text-sm border outline-none transition-all ${replyIdentity === "me" ? "bg-white/90 border-gray-200 focus:border-black" : "bg-gray-100/90 border-gray-200 focus:border-gray-400 text-gray-600"}`}
                       onKeyPress={(e) => {
                         if (e.key === "Enter") {
+                          let val = e.target.value;
+                          if (replyTarget && !val.startsWith("回复 " + replyTarget.author)) {
+                            val = "回复 " + replyTarget.author + "：" + val;
+                          }
                           handleUserReply(
                             thread.id,
-                            e.target.value,
+                            val,
                             replyIdentity,
                           );
                           e.target.value = "";
+                          setReplyTarget(null);
                         }
                       }}
                     />
@@ -905,12 +943,17 @@ ${realNameContext}
                         const input =
                           document.getElementById("forum-reply-input");
                         if (input && input.value) {
+                          let val = input.value;
+                          if (replyTarget && !val.startsWith("回复 " + replyTarget.author)) {
+                            val = "回复 " + replyTarget.author + "：" + val;
+                          }
                           handleUserReply(
                             thread.id,
-                            input.value,
+                            val,
                             replyIdentity,
                           );
                           input.value = "";
+                          setReplyTarget(null);
                         }
                       }}
                       className={`p-3 rounded-full shadow-lg text-white transition-all active:scale-95 ${replyIdentity === "me" ? "bg-black hover:bg-gray-800" : "bg-gray-500 hover:bg-gray-600"}`}

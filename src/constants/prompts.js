@@ -324,7 +324,7 @@ JSON Format:
 
   forum_gen_replies: `Generate NEW replies for a thread.
 Thread: "{{TITLE}}" - {{CONTENT}}
-[FORUM CONTEXT] (Public comments):
+[FORUM CONTEXT] (Public comments, format: author → replyTo: content):
 """
 {{EXISTING_REPLIES}}
 """
@@ -333,6 +333,8 @@ Thread: "{{TITLE}}" - {{CONTENT}}
 [IDENTITY INFO]:
 - Character Real Name: "{{char}}"
 - **Character Forum Nickname**: "{{CHAR_NICK}}"
+- **User Forum Nickname**: "{{USER_NICK}}" (Real name: {{user}})
+- **replyTo Rule**: When NPCs reply to "{{CHAR_NICK}}", set replyTo to "{{CHAR_NICK}}". When NPCs reply to "{{USER_NICK}}" ({{user}}), set replyTo to "{{USER_NICK}}". When replying to another NPC, set replyTo to that NPC's nickname. For top-level comments with no target, set replyTo to null.
 Trigger Mode: {{MODE}} (Auto/Manual).
 
 Instructions:
@@ -344,21 +346,20 @@ Instructions:
 4. **Character Logic**:
    - If Mode is "Manual": {{char}} MUST reply.
    - If Mode is "Auto": {{char}} should ONLY reply if the topic is *directly* related to their specific interests. Otherwise, return NO character reply.
-5. JSON SYNTAX RULE: If the dialogue or thought content contains double quotes, you MUST use Chinese double quotes (“�? instead. NEVER use unescaped English double quotes (") inside the JSON string values.
+5. JSON SYNTAX RULE: If the dialogue or thought content contains double quotes, you MUST use Chinese double quotes ("�) instead. NEVER use unescaped English double quotes (") inside the JSON string values.
 6. - Create interactions, arguments, agreements, or ridicule between netizens.
-7. **FORMAT RULE**: 
-   - If a reply is directed at a specific person, START the content with: "回复 Nickname: "
-   - **ONE TARGET PER MESSAGE**: Do NOT combine multiple replies into one text block.
-   - Example: "回复 小狗饲养�? 你才是宠物，滚�?
-   - **BAD CASE**: "回复 A: ... 回复 B: ..." (This is forbidden!)
-   - The "author" field MUST be the nickname ONLY. Do NOT put "回复 xxx" inside "author". Put "回复 xxx: " at the start of the "content" field instead.
-   - If it's a top-level comment, just write the content.
+7. **FORMAT RULE (CRITICAL)**: 
+   - Do NOT write "回复 xxx: " in the content field. Use the "replyTo" field to indicate who this reply targets.
+   - The system will render the "回复 xxx: " prefix automatically based on the replyTo field.
+   - **ONE TARGET PER MESSAGE**: Set replyTo to at most one nickname. Do NOT target multiple people in a single reply.
+   - For top-level comments, set replyTo to null.
+   - The "author" field MUST be the nickname ONLY.
 
 JSON Format:
 {
   "replies": [
-    { "author": "Nickname", "content": "Reply content", "isCharacter": false },
-    { "author": "{{char}}", "content": "Character's reply (only if applicable)", "isCharacter": true }
+    { "author": "Nickname", "content": "Reply content", "replyTo": "targetNickname or null", "isCharacter": false },
+    { "author": "{{char}}", "content": "Character's reply (only if applicable)", "replyTo": "targetNickname or null", "isCharacter": true }
   ]
 }`,
 
@@ -424,8 +425,8 @@ JSON Format:
   "title": "Title",
   "content": "Content",
   "replies": [
-     { "author": "NetizenA", "content": "Comment 1", "isCharacter": false },
-     { "author": "NetizenB", "content": "Comment 2", "isCharacter": false }
+     { "author": "NetizenA", "content": "Comment 1", "replyTo": "targetNickname or null", "isCharacter": false },
+     { "author": "NetizenB", "content": "Comment 2", "replyTo": "targetNickname or null", "isCharacter": false }
   ]
 }`,
   trigger_events: `Analyze the recent chat history and decide what events to trigger.
