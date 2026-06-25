@@ -508,7 +508,7 @@ ${realNameContext}
         (err) => showToast("error", err),
       );
 
-      if (data && data.shouldPost && data.title && data.content) {
+      if (data && data.title && data.content) {
         const newPost = {
           id: `char_${Date.now()}`,
           author: charNick,

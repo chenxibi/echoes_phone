@@ -400,7 +400,7 @@ JSON Format:
   "title": "Title",
   "content": "Content"
 }`,
-  forum_chat_event: `Analyze the recent chat history and decide if {{char}} would post on a forum about it.
+  forum_chat_event: `A forum post event has been triggered based on recent chat history. Generate a post from {{char}}'s perspective.
 Recent Chat:
 """
 {{HISTORY}}
@@ -408,16 +408,13 @@ Recent Chat:
 Topic: {{TOPIC}}
 
 Instructions:
-1. **Decision**: Is there a noteworthy emotion, event, or thought derived from the chat? (e.g., getting a gift, having a fight, feeling loved, daily complaint).
-2. If YES: 
-   - Write a forum post (Title + Content) from {{char}}'s perspective.
-   - **Generate 2-4 initial comments** from random netizens reacting to this post immediately.
-   - **Style**: 
+1. Write a forum post (Title + Content) from {{char}}'s perspective based on the conversation above.
+2. **Generate 2-4 initial comments** from random netizens reacting to this post immediately.
+3. **Style**: 
    - Vague/Subtle: Don't name {{user}} directly. Use "Someone", "That girl", "My crush", etc.
    - If it's a sweet moment: "Show off" subtly (暗戳戳炫耀).
    - If it's a conflict: Seek advice or vent.
    - The post must feel like a REAL forum post (casual, sometimes unclear, authentic slang).
-3. If NO (Chat is boring/too short): Return "null" for title and content.
 4. **Naming Style for Netizens (CRITICAL)":
    Generate diverse, realistic Chinese internet nicknames. 
    **STRICT CONSTRAINT**: You MUST generate NEW, ORIGINAL nicknames. **DO NOT** use the specific example names listed below. Use the *logic* behind them to create unique ones. All example Ref: names below are for inspiration only - you must CREATE your own.
