@@ -2844,6 +2844,20 @@ Requirements:
               return [];
             }
 
+            // 如果 message 是骰子对象（无 text），视为骰子消息
+            if (typeof item === "object" && item !== null && item.dice && !item.text) {
+              const diceResult = item.dice.result || 1;
+              return [{
+                sender: "char",
+                text: `[骰子] ?? ${diceResult}`,
+                isDice: true,
+                dice: { result: diceResult },
+                time: formatTime(getCurrentTimeObj()),
+                ...(realTimeEnabled ? { timestamp: Date.now() } : {}),
+                status: index === responseData.messages.length - 1 ? responseData.status : null,
+              }];
+            }
+
             let actualText =
               typeof item === "object" && item !== null && item.text
                 ? item.text
