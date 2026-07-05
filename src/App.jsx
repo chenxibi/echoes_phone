@@ -3117,7 +3117,7 @@ Requirements:
     ? userFacts
         .map((f) =>
           formatTrackerLine(
-            `- [Facts about {{user}}]: ${f.content} ({{char}}'s Note: ${f.comment})`,
+            `- [Facts about {{user}}]: ${f.content} ({{char}}'s Note: ${f.comment}) (记录于${f.time || "某天"})`,
           ),
         )
         .join("\n")
@@ -3127,7 +3127,7 @@ Requirements:
     ? charFacts
         .map((f) =>
           formatTrackerLine(
-            `- [Facts about {{char}}]: ${f.content} ({{char}}'s Note: ${f.comment})`,
+            `- [Facts about {{char}}]: ${f.content} ({{char}}'s Note: ${f.comment}) (记录于${f.time || "某天"})`,
           ),
         )
         .join("\n")
