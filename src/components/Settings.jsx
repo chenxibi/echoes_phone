@@ -16,6 +16,7 @@ import {
   Download,
   MapPin,
   Edit2,
+  Sparkles,
 } from "lucide-react";
 
 const SettingsPanel = ({
@@ -41,6 +42,8 @@ const SettingsPanel = ({
   setLongMemory,
   triggerSummary,
   isSummarizing,
+  onSimplify,
+  isSimplifying,
 
   // --- 聊天设置参数 ---
   chatStyle,
@@ -348,6 +351,20 @@ const SettingsPanel = ({
                       <FileText size={10} />
                     )}
                     手动总结
+                  </button>
+                  <span className="text-[10px] text-gray-300">|</span>
+                  <button
+                    onClick={onSimplify}
+                    disabled={isSimplifying || !longMemory?.trim()}
+                    className="flex items-center gap-1 text-[10px] text-orange-600 hover:underline disabled:opacity-50 disabled:no-underline disabled:text-gray-400 cursor-pointer"
+                    title="简化已有的长期记忆，去掉重复并压缩早期内容"
+                  >
+                    {isSimplifying ? (
+                      <RefreshCw size={10} className="animate-spin" />
+                    ) : (
+                      <Sparkles size={10} />
+                    )}
+                    简化
                   </button>
                 </div>
                 <textarea

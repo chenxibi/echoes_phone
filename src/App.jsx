@@ -839,6 +839,9 @@ const App = () => {
   const [editContent, setEditContent] = useState(""); // 编辑框的内容
   const longPressTimerRef = useRef(null);
   const [isSummarizing, setIsSummarizing] = useState(false); // Loading 状态
+  const [isSimplifying, setIsSimplifying] = useState(false); // 记忆简化 loading
+  const [simplifiedMemory, setSimplifiedMemory] = useState(null); // 简化后的临时文本
+  const [showSimplifyModal, setShowSimplifyModal] = useState(false); // 简化对比弹窗
 
   // NEW: State to track which message has its status expanded
   const [expandedChatStatusIndex, setExpandedChatStatusIndex] = useState(null);
@@ -3922,6 +3925,30 @@ Requirements:
     }
   };
 
+  const handleSimplifyMemory = async () => {
+    if (!longMemory || !longMemory.trim()) {
+      showToast("error", "暂无记忆可简化");
+      return;
+    }
+    setIsSimplifying(true);
+    try {
+      const prompt = prompts.simplify_memory.replaceAll("{{MEMORY}}", longMemory);
+      const result = await generateContent(
+        { prompt, systemInstruction: "You are a text compressor.", isJson: false },
+        apiConfig,
+        (err) => showToast("error", "简化失败: " + err),
+      );
+      if (result && typeof result === "string" && result.trim()) {
+        setSimplifiedMemory(result.trim());
+        setShowSimplifyModal(true);
+      } else {
+        showToast("error", "简化返回为空");
+      }
+    } finally {
+      setIsSimplifying(false);
+    }
+  };
+
   return (
     <div id="echoes-chat" className="h-screen w-full bg-[#EBEBF0] flex items-center justify-center text-[#2C2C2C] overflow-hidden relative">
       {/* Skip Link for Accessibility */}
@@ -5026,6 +5053,8 @@ Requirements:
                 setLongMemory={setLongMemory}
                 triggerSummary={generateSummary}
                 isSummarizing={isSummarizing}
+                onSimplify={handleSimplifyMemory}
+                isSimplifying={isSimplifying}
                 // 聊天设置
                 chatStyle={chatStyle}
                 setChatStyle={setChatStyle}
@@ -5880,6 +5909,47 @@ Requirements:
           config={dialogConfig}
           onClose={() => setDialogConfig(null)}
         />
+      )}
+
+      {/* 记忆简化对比弹窗 */}
+      {showSimplifyModal && (
+        <div className="fixed inset-0 bg-black/50 z-[110] flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+            <h3 className="text-lg font-medium text-gray-900">记忆简化</h3>
+            <div className="flex-1 overflow-y-auto space-y-3">
+              <div>
+                <label className="text-[10px] font-bold uppercase text-gray-400 mb-1 block">原记忆</label>
+                <textarea
+                  value={longMemory}
+                  onChange={(e) => setLongMemory(e.target.value)}
+                  className="w-full h-32 p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs resize-none outline-none focus:border-black"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold uppercase text-gray-400 mb-1 block">简化后</label>
+                <textarea
+                  value={simplifiedMemory}
+                  onChange={(e) => setSimplifiedMemory(e.target.value)}
+                  className="w-full h-32 p-3 bg-green-50 border border-green-200 rounded-xl text-xs resize-none outline-none focus:border-green-400"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setLongMemory(simplifiedMemory); setShowSimplifyModal(false); showToast("success", "已使用简化后的记忆"); }}
+                className="flex-1 py-2.5 bg-green-500 text-white rounded-xl text-sm font-bold hover:bg-green-600"
+              >
+                使用简化版
+              </button>
+              <button
+                onClick={() => setShowSimplifyModal(false)}
+                className="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-200"
+              >
+                保留原版
+              </button>
+            </div>
+          </div>
+        </div>
       )}
       {/* [新增] 位置发送弹窗 */}
       {showLocationModal && (

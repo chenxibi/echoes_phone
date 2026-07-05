@@ -493,6 +493,20 @@ CRITICAL INSTRUCTIONS:
 6. If the chat log indicates the current date or time, or covers a certain time range, or mentions time passing, include it in the summary.
 7. **Language**: Simplified Chinese (zh-CN).`,
 
+  simplify_memory: `You are a text compressor. Simplify the following long-term memory summary by:
+1. Remove ALL duplicate or repeated information across paragraphs.
+2. For older events (early in the text), aggressively condense to 1-2 short sentences.
+3. For recent events (near the end), preserve more detail but still be concise.
+4. Merge related events into single coherent descriptions.
+5. Output the simplified text directly — NO explanations, NO headers, NO analysis.
+
+Original Memory:
+"""
+{{MEMORY}}
+"""
+
+Simplified:`,
+
   tracker_update: `Analyze the chat history to extract **PERMANENT** information.
 Context: 
 {{HISTORY}}
