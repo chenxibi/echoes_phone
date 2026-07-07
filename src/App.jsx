@@ -4053,7 +4053,7 @@ Requirements:
               )}
 
         {/* Status Bar */}
-        <header className="h-3 bg-transparent z-20 shrink-0" role="banner" />
+        <header className="h-3 bg-[var(--skin-bg,#f2f2f2)] z-20 shrink-0" role="banner" />
 
         <main id="main-content" className="flex-grow relative overflow-hidden" role="main">
           {/* HOME SCREEN */}
