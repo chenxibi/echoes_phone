@@ -185,7 +185,14 @@ JSON:
   "time": "HH:MM"
 }`,
 
-  smartwatch_offline_batch: `{{user}} left or has not replied after the last conversation shown below. Generate up to {{EXPECTED_COUNT}} surveillance log entries showing {{char}}'s daily life when {{user}} is not present (i.e., events happen in the {{GAP_DURATION}} between the last chat and now). If nothing significant happens, fewer entries (even zero) is fine. If there are natural plot developments, generate more.
+  smartwatch_offline_batch: `{{user}} has gone offline and hasn't replied. The time gap is {{GAP_DURATION}}. Determine what {{char}} does during this period.
+
+First, **ASSESS THE SITUATION**:
+- If the time gap is short (< 1 hour) AND the last conversation was mid-topic (unfinished chat, waiting for reply), {{char}} is likely still waiting. Generate 0-1 brief entries showing {{char}} doing something nearby while waiting (e.g., scrolling phone, making tea). Do NOT end the conversation context.
+- If the time gap is moderate (1-4 hours), {{char}} may continue their daily routine but still keep an eye out for user's return. Generate 1-2 entries blending daily life with occasional check-ins.
+- If the time gap is long (4+ hours, especially overnight), {{char}} went to sleep or fully engaged in independent activities. Generate a full day's arc ({{EXPECTED_COUNT}} entries max). Include winding down, sleeping if overnight, and possibly waking up.
+
+**General Rule**: If the last conversation was intense, romantic, or emotionally charged, {{char}} may linger on those feelings. If it was casual small talk, {{char}} moves on quickly.
 
 Known Locations: {{LOCATIONS_LIST}} (Choose IDs from this list when applicable, or use null for new places and provide a fresh name in "locationName". You may visit places not in this list.)
 Last Known Status Before User Left: {{LAST_LOG}}
@@ -195,8 +202,9 @@ Last Conversation Before User Left (happened JUST BEFORE {{char}} began these ac
 CRITICAL INSTRUCTIONS:
 1. **Time Span**: All events happen AFTER {{LAST_MSG_TIME}} and BEFORE {{CURRENT_TIME}}. Earliest entry is right after user left at {{LAST_MSG_TIME}}, latest entry ends at {{CURRENT_TIME}}.
 2. **Location Transitions**: {{LOCATION_RULE}}
-4. **Natural Life**: Show {{char}} doing real daily things — eating, sleeping, working, hobbies, thinking about {{user}}, going out, interacting with the world. Make it feel like a real person living their life, not just waiting for the user to return.
-5. **Emotional Arc**: {{char}} may miss {{user}} at times, but also has their own independent life, routines, and distractions. Show both.
+3. **Situation-Aware Generation**: Based on the assessment above, generate the appropriate number of entries. Do NOT force entries if the gap is short and conversation was mid-topic.
+4. **Natural Life**: Show {{char}} doing real daily things — eating, sleeping, working, hobbies, thinking about {{user}}, going out. If user will return soon, {{char}} stays nearby and might re-read messages or check their phone.
+5. **Emotional Continuity**: If the last conversation was meaningful, {{char}} may linger on those feelings in early entries, then gradually shift to daily life as time passes.
 6. **AV Data**: For each entry, write a concise 3rd-person objective description of what a camera/microphone would capture. MUST NOT exceed 80 Chinese characters.
 7. **Thought**: For each entry, {{char}}'s uncensored inner thought. MUST NOT exceed 80 Chinese characters.
 8. **Chronological Order**: Entries MUST be in chronological order (earliest first). The first entry's time should be close to when user left, the last entry's time should be close to now.
