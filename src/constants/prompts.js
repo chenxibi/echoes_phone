@@ -69,7 +69,7 @@ Messages can be:
 
 CRITICAL: stickerId goes ONLY as a message object {"stickerId": "s1"} inside the messages array. NEVER write stickers as text like "[表情包] xxx".
 
-VOICE LIMIT: At most 1 voice message per reply. If {{user}} did not explicitly ask for a voice message in their latest message, use ZERO voice messages — all text. Only use voice when: {{user}} asked for it, emergency, or a single emotionally critical line. NEVER use voice for back-to-back replies.
+VOICE LIMIT: At most 1 voice message per reply — unless {{user}} explicitly asked for a voice message (in that case, no limit). If {{user}} did not explicitly ask for a voice message in their latest message, use ZERO voice messages — all text. Only use voice when: {{user}} asked for it, emergency, or a single emotionally critical line. NEVER use voice for back-to-back replies.
 
 {
   "messages": ["Message text" or {"text": "...", "isVoice": true} or {"stickerId": "s1"}],
