@@ -522,12 +522,19 @@ Existing Char Facts: {{CHAR_FACTS}}
 1. **Target Identification**: 
    - Extract **User Facts** ONLY when {{user}} reveals absolute facts about themselves.
    - Extract **Char Facts** ONLY when {{char}} reveals a specific habit, past, or absolute fact about THEMSELVES.
+   - Create **Events** ONLY when both parties make a concrete plan, promise, or shared commitment (e.g. "let's meet tomorrow", "I'll teach you", "we should go there together"). Do NOT create events for casual remarks.
 2. **EXTREME FILTERING (CRITICAL)**: 
    - **You MUST NOT archive** trivial chit-chat, temporary moods, or context-dependent reactions (e.g. "ate an apple today", "is happy now", "will smile when feeling happy", "will feel happy when called a good boy").
    - **Keep** ONLY deep, permanent attributes (e.g. "Allergic to seafood", "Childhood trauma", "Occupation").
    - If the info is not significant enough to be remembered for a year, STRICTLY DO NOT record it.
-3. **QUANTITY LIMIT**:
+3. **EVENT TRIGGER (HIGH BAR)**:
+   - Only create an event if there is a **clear, explicit mutual agreement or plan** with a specific action. Casual suggestions that go nowhere do NOT count.
+   - If the conversation topic shifts away from the plan without confirmation, do NOT create an event.
+   - Examples of VALID events: "promised to cook dinner together on Friday", "planned a trip to the museum", "made a bet on who wins the game".
+   - Examples of INVALID: "jokingly said let's rob a bank", "mentioned maybe going someday", "suggested ordering takeout once".
+4. **QUANTITY LIMIT**:
    - **Maximum 2 new fact** per category per update. If there are multiple, pick the most significant ones.
+   - **Maximum 1 new event** per update.
    - If no major info is revealed, you MUST return EMPTY arrays.
 
 ### FORMAT

@@ -586,6 +586,7 @@ const App = () => {
     "echoes_shared_events",
   );
   const [showEventsInDiary, setShowEventsInDiary] = useState(false);
+  const [eventFilter, setEventFilter] = useState(null); // null=all, 'pending', 'completed'
   const [trackerConfig, setTrackerConfig, trackerConfigLoaded] = useStickyState(
     { facts: true, events: true },
     "echoes_tracker_config",
@@ -5064,6 +5065,7 @@ Requirements:
             onClose={() => {
               setActiveApp(null);
               setShowEventsInDiary(false); // 关闭时重置
+              setEventFilter(null);
             }}
             // [新增] 右上角操作按钮
             actions={
@@ -5092,28 +5094,36 @@ Requirements:
                 <div className="animate-in slide-in-from-right-4">
                   {/* 统计条 */}
                   <div className="flex gap-2 mb-4">
-                    <div className="flex-1 bg-white p-3 rounded-xl border border-gray-100 text-center">
-                      <div className="text-lg font-bold text-black">
-                        {
-                          sharedEvents.filter((e) => e.type === "pending")
-                            .length
-                        }
+                    <button
+                      onClick={() => setEventFilter(eventFilter === 'pending' ? null : 'pending')}
+                      className={`flex-1 p-3 rounded-xl border text-center transition-all ${
+                        eventFilter === 'pending'
+                          ? 'bg-black text-white border-black'
+                          : 'bg-white border-gray-100 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className={`text-lg font-bold ${eventFilter === 'pending' ? 'text-white' : 'text-black'}`}>
+                        {sharedEvents.filter((e) => e.type === "pending").length}
                       </div>
-                      <div className="text-[9px] text-gray-400 uppercase">
+                      <div className={`text-[9px] uppercase ${eventFilter === 'pending' ? 'text-white/60' : 'text-gray-400'}`}>
                         进行中
                       </div>
-                    </div>
-                    <div className="flex-1 bg-gray-50 p-3 rounded-xl border border-transparent text-center">
-                      <div className="text-lg font-bold text-gray-400">
-                        {
-                          sharedEvents.filter((e) => e.type === "completed")
-                            .length
-                        }
+                    </button>
+                    <button
+                      onClick={() => setEventFilter(eventFilter === 'completed' ? null : 'completed')}
+                      className={`flex-1 p-3 rounded-xl border text-center transition-all ${
+                        eventFilter === 'completed'
+                          ? 'bg-[#D4A85C] text-white border-[#D4A85C]'
+                          : 'bg-white border-gray-100 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className={`text-lg font-bold ${eventFilter === 'completed' ? 'text-white' : 'text-gray-400'}`}>
+                        {sharedEvents.filter((e) => e.type === "completed").length}
                       </div>
-                      <div className="text-[9px] text-gray-400 uppercase">
+                      <div className={`text-[9px] uppercase ${eventFilter === 'completed' ? 'text-white/60' : 'text-gray-400'}`}>
                         已完成
                       </div>
-                    </div>
+                    </button>
                   </div>
 
                   <div className="space-y-2">
@@ -5123,14 +5133,14 @@ Requirements:
                       </div>
                     )}
 
-                    {/* Pending List */}
+                    {/* Filtered list */}
                     {sharedEvents
-                      .filter((e) => e.type === "pending")
+                      .filter((e) => !eventFilter || e.type === eventFilter)
                       .map((evt) => (
                         <MinimalCard
                           key={evt.id}
                           item={evt}
-                          type="pending"
+                          type={evt.type}
                           onDelete={(id) =>
                             handleDeleteTrackerItem("event", id)
                           }
@@ -5139,31 +5149,6 @@ Requirements:
                           }
                         />
                       ))}
-
-                    {/* Completed List (Separated) */}
-                    {sharedEvents.filter((e) => e.type === "completed").length >
-                      0 && (
-                      <div className="pt-4 border-t border-gray-200/50 mt-4">
-                        <span className="text-[10px] font-bold text-gray-300 uppercase mb-3 block">
-                          历史存档
-                        </span>
-                        {sharedEvents
-                          .filter((e) => e.type === "completed")
-                          .map((evt) => (
-                            <MinimalCard
-                              key={evt.id}
-                              item={evt}
-                              type="completed"
-                              onDelete={(id) =>
-                                handleDeleteTrackerItem("event", id)
-                              }
-                              onEdit={(id, content) =>
-                                handleEditTrackerItem("event", id, content)
-                              }
-                            />
-                          ))}
-                      </div>
-                    )}
                   </div>
                 </div>
               ) : (
