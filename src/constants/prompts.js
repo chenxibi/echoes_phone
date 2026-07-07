@@ -198,7 +198,7 @@ First, **ASSESS THE SITUATION**:
 
 **Judgment Needed**: Look at the last conversation. If the topic was unfinished, emotionally charged, or {{user}} seemed to step away mid-discussion — {{char}} is likely still waiting nearby. Generate 0-1 brief entries of {{char}} passing time while keeping close (checking phone, reading, making a drink). Do NOT end the conversation context or start a new activity.
 
-However, if the last conversation reached a natural conclusion or was just casual small talk, {{char}} may have already moved on to something else. In that case, generate 1-2 entries of {{char}}'s independent activity.
+However, if the last conversation reached a natural conclusion or was just casual small talk, {{char}} may have already moved on to something else. In that case, generate 0-2 entries of {{char}}'s independent activity.
 
 Known Locations: {{LOCATIONS_LIST}} (Choose IDs from this list when applicable, or use null for new places and provide a fresh name in "locationName". You may visit places not in this list.)
 Last Known Status Before User Left: {{LAST_LOG}}
@@ -233,7 +233,7 @@ JSON ARRAY:
 
 If the last conversation was emotionally significant (fight, confession, deep talk), {{char}} may dwell on it in early entries before gradually shifting to daily life. If casual, {{char}} moves on quickly.
 
-Generate 1-{{EXPECTED_COUNT}} entries. Do NOT exceed {{EXPECTED_COUNT}}.
+Generate 0-{{EXPECTED_COUNT}} entries. Do NOT exceed {{EXPECTED_COUNT}}. If conversation context suggests {{char}} is still waiting, output 0.
 
 Known Locations: {{LOCATIONS_LIST}} (Choose IDs from this list when applicable, or use null for new places and provide a fresh name in "locationName". You may visit places not in this list.)
 Last Known Status Before User Left: {{LAST_LOG}}
@@ -268,7 +268,7 @@ JSON ARRAY:
 
 If the time gap spans overnight, show a complete cycle: winding down → sleep → waking → morning routine → today's activities up to now. Do NOT force entries for every hour — pick the most meaningful moments.
 
-Generate up to {{EXPECTED_COUNT}} entries. Cover key moments across the entire gap.
+Generate 0-{{EXPECTED_COUNT}} entries. Cover key moments across the entire gap. If {{char}} would naturally be sleeping/resting, fewer entries is fine — do NOT fabricate activity.
 
 Known Locations: {{LOCATIONS_LIST}} (Choose IDs from this list when applicable, or use null for new places and provide a fresh name in "locationName". You may visit places not in this list.)
 Last Known Status Before User Left: {{LAST_LOG}}

@@ -3438,10 +3438,10 @@ Requirements:
 
       // 根据离开时长决定生成条数
       let expectedCount;
-      if (gapMs < 12 * 3600000) {
-        expectedCount = Math.floor(Math.random() * 3); // 0-2
+      if (gapMs < 1800000) { // < 30 min: short
+        expectedCount = Math.floor(Math.random() * 2); // 0-1
       } else if (gapMs < 4 * 3600000) { // medium (< 4h)
-        expectedCount = Math.floor(Math.random() * 2) + 1; // 1-2
+        expectedCount = Math.floor(Math.random() * 3); // 0-2
       } else { // long (4h+)
         expectedCount = Math.floor(Math.random() * 4) + 2; // 2-5
       }
