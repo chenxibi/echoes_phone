@@ -2459,6 +2459,10 @@ Requirements:
 
     // 如果是重生成，回滚历史
     if (regenIndex !== null) {
+      // 回退被替换消息生成的 tracker 数据
+      for (let i = regenIndex; i < chatHistory.length; i++) {
+        if (chatHistory[i]?.id) rollbackTrackerData(chatHistory[i].id);
+      }
       newHistory = chatHistory.slice(0, regenIndex);
     }
     // 如果是带内容触发（来自音乐等界面），先插入用户消息
