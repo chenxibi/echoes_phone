@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { Virtuoso } from "react-virtuoso";
 import { jsonrepair } from "jsonrepair";
 import { PRESET_LOCATION_IMAGES } from "./constants/assets";
+import { PRESET_WORLDBOOK } from "./constants/presets";
 import Forum from "./components/Forum";
 import SettingsPanel from "./components/Settings";
 import WorldBook from "./components/WorldBook";
@@ -391,6 +392,19 @@ const App = () => {
     "echoes_custom_font_name",
   );
 
+  // Initialize preset world book entries on first load
+  useEffect(() => {
+    if (worldBookLoaded && worldBook.length === 0 && PRESET_WORLDBOOK.length > 0) {
+      const presets = PRESET_WORLDBOOK.map((entry, i) => ({
+        id: `preset_wb_${i}_${Date.now()}`,
+        name: entry.name,
+        content: entry.content,
+        enabled: entry.enabled !== false,
+        group: entry.group || "预设",
+      }));
+      setWorldBook(presets);
+    }
+  }, [worldBookLoaded]);
   const applyFont = (name, url) => {
     const styleId = "dynamic-user-font";
     let styleTag = document.getElementById(styleId);
