@@ -1165,11 +1165,17 @@ const App = () => {
     }
   }, [isTyping, messageQueue]);
 
-  // 皮肤 CSS 注入
+  // 皮肤 CSS 注入及状态栏颜色同步
   useEffect(() => {
     let styleEl = document.getElementById("echoes-skin-style");
     if (!skinCSS) {
       if (styleEl) styleEl.remove();
+      
+      // Reset meta theme-color
+      let metaThemeColor = document.querySelector("meta[name='theme-color']");
+      if (metaThemeColor) {
+        metaThemeColor.setAttribute("content", "#F2F2F7");
+      }
       return;
     }
     if (!styleEl) {
@@ -1178,6 +1184,17 @@ const App = () => {
       document.head.appendChild(styleEl);
     }
     styleEl.textContent = skinCSS;
+
+    // Sync theme-color for mobile status bar
+    const match = skinCSS.match(/--skin-bg:\s*(#[0-9a-fA-F]{3,8})/i);
+    const bgColor = match ? match[1] : '#F2F2F7';
+    let metaThemeColor = document.querySelector("meta[name='theme-color']");
+    if (!metaThemeColor) {
+      metaThemeColor = document.createElement("meta");
+      metaThemeColor.setAttribute("name", "theme-color");
+      document.head.appendChild(metaThemeColor);
+    }
+    metaThemeColor.setAttribute("content", bgColor);
   }, [skinCSS]);
 
   // Helpers
@@ -4093,7 +4110,7 @@ Requirements:
               )}
 
         {/* Status Bar */}
-        <header className="h-3 shrink-0" role="banner" style={{ backgroundColor: 'var(--skin-bg, #F2F2F7)' }} />
+        <header className="h-4 shrink-0" role="banner" style={{ backgroundColor: 'var(--skin-bg, #F2F2F7)' }} />
 
         <main id="main-content" className="flex-grow relative overflow-hidden" role="main">
           {/* HOME SCREEN */}
