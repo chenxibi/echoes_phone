@@ -911,7 +911,12 @@ const App = () => {
       ...entry,
       group: finalName, // 使用角色名作为分组
     }));
-    setWorldBook(groupedWorldBook);
+    // 合并：预设在前，角色卡世界书追加在后
+    setWorldBook((prev) => {
+      const presetIds = new Set(prev.filter(e => e.id.startsWith('preset_')).map(e => e.id));
+      const newEntries = groupedWorldBook.filter(e => !presetIds.has(e.id));
+      return [...prev, ...newEntries];
+    });
 
     // 6. 重置生成器 UI
     setShowCreationAssistant(false);
@@ -1188,7 +1193,13 @@ const App = () => {
             const json = JSON.parse(e.target.result);
             const { rawText, worldBook, name } = cleanCharacterJson(json);
             setInputKey(rawText);
-            setWorldBook(worldBook);
+            // 合并：保留预设在前，角色卡世界书追加在后
+            const newWB = worldBook || [];
+            setWorldBook((prev) => {
+              const existing = new Set(prev.map(e => e.id));
+              const unique = newWB.filter(e => !existing.has(e.id));
+              return [...prev, ...unique];
+            });
             // 从 rawText 提取名字（双轨兼容：Name: 模式 + 第一行启发式），兜底用 cleanCharacterJson 返回的 name
             const finalName = extractNameFromText(rawText) || (name && name !== "Unknown" ? name : "角色");
             setPersona((prev) => ({
