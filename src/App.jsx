@@ -1118,10 +1118,14 @@ const App = () => {
   useEffect(() => {
     if (activeApp === "chat" && virtuosoRef.current) {
       // 切换到聊天时滚到底部
-      virtuosoRef.current.scrollToIndex({
-        index: chatHistory.length - 1,
-        behavior: "auto",
-      });
+      setTimeout(() => {
+        if (virtuosoRef.current) {
+          virtuosoRef.current.scrollToIndex({
+            index: chatHistory.length - 1,
+            behavior: "auto",
+          });
+        }
+      }, 100);
     }
   }, [activeApp]);
 
@@ -1150,6 +1154,17 @@ const App = () => {
   useEffect(() => {
     if (messageQueue.length > 0 && !isTyping) {
       setIsTyping(true);
+      // typing 开始时，如果用户在底部则滚到底部（显示"正在输入中"）
+      if (isAtBottomRef.current && virtuosoRef.current) {
+        setTimeout(() => {
+          if (virtuosoRef.current) {
+            virtuosoRef.current.scrollToIndex({
+              index: chatHistory.length - 1,
+              behavior: "smooth",
+            });
+          }
+        }, 100);
+      }
     }
   }, [messageQueue, isTyping]);
 
@@ -1164,6 +1179,17 @@ const App = () => {
         setChatHistory((prev) => [...prev, nextMsg]);
         setMessageQueue((prev) => prev.slice(1));
         setIsTyping(false); // This triggers Effect 1 again if queue > 0
+        // 新消息渲染后，如果用户在底部则滚到底部
+        if (isAtBottomRef.current && virtuosoRef.current) {
+          setTimeout(() => {
+            if (virtuosoRef.current) {
+              virtuosoRef.current.scrollToIndex({
+                index: "LAST",
+                behavior: "smooth",
+              });
+            }
+          }, 50);
+        }
       }, delay);
 
       return () => clearTimeout(timer);
@@ -2490,12 +2516,12 @@ Requirements:
 
     setChatHistory((prev) => [...prev, newMsg]);
     setChatInput("");
-    // 发送后主动滚到底部
+    // 发送后滚动到底部（只有在用户已在底部时才滚动）
     setTimeout(() => {
-      if (virtuosoRef.current) {
-        virtuosoRef.current.scrollToIndex({ index: chatHistory.length, behavior: "smooth" });
+      if (virtuosoRef.current && isAtBottomRef.current) {
+        virtuosoRef.current.scrollToIndex({ index: "LAST", behavior: "smooth" });
       }
-    }, 50);
+    }, 100);
     lastUserSendTimeRef.current = Date.now();
     setLastInteractionTime(Date.now());
     setMsgCountSinceSummary((prev) => prev + 1);
@@ -4681,7 +4707,6 @@ Requirements:
                 data={chatHistory}
                 className="flex-grow overflow-y-auto overflow-x-hidden custom-scrollbar" style={{ paddingBottom: '1.5rem' }}
                 followOutput={expandedChatStatusIndex === null && activeMenuIndex === null ? 'auto' : false}
-                initialTopMostItemIndex={chatHistory.length - 1}
                 overscan={200}
                 itemContent={(i, msg) => {
                   const msgKey = msg.id || i;
