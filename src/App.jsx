@@ -1154,17 +1154,6 @@ const App = () => {
   useEffect(() => {
     if (messageQueue.length > 0 && !isTyping) {
       setIsTyping(true);
-      // typing 开始时，如果用户在底部则滚到底部（显示"正在输入中"）
-      if (isAtBottomRef.current && virtuosoRef.current) {
-        setTimeout(() => {
-          if (virtuosoRef.current) {
-            virtuosoRef.current.scrollToIndex({
-              index: chatHistory.length - 1,
-              behavior: "smooth",
-            });
-          }
-        }, 100);
-      }
     }
   }, [messageQueue, isTyping]);
 
@@ -1179,17 +1168,6 @@ const App = () => {
         setChatHistory((prev) => [...prev, nextMsg]);
         setMessageQueue((prev) => prev.slice(1));
         setIsTyping(false); // This triggers Effect 1 again if queue > 0
-        // 新消息渲染后，如果用户在底部则滚到底部
-        if (isAtBottomRef.current && virtuosoRef.current) {
-          setTimeout(() => {
-            if (virtuosoRef.current) {
-              virtuosoRef.current.scrollToIndex({
-                index: "LAST",
-                behavior: "smooth",
-              });
-            }
-          }, 50);
-        }
       }, delay);
 
       return () => clearTimeout(timer);
@@ -2579,6 +2557,15 @@ Requirements:
     if (abortControllerRef.current) abortControllerRef.current.abort();
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
+
+    // isTyping 开始后，如果用户在底部则滚到底部（显示"正在输入中"）
+    if (isAtBottomRef.current && virtuosoRef.current) {
+      setTimeout(() => {
+        if (virtuosoRef.current) {
+          virtuosoRef.current.scrollToIndex({ index: "LAST", behavior: "smooth" });
+        }
+      }, 100);
+    }
 
     const effectiveUserName = userName || "你";
 
