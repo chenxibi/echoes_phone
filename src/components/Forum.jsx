@@ -35,6 +35,7 @@ const Forum = ({
   generateContent,
   showToast,
   worldInfoString, // [关键修改] 直接接收字符串，不再调用 getWorldInfoString()
+  worldBook, // [新增] 世界书数组，用于二次确认判断
   getCurrentTimeObj,
   getContextString, // 获取聊天记录上下文
   customConfirm,
@@ -203,6 +204,21 @@ const Forum = ({
   const initForum = async () => {
     if (!persona) return;
     if (!checkCanGenerate()) return;
+
+    // 如果世界书为空或没有启用条目，弹出二次确认
+    const worldBookArr = worldBook || [];
+    const hasEnabledEntries = worldBookArr.length > 0 && worldBookArr.some((e) => e.enabled);
+    if (!hasEnabledEntries) {
+      const confirmed = await customConfirm(
+        worldBookArr.length === 0
+          ? "世界书中没有任何条目，初始化后生活圈将在「无世界观设定」的环境中生成内容，可能缺乏地域感与背景关联。\n\n是否确定继续初始化？"
+          : "世界书中有条目但全部处于关闭状态，初始化后生活圈将在「未启用世界观」的环境中生成内容。\n\n是否确定继续初始化？",
+        "提醒",
+        false
+      );
+      if (!confirmed) return;
+    }
+
     setLoading((prev) => ({ ...prev, forum: true }));
 
     const prompt = prompts.forum_init
