@@ -2495,9 +2495,10 @@ Requirements:
     setChatHistory((prev) => [...prev, newMsg]);
     setChatInput("");
     // 发送后无条件滚到底部（用户主动发送，必然想看自己发的消息）
+    const targetIndex = chatHistory.length; // 新消息加入后 length 已 +1，index = length 即最后一条
     setTimeout(() => {
       if (virtuosoRef.current) {
-        virtuosoRef.current.scrollToIndex({ index: "LAST", behavior: "smooth" });
+        virtuosoRef.current.scrollToIndex({ index: targetIndex, behavior: "smooth" });
       }
     }, 100);
     lastUserSendTimeRef.current = Date.now();
@@ -2560,9 +2561,10 @@ Requirements:
 
     // isTyping 开始后，如果用户在底部则滚到底部（显示"正在输入中"）
     if (isAtBottomRef.current && virtuosoRef.current) {
+      const latestIndex = newHistory.length - 1;
       setTimeout(() => {
         if (virtuosoRef.current) {
-          virtuosoRef.current.scrollToIndex({ index: "LAST", behavior: "smooth" });
+          virtuosoRef.current.scrollToIndex({ index: latestIndex, behavior: "smooth" });
         }
       }, 100);
     }
