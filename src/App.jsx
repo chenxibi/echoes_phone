@@ -2494,13 +2494,15 @@ Requirements:
 
     setChatHistory((prev) => [...prev, newMsg]);
     setChatInput("");
-    // 发送后无条件滚到底部（用户主动发送，必然想看自己发的消息）
-    const targetIndex = chatHistory.length; // 新消息加入后 length 已 +1，index = length 即最后一条
-    setTimeout(() => {
-      if (virtuosoRef.current) {
-        virtuosoRef.current.scrollToIndex({ index: targetIndex, behavior: "smooth" });
-      }
-    }, 100);
+    // 发送后滚动到底部——用 requestAnimationFrame 确保 DOM 已更新
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (virtuosoRef.current) {
+          // 用一个大数字让 Virtuoso 自动 clamp 到最后一条
+          virtuosoRef.current.scrollToIndex({ index: 999999, behavior: "auto", align: "end" });
+        }
+      });
+    });
     lastUserSendTimeRef.current = Date.now();
     setLastInteractionTime(Date.now());
     setMsgCountSinceSummary((prev) => prev + 1);
@@ -2561,12 +2563,13 @@ Requirements:
 
     // isTyping 开始后，如果用户在底部则滚到底部（显示"正在输入中"）
     if (isAtBottomRef.current && virtuosoRef.current) {
-      const latestIndex = newHistory.length - 1;
-      setTimeout(() => {
-        if (virtuosoRef.current) {
-          virtuosoRef.current.scrollToIndex({ index: latestIndex, behavior: "smooth" });
-        }
-      }, 100);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (virtuosoRef.current) {
+            virtuosoRef.current.scrollToIndex({ index: 999999, behavior: "auto", align: "end" });
+          }
+        });
+      });
     }
 
     const effectiveUserName = userName || "你";
