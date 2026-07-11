@@ -2494,9 +2494,9 @@ Requirements:
 
     setChatHistory((prev) => [...prev, newMsg]);
     setChatInput("");
-    // 发送后滚动到底部（只有在用户已在底部时才滚动）
+    // 发送后无条件滚到底部（用户主动发送，必然想看自己发的消息）
     setTimeout(() => {
-      if (virtuosoRef.current && isAtBottomRef.current) {
+      if (virtuosoRef.current) {
         virtuosoRef.current.scrollToIndex({ index: "LAST", behavior: "smooth" });
       }
     }, 100);
