@@ -613,7 +613,7 @@ const PersonalizationPanel = ({
 
         {/* 官方皮肤 */}
         <div className="grid grid-cols-4 gap-2 mb-4">
-          {OFFICIAL_SKINS.filter((s) => s.id !== "neon" && s.id !== "pixel").map((skin) => (
+          {OFFICIAL_SKINS.filter((s) => s.id !== "neon" && s.id !== "pixel" && s.id !== "latte").map((skin) => (
             <button
               key={skin.id}
               onClick={() => {

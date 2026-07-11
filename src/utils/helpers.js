@@ -122,15 +122,15 @@ export const formatSmartTime = (timestamp) => {
   if (!timestamp) return "";
   const d = new Date(timestamp);
   const now = new Date();
-  const hm = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+  const hm = d.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", hour12: false });
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const msgDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const diffDays = Math.floor((today - msgDay) / 86400000);
   if (diffDays === 0) return hm;
-  if (diffDays === 1) return `Yesterday ${hm}`;
-  if (diffDays === 2) return `2 days ago ${hm}`;
-  if (d.getFullYear() === now.getFullYear()) return `${d.toLocaleString("en-US", { month: "short" })} ${d.getDate()} ${hm}`;
-  return `${d.toLocaleString("en-US", { month: "short" })} ${d.getDate()}, ${d.getFullYear()} ${hm}`;
+  if (diffDays === 1) return `昨天 ${hm}`;
+  const md = `${d.getMonth() + 1}月${d.getDate()}日`;
+  if (d.getFullYear() === now.getFullYear()) return `${md} ${hm}`;
+  return `${d.getFullYear()}年${md} ${hm}`;
 };
 
 export const replacePlaceholders = (text, charName, userName) => {

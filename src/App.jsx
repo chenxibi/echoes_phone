@@ -4561,6 +4561,8 @@ Requirements:
                     className="w-full h-32 p-3 bg-white/50 border border-gray-200 rounded-xl text-xs font-medium focus:border-black focus:outline-none transition-colors resize-none custom-scrollbar leading-relaxed"
                   />
                 </div>
+                {/* 世界规则�?已隐藏 */}
+                {false && (
                 <div>
                   <label
                     className="block text-[9px] uppercase text-gray-400 mb-1 font-bold"
@@ -4576,6 +4578,7 @@ Requirements:
                     className="w-full h-20 p-3 bg-white/50 border border-gray-200 rounded-xl text-xs font-medium focus:border-black focus:outline-none resize-none transition-colors"
                   />
                 </div>
+                )}
               </div>
               <div>
                 <div className="flex justify-between items-center mb-3 px-1">
