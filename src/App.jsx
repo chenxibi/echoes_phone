@@ -851,6 +851,9 @@ const App = () => {
   const chatScrollRef = useRef(null);
   const virtuosoRef = useRef(null);
   const isAtBottomRef = useRef(true);
+  // 触发按钮引导（新手第一次发完消息后无操作5秒弹出）
+  const [showTriggerGuide, setShowTriggerGuide] = useState(false);
+  const triggerGuideTimerRef = useRef(null);
 
   // sticker 查找 Map 缓存 (避免每条消息都 .find 遍历数组)
   const charStickerMap = useMemo(() => new Map(charStickers.map(s => [s.id, s])), [charStickers]);
@@ -2537,6 +2540,14 @@ Requirements:
     setLastInteractionTime(Date.now());
     setMsgCountSinceSummary((prev) => prev + 1);
     setShowUserStickerPanel(false);
+    // 新手引导：发完消息5秒内没点触发按钮则弹出提示
+    if (!dialogsShown.triggerGuide) {
+      clearTimeout(triggerGuideTimerRef.current);
+      setShowTriggerGuide(false);
+      triggerGuideTimerRef.current = setTimeout(() => {
+        setShowTriggerGuide(true);
+      }, 5000);
+    }
   };
 
   // 2. 触发 AI 回复 (完整替换版)
@@ -2546,6 +2557,12 @@ Requirements:
     overrideContext = null,
   ) => {
     if (!persona) return;
+    // 清除触发引导
+    clearTimeout(triggerGuideTimerRef.current);
+    if (!dialogsShown.triggerGuide) {
+      setDialogsShown((prev) => ({ ...prev, triggerGuide: true }));
+    }
+    setShowTriggerGuide(false);
 
     // --- 1. 参数智能解析与消息预处理 ---
     const userContent = typeof param1 === "string" ? param1 : null;
@@ -5043,6 +5060,8 @@ Requirements:
                             value={chatInput}
                             onChange={(e) => {
                               setChatInput(e.target.value);
+                              // 用户开始输入则隐藏触发引导
+                              if (showTriggerGuide) setShowTriggerGuide(false);
                               e.target.style.height = "auto";
                               e.target.style.height =
                                 Math.min(e.target.scrollHeight, 120) + "px";
@@ -5115,13 +5134,23 @@ Requirements:
                             </button>
                           ) : (
                             /* 触发回复按钮 */
-                            <button
+                            <div className="relative">
+                              {showTriggerGuide && (
+                                <div className="absolute bottom-full mb-3 right-0 whitespace-nowrap animate-in slide-in-from-bottom-2 fade-in duration-300">
+                                  <div className="bg-[#1a1a1a]/95 backdrop-blur-md text-white text-xs font-medium px-4 py-2.5 rounded-2xl shadow-xl border border-white/20 relative">
+                                    按下按钮生成角色回复
+                                    <div className="absolute -bottom-1.5 right-4 w-3 h-3 bg-[#1a1a1a]/95 rotate-45 border-r border-b border-white/20"></div>
+                                  </div>
+                                </div>
+                              )}
+                              <button
                               onClick={() => triggerAIResponse()}
                               className="p-2 md:p-2.5 bg-[#2C2C2C] text-white rounded-full hover:bg-gray-200 border border-gray-200 transition-all active:scale-95"
                               title="让对方回复"
                             >
                               <MessageSquare size={18} strokeWidth={1.5} />
                             </button>
+                            </div>
                           )}
                         </div>
                       </>
