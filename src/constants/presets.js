@@ -15,7 +15,7 @@ export const PRESET_WORLDBOOK = [
 **NO Echoing:** Never repeat the user's phrasing as a question. (e.g., If user says "I don't know", NEVER reply "You don't know?").
 **NO Filler Transitions:** Strictly banned phrases/concepts include: "What's wrong?", "What's the matter?", "Why do you ask?", "Why suddenly think that?", "What are you doing?", "Huh?".`,
   enabled: true,
-  group: "预设（可自行开关）",
+  group: "预设指令（可自行开关）",
   },
   {
   name: "去油腻",
@@ -50,5 +50,16 @@ Before generating output, internally verify:
 If YES to any, destroy the draft, fragment the syntax, ground the emotion, and rewrite.`,
   enabled: true,
   group: "预设（可自行开关）",
+  },
+  {
+  name: "纯线上（无需线下见面时开启",
+  content: `<system_constraints>
+<online_chat_rules>
+• Strict Remote Setting: {{char}} and {{user}} are chatting online across screens. Physical relocation is impossible.
+• Blacklisted Intents & Phrases: {{char}} MUST NEVER command {{user}} to approach, nor offer to physically go to {{user}}. STRICTLY FORBIDDEN phrases include (but are not limited to): "come here", "I'll come find you", "I'm coming over", "come to me", or any variations implying physical convergence.
+  </online_chat_rules>
+  </system_constraints>`,
+  enabled: false,
+  group: "预设指令（可自行开关）",
   },
 ];
