@@ -3860,7 +3860,7 @@ Requirements:
         )}
 
         <div className="max-w-md w-full space-y-4 z-10 flex flex-col items-center h-auto">
-          <div className="text-center flex flex-col items-center space-y-0 mb-2">
+          <div className="text-center flex flex-col items-center gap-1 mb-2">
             <h1 className="text-7xl font-serif font-extralight text-[#1a1a1a] lock-time">
               {formatTime(getCurrentTimeObj())}
             </h1>
@@ -3898,7 +3898,7 @@ Requirements:
                 )}
               </div>
               {!avatar && (
-                <div className="text-[9px] text-gray-400 tracking-widest uppercase opacity-60 whitespace-nowrap mt-1">
+                <div className="text-[9px] text-gray-400 tracking-widest uppercase opacity-60 whitespace-nowrap mt-2 text-center w-full">
                   点击上传头像
                 </div>
               )}
