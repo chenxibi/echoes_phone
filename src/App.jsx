@@ -854,6 +854,10 @@ const App = () => {
   // 触发按钮引导（新手第一次发完消息后无操作5秒弹出）
   const [showTriggerGuide, setShowTriggerGuide] = useState(false);
   const triggerGuideTimerRef = useRef(null);
+  // 50轮后无聊引导（AI回复后5秒无输入，弹出8秒）
+  const [showIdleGuide, setShowIdleGuide] = useState(false);
+  const idleGuideTimerRef = useRef(null);
+  const idleGuideDismissRef = useRef(null);
 
   // sticker 查找 Map 缓存 (避免每条消息都 .find 遍历数组)
   const charStickerMap = useMemo(() => new Map(charStickers.map(s => [s.id, s])), [charStickers]);
@@ -2578,6 +2582,23 @@ Requirements:
     }
   };
 
+  // 无聊引导：50轮后 AI 回复完 5 秒无输入弹出
+  const idleAfterResponse = () => {
+    if (dialogsShown.idleGuide) return;
+    const userTurns = chatHistory.filter(m => m.sender === "me").length;
+    if (userTurns < 50) return;
+    clearTimeout(idleGuideTimerRef.current);
+    setShowIdleGuide(false);
+    idleGuideTimerRef.current = setTimeout(() => {
+      setShowIdleGuide(true);
+      clearTimeout(idleGuideDismissRef.current);
+      idleGuideDismissRef.current = setTimeout(() => {
+        setShowIdleGuide(false);
+        setDialogsShown((prev) => ({ ...prev, idleGuide: true }));
+      }, 8000);
+    }, 5000);
+  };
+
   // 2. 触发 AI 回复 (完整替换版)
   const triggerAIResponse = async (
     param1 = null, // 可以是重生成索引(number)，也可以是新消息内容(string)
@@ -3106,6 +3127,8 @@ Requirements:
     } finally {
       setLoading((prev) => ({ ...prev, chat: false }));
       abortControllerRef.current = null;
+      // 无聊引导：50轮后，AI回复完5秒无输入则弹出
+      idleAfterResponse();
     }
   };
   const handleDeleteChat = (index) =>
@@ -5076,6 +5099,14 @@ Requirements:
                       </button>
                     ) : (
                       <>
+                        {/* 无聊引导 */}
+                        {showIdleGuide && (
+                          <div className="relative w-full mb-2 flex justify-center animate-in fade-in slide-in-from-bottom-2 duration-300">
+                            <div className="bg-[#1a1a1a]/90 backdrop-blur-md text-white text-[11px] font-medium px-4 py-2.5 rounded-2xl shadow-xl border border-white/20 text-center leading-relaxed max-w-[280px]">
+                              聊了这么久，可以去小红书搜搜"番外指令"或"ai聊天梗"找找新灵感～
+                            </div>
+                          </div>
+                        )}
                         <div className="flex gap-1 shrink-0">
                           <button
                             onClick={() => {
@@ -5113,8 +5144,9 @@ Requirements:
                             value={chatInput}
                             onChange={(e) => {
                               setChatInput(e.target.value);
-                              // 用户开始输入则隐藏触发引导
+                              // 用户开始输入则隐藏触发引导和无聊引导
                               if (showTriggerGuide) setShowTriggerGuide(false);
+                              if (showIdleGuide) { setShowIdleGuide(false); clearTimeout(idleGuideTimerRef.current); clearTimeout(idleGuideDismissRef.current); }
                               e.target.style.height = "auto";
                               e.target.style.height =
                                 Math.min(e.target.scrollHeight, 120) + "px";
