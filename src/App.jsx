@@ -3854,8 +3854,8 @@ Requirements:
         )}
 
         <div className="max-w-md w-full space-y-8 z-10 flex flex-col items-center h-auto">
-          <div className="text-center flex flex-col items-center space-y-2 mb-4">
-            <h1 className="text-7xl font-serif font-extralight text-[#1a1a1a] lock-time mb-3">
+          <div className="text-center flex flex-col items-center space-y-0.5 mb-2">
+            <h1 className="text-7xl font-serif font-extralight text-[#1a1a1a] lock-time">
               {formatTime(getCurrentTimeObj())}
             </h1>
             <p className="text-sm uppercase tracking-widest text-gray-400">
@@ -4021,7 +4021,7 @@ Requirements:
           </div>
           <button
             onClick={() => setShowLockSettings(true)}
-            className="text-gray-400 hover:text-[#2C2C2C] transition-colors p-3 rounded-full hover:bg-gray-100/50"
+            className="text-gray-400 hover:text-[#2C2C2C] transition-colors p-3 rounded-full hover:bg-gray-100/50 mb-6"
             aria-label="打开设置"
           >
             <SettingsIcon size={18} strokeWidth={1.5} aria-hidden="true" />
