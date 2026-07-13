@@ -105,7 +105,7 @@ const SettingsPanel = ({
           {/* API Base URL */}
           <div>
             <label className="block text-[10px] uppercase text-gray-500 mb-1.5 font-bold">
-              API 地址
+              API 地址 (Base URL)
             </label>
             <input
               type="text"
@@ -121,7 +121,7 @@ const SettingsPanel = ({
           {/* API Key */}
           <div>
             <label className="block text-[10px] uppercase text-gray-500 mb-1.5 font-bold">
-              密钥
+              密钥 (API Key)
             </label>
             <input
               type="password"
@@ -137,7 +137,7 @@ const SettingsPanel = ({
           {/* Model Selection */}
           <div>
             <label className="block text-[10px] uppercase text-gray-500 mb-1.5 font-bold">
-              模型
+              模型 (Model)
             </label>
             <div className="flex gap-2">
               <div className="relative flex-grow">
@@ -466,7 +466,7 @@ const SettingsPanel = ({
                     <label className="block text-[10px] font-bold uppercase text-gray-500">
                       真实时间感知
                     </label>
-                    <span className="text-[9px] text-gray-400">【线下】、【小说】模式下推荐关闭</span>
+                    <span className="text-[9px] text-gray-400">【小说】、【现实】模式下推荐关闭</span>
                   </div>
                   <button
                     onClick={() => {
