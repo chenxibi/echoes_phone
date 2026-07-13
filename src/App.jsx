@@ -3866,7 +3866,7 @@ Requirements:
               {formatDate(getCurrentTimeObj())}
             </p>
           </div>
-          <div className="flex flex-col items-center w-full gap-8">
+          <div className="flex flex-col items-center w-full gap-4">
             <div
               className="relative group cursor-pointer"
               onClick={() => avatarInputRef.current.click()}
