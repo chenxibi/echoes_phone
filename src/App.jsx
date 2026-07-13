@@ -3937,7 +3937,7 @@ Requirements:
               </div>
             </div>
 
-            <div className="w-72 flex flex-col gap-4">
+            <div className="w-72 flex flex-col gap-4 -mt-3">
               {/* 分隔线 */}
               <div className="flex items-center gap-3">
                 <div className="flex-1 h-[1px] bg-gray-300/50"></div>
