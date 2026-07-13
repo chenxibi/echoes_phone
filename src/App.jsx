@@ -2596,7 +2596,7 @@ Requirements:
         setShowIdleGuide(false);
         setDialogsShown((prev) => ({ ...prev, idleGuide: true }));
       }, 8000);
-    }, 5000);
+    }, 8000);
   };
 
   // 2. 触发 AI 回复 (完整替换版)
@@ -5103,7 +5103,7 @@ Requirements:
                         {showIdleGuide && (
                           <div className="relative w-full mb-2 flex justify-center animate-in fade-in slide-in-from-bottom-2 duration-300">
                             <div className="bg-[#1a1a1a]/90 backdrop-blur-md text-white text-[11px] font-medium px-4 py-2.5 rounded-2xl shadow-xl border border-white/20 text-center leading-relaxed max-w-[280px]">
-                              聊了这么久，可以去小红书搜搜"番外指令"或"ai聊天梗"找找新灵感～
+                            有时如果不知道该聊什么，可以去小红书搜搜"番外指令"或"ai聊天梗"找找灵感。
                             </div>
                           </div>
                         )}
