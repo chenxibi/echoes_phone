@@ -303,7 +303,7 @@ const ChatBubble = ({
         {!isTransfer && !stickerUrl && !isVoice && !isLocation && !isDice && !isForward && !isRealImage && !msg.text?.startsWith("[图片]") && (
           <div
             className={`
-              px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap select-text
+              px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap select-text w-fit
               ${
                 isMe
                   ? "bg-[var(--color-bubble-user-bg)] text-[var(--color-bubble-user-text)] rounded-tr-none"
