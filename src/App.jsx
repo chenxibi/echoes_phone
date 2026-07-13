@@ -3853,7 +3853,7 @@ Requirements:
           </div>
         )}
 
-        <div className="max-w-md w-full space-y-8 z-10 flex flex-col items-center h-auto">
+        <div className="max-w-md w-full space-y-4 z-10 flex flex-col items-center h-auto">
           <div className="text-center flex flex-col items-center space-y-0 mb-2">
             <h1 className="text-7xl font-serif font-extralight text-[#1a1a1a] lock-time">
               {formatTime(getCurrentTimeObj())}
@@ -3937,7 +3937,7 @@ Requirements:
               </div>
             </div>
 
-            <div className="w-72 flex flex-col gap-4 -mt-3">
+            <div className="w-72 flex flex-col gap-4">
               {/* 分隔线 */}
               <div className="flex items-center gap-3">
                 <div className="flex-1 h-[1px] bg-gray-300/50"></div>
