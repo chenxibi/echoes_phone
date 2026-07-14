@@ -445,8 +445,8 @@ const Forum = ({
 ${recentHistory}
 """
 [USER IDENTITY INFO - CRITICAL]:
-- Real User Name: "${currentUserName}"
-${isSmurfReply ? `- **CRITICAL**: The user "${currentUserName}" is currently posting as a netizen named "${smurfNick}". {{char}} MUST treat "${smurfNick}" as a COMPLETE STRANGER with no shared history. Do NOT reveal that you know "${currentUserName}". Do NOT reference any private conversations or relationship.` : `- User's Current Forum Nickname: "${userNick}"
+${isSmurfReply ? `- **CRITICAL**: {{char}} is seeing a netizen named "${smurfNick}" in the replies below. This is a STRANGER. {{char}} does NOT know who this person is. Do NOT reveal any private knowledge, relationship, or familiarity. Treat "${smurfNick}" as if meeting them for the first time.` : `- Real User Name: "${currentUserName}"
+- User's Current Forum Nickname: "${userNick}"
 ${isUserThread ? `- **CRITICAL**: "${userNick}" IS the author (OP) of this thread. {{char}} and the NPCs will treat them as one identity. "${userNick}" is "${currentUserName}"'s forum nickname — they are the SAME PERSON.` : ""}
 - **ABSOLUTE RULE**: "{{char}}" KNOWS that "${userNick}" is "${currentUserName}".
 - **Netizen Logic**: Random NPCs should react to "${userNick}" if they comment.
