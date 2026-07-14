@@ -24,6 +24,34 @@
         window.visualViewport.addEventListener('scroll', setVH);
       }
     </script>
+    <!-- 强制 SW 更新：每次页面加载检查新版本，自动跳过等待并刷新 -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(regs) {
+          regs.forEach(function(reg) {
+            if (reg.waiting) {
+              // 有新版本等待中，跳过等待并刷新
+              reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+            }
+            reg.addEventListener('updatefound', function() {
+              var newWorker = reg.installing;
+              if (newWorker) {
+                newWorker.addEventListener('statechange', function() {
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    newWorker.postMessage({ type: 'SKIP_WAITING' });
+                    window.location.reload();
+                  }
+                });
+              }
+            });
+          });
+        });
+        var refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', function() {
+          if (!refreshing) { refreshing = true; window.location.reload(); }
+        });
+      }
+    </script>
     <script type="module" crossorigin src="/echoes_phone/assets/index-tMrTG29Y.js"></script>
     <link rel="stylesheet" crossorigin href="/echoes_phone/assets/index-CZPIEkhW.css">
   <link rel="manifest" href="/echoes_phone/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/echoes_phone/registerSW.js"></script></head>
