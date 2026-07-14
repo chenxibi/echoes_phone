@@ -402,7 +402,8 @@ Author: {{AUTHOR}}
 - Character Real Name: "{{char}}"
 - **Character Forum Nickname**: "{{CHAR_NICK}}"
 - **User Forum Nickname**: "{{USER_NICK}}" (Real name: {{user}})
-- **replyTo Rule**: When NPCs reply to "{{CHAR_NICK}}", set replyTo to "{{CHAR_NICK}}". When NPCs reply to "{{USER_NICK}}" ({{user}}), set replyTo to "{{USER_NICK}}". When replying to another NPC, set replyTo to that NPC's nickname. For top-level comments with no target, set replyTo to null.
+{{SMURF_IDENTITY}}
+- **replyTo Rule**: When NPCs reply to "{{CHAR_NICK}}", set replyTo to "{{CHAR_NICK}}". When NPCs reply to "{{USER_NICK}}" ({{user}}), set replyTo to "{{USER_NICK}}".{{SMURF_REPLYTO_RULE}} When replying to another NPC, set replyTo to that NPC's nickname. For top-level comments with no target, set replyTo to null.
 Instructions:
 1. Generate 4-6 new replies from netizens. If {{user}}'s comment is in the context, there must be at least one reply interacting with "{{USER_NICK}}" ({{user}}).
 2. **Tone**: Short, casual, slang, typos allowed. AVOID poetic/translated/AI-like tone. Use "卧槽", "哈哈", "确实", "666".

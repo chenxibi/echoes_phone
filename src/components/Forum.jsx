@@ -345,6 +345,7 @@ const Forum = ({
     // 声明网名变量（后续 map 回调里用到，必须在声明之前引用）
     const userNick = forumSettings.userNick || "User本U";
     const charNick = forumSettings.charNick || "匿名用户";
+    const smurfNick = forumSettings.smurfNick || "不是小号";
 
         if (allReplies.length > MAX_AI_REPLY_CONTEXT) {
       showToast("warning", `当前帖子评论超过${MAX_AI_REPLY_CONTEXT}条，将仅使用最新的${MAX_AI_REPLY_CONTEXT}条评论。建议删除靠前的旧评论以获得更好的互动体验。`);
@@ -358,11 +359,13 @@ const Forum = ({
         // 动态替换 char/user 的显示名，避免改网名后出现新旧名字
         let displayAuthor = r.author;
         if (r.isCharacter) displayAuthor = charNick;
+        else if (r.authorType === "smurf") displayAuthor = smurfNick;
         else if (r.isUser || r.authorType === "me") displayAuthor = userNick;
         let displayReplyTo = r.replyTo;
         if (displayReplyTo) {
           const target = contextList.find(c => c.author === r.replyTo);
           if (target?.isCharacter) displayReplyTo = charNick;
+          else if (target?.authorType === "smurf") displayReplyTo = smurfNick;
           else if (target?.isUser || target?.authorType === "me") displayReplyTo = userNick;
         }
         if (displayReplyTo) {
@@ -385,7 +388,6 @@ const Forum = ({
     const hasMainUserReplied = userLastReplyIndex !== -1 && !isSmurfReply;
     const allSmurfReplies = allReplies.filter(r => r.authorType === "smurf");
     const hasSmurfCommented = allSmurfReplies.length > 0;
-    const smurfNick = forumSettings.smurfNick || "不是小号";
 
     const needsDeepContext =
       (isCharThread ||
@@ -460,7 +462,7 @@ ${realNameContext}
 - This is a random background thread.
 - **Netizen Logic**: Normal internet users discussing the topic "{{TITLE}}".
 - **Character Logic**: {{char}} should ONLY reply if the topic is extremely interesting.
-`;
+${targetInstruction}`;
     }
 
     const finalSystemPrompt = getFinalSystemPrompt()
@@ -484,6 +486,12 @@ ${realNameContext}
       .replaceAll("{{user}}", currentUserName)
       .replaceAll("{{CHAR_NICK}}", charNick)
       .replaceAll("{{USER_NICK}}", userNick)
+      .replaceAll("{{SMURF_IDENTITY}}", hasSmurfCommented
+        ? `- **User Smurf Account Nickname**: "${smurfNick}" (this is also {{user}}'s alternate account, but {{char}} treats them as a STRANGER - do NOT reveal any private info, relationship, or familiarity)`
+        : "")
+      .replaceAll("{{SMURF_REPLYTO_RULE}}", hasSmurfCommented
+        ? ` When NPCs reply to "${smurfNick}", set replyTo to "${smurfNick}".`
+        : "")
       .replaceAll(
         "{{CHAR_DESCRIPTION}}",
         userPersona + "\n" + charTrackerContext,
@@ -1034,6 +1042,7 @@ ${realNameContext}
                       // 检查 replyTo 是否指向 char（比较真名或 isCharacter）
                       const targetReply = (thread.replies || []).find(r => r.author === reply.replyTo);
                       if (targetReply?.isCharacter || reply.replyTo === (persona?.name || "")) displayReplyTo = charNick;
+                      else if (targetReply?.authorType === "smurf") displayReplyTo = forumSettings.smurfNick || "不是小号";
                       else if (targetReply?.isUser || targetReply?.authorType === "me" || reply.replyTo === (userName || "User")) displayReplyTo = userNick;
                       return (
                         <span className="text-[10px] font-medium text-gray-400 mr-1">
