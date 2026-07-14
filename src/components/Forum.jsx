@@ -489,9 +489,21 @@ ${targetInstruction}`;
       .replaceAll("{{SMURF_IDENTITY}}", hasSmurfCommented
         ? `- **User Smurf Account Nickname**: "${smurfNick}" (this is also {{user}}'s alternate account, but {{char}} treats them as a STRANGER - do NOT reveal any private info, relationship, or familiarity)`
         : "")
+      .replaceAll("{{USER_REPLYTO_RULE}}", hasMainUserReplied
+        ? ` When NPCs reply to "${userNick}" (${currentUserName}), set replyTo to "${userNick}".`
+        : "")
       .replaceAll("{{SMURF_REPLYTO_RULE}}", hasSmurfCommented
         ? ` When NPCs reply to "${smurfNick}", set replyTo to "${smurfNick}".`
         : "")
+      .replaceAll("{{INTERACT_INSTRUCTION}}", (() => {
+        if (isSmurfReply) {
+          return `"${smurfNick}" has commented. There MUST be at least one reply interacting with "${smurfNick}".`;
+        }
+        if (userLastReplyIndex !== -1) {
+          return `"${userNick}" (${currentUserName}) has commented. There MUST be at least one reply interacting with "${userNick}"(${currentUserName}). {{char}} must prioritize replying to "${userNick}"(${currentUserName}).`;
+        }
+        return "";
+      })())
       .replaceAll(
         "{{CHAR_DESCRIPTION}}",
         userPersona + "\n" + charTrackerContext,
