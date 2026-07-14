@@ -386,7 +386,7 @@ const Forum = ({
         isUserThread ||
         hasMainUserReplied ||
         mode === "Manual") &&
-      !isSmurfReply;
+      (!isSmurfReply || mode === "Manual");
     const aiPromptMode = (isCharThread || mode === "Manual" || hasMainUserReplied) ? "Manual" : "Auto";
     const currentUserName = userName || "User";
 
@@ -394,7 +394,7 @@ const Forum = ({
     if (isSmurfReply) {
       targetInstruction = `
         - **Context**: A netizen named "${userLastReply.author}" just commented.
-        - **Action**: Decide naturally whether to reply to "${userLastReply.author}" or others based on content interest.
+        - **Action**: {{char}} MUST reply directly to "${userLastReply.author}"'s comment. Respond naturally as you would to a stranger you find interesting.
        `;
     } else if (userLastReplyIndex === -1) {
       if (isUserThread) {
@@ -437,13 +437,15 @@ const Forum = ({
 ${recentHistory}
 """
 [USER IDENTITY INFO - CRITICAL]:
-- Real User Name: "${currentUserName}"
+${isSmurfReply ? `- **CRITICAL**: {{char}} is seeing a netizen named "${smurfNick}" in the replies below. This is a STRANGER. {{char}} does NOT know who this person is. Do NOT reveal any private knowledge, relationship, or familiarity. Treat "${smurfNick}" as if meeting them for the first time.
+- **Character Self-Awareness**: {{char}}'s forum nickname is "${charNick}". Any reply in the context from "${charNick}" is sent by {{char}}. When others reply targeting "${charNick}", they are talking to {{char}}.
+- **ABSOLUTE RULE**: "{{char}}" KNOWS that "${userNick}" is "${currentUserName}".` : `- Real User Name: "${currentUserName}"
 - User's Current Forum Nickname: "${userNick}"
 ${isUserThread ? `- **CRITICAL**: "${userNick}" IS the author (OP) of this thread. {{char}} and the NPCs will treat them as one identity. "${userNick}" is "${currentUserName}"'s forum nickname — they are the SAME PERSON.` : ""}
 - **Character Self-Awareness**: {{char}}'s forum nickname is "${charNick}". Any reply in the context from "${charNick}" is sent by {{char}}. When others reply targeting "${charNick}", they are talking to {{char}}.
 - **ABSOLUTE RULE**: "{{char}}" KNOWS that "${userNick}" is "${currentUserName}".
 - **Netizen Logic**: Random NPCs should react to "${userNick}" if they comment.
-${realNameContext}
+${realNameContext}`}
 - **Character Logic**: 
   1. Tone must reflect the relationship in [DATA SOURCE 2].
   ${targetInstruction} 
@@ -453,7 +455,7 @@ ${realNameContext}
 [SCENARIO CONSTRAINT]:
 - This is a random background thread.
 - **Netizen Logic**: Normal internet users discussing the topic "{{TITLE}}".
-- **Character Logic**: {{char}} should ONLY reply if the topic is extremely interesting.
+- **Character Logic**: ${isSmurfReply ? `{{char}} MUST reply to "${smurfNick}" and interact with other netizens naturally.` : "{{char}} should ONLY reply if the topic is extremely interesting."}
 `;
     }
 
