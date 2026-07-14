@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+﻿import React, { useState, useEffect, useRef } from "react";
 import {
   RefreshCw,
   Hash,
@@ -645,7 +645,7 @@ ${realNameContext}
         }
         if (onChatEventPost) {
           onChatEventPost(newPost);
-          markUnseen("forum");
+          markUnseenDot("forum");
         }
         if (typeof showToast === "function") showToast("info", `${charNick}在生活圈发布了一条帖子`);
       }

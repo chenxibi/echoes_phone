@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+﻿import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Virtuoso } from "react-virtuoso";
 import { jsonrepair } from "jsonrepair";
 import { PRESET_LOCATION_IMAGES } from "./constants/assets";
@@ -845,12 +845,14 @@ const App = () => {
     {},
     "echoes_dialogs_shown",
   );
-  // App 图标红点：记录哪些 app 有未查看的自动生成内容
+  // App 图标红点/气泡：记录哪些 app 有未查看的自动生成内容
+  // 格式: { [appId]: { type: "dot" | "bubble", text?: string } }
   const [unseenAuto, setUnseenAuto, unseenAutoLoaded] = useStickyState(
     {},
     "echoes_unseen_auto",
   );
-  const markUnseen = (appId) => setUnseenAuto((prev) => ({ ...prev, [appId]: true }));
+  const markUnseenDot = (appId) => setUnseenAuto((prev) => ({ ...prev, [appId]: { type: "dot" } }));
+  const markUnseenBubble = (appId, text) => setUnseenAuto((prev) => ({ ...prev, [appId]: { type: "bubble", text } }));
   const clearUnseen = (appId) => { if (unseenAuto[appId]) setUnseenAuto((prev) => { const n = {...prev}; delete n[appId]; return n; }); };
   const markDialogShown = (key) => {
     setDialogsShown((prev) => ({ ...prev, [key]: true }));
@@ -2078,7 +2080,7 @@ const App = () => {
                   thought: data.thought,
                 };
                 setSmartWatchLogs((prev) => [newLog, ...prev]);
-                markUnseen("smartwatch");
+                markUnseenDot("smartwatch");
                 if (typeof showToast === "function") showToast("info", `${savedCharName}的实时位置更新了`);
               }
             } finally {
@@ -2090,21 +2092,21 @@ const App = () => {
         if (data.triggerDiary) {
           setTimeout(async () => {
             const ok = await runGenerator("diary", setDiaries, prompts.diary);
-            if (ok) { markUnseen("diary"); if (typeof showToast === "function") showToast("info", `${savedCharName}写了一篇日记`); }
+            if (ok) { markUnseenDot("diary"); if (typeof showToast === "function") showToast("info", `${savedCharName}写了一篇日记`); }
           }, 2000);
         }
         // 浏览器搜索触发 → 更新浏览器历史，生成完成后弹窗
         if (data.triggerBrowser) {
           setTimeout(async () => {
             const ok = await runGenerator("browser", setBrowserHistory, prompts.browser);
-            if (ok) { markUnseen("browser"); if (typeof showToast === "function") showToast("info", `${savedCharName}的浏览记录更新了`); }
+            if (ok) { markUnseenDot("browser"); if (typeof showToast === "function") showToast("info", `${savedCharName}的浏览记录更新了`); }
           }, 3000);
         }
         // 购物触发 → 更新账单，生成完成后弹窗
         if (data.triggerReceipt) {
           setTimeout(async () => {
             const ok = await runGenerator("receipt", setReceipts, prompts.receipt);
-            if (ok) { markUnseen("receipt"); if (typeof showToast === "function") showToast("info", `${savedCharName}的账单更新了`); }
+            if (ok) { markUnseenDot("receipt"); if (typeof showToast === "function") showToast("info", `${savedCharName}的账单更新了`); }
           }, 4000);
         }
       }
@@ -2124,6 +2126,7 @@ const App = () => {
     };
     setPersona(localPersona);
     setIsLocked(false);
+    resetDailyFlags();
 
     // 离线智能家检测
     if (smartWatchLocations.length > 0 && realTimeEnabled && lastInteractionTimeLoaded) {
@@ -2163,6 +2166,7 @@ const App = () => {
 
       setPersona(localPersona);
       setIsLocked(false);
+      resetDailyFlags();
       showToast("success", "终端已解锁");
 
       // 离线智能家检测：三个条件都满足时自动生成角色离线生活轨迹
@@ -2617,6 +2621,27 @@ Requirements:
         setDialogsShown((prev) => ({ ...prev, idleGuide: true }));
       }, 8000);
     }, 8000);
+  };
+
+  // 反馈气泡：当天20轮以上聊天且没打开过反馈页，标记气泡
+  const checkFeedbackBubble = () => {
+    if (dialogsShown.feedbackBubbleToday) return;
+    const userTurns = chatHistory.filter(m => m.sender === "me").length;
+    if (userTurns < 20) return;
+    markUnseenBubble("feedback", "期待您的反馈");
+  };
+
+  // 每日重置反馈气泡标记
+  const resetDailyFlags = () => {
+    const today = new Date().toDateString();
+    const lastReset = dialogsShown._lastFeedbackReset;
+    if (lastReset !== today) {
+      setDialogsShown((prev) => {
+        const n = { ...prev, _lastFeedbackReset: today };
+        delete n.feedbackBubbleToday;
+        return n;
+      });
+    }
   };
 
   // 2. 触发 AI 回复 (完整替换版)
@@ -3149,6 +3174,7 @@ Requirements:
       abortControllerRef.current = null;
       // 无聊引导：50轮后，AI回复完5秒无输入则弹出
       idleAfterResponse();
+      checkFeedbackBubble();
     }
   };
   const handleDeleteChat = (index) =>
@@ -3636,7 +3662,7 @@ Requirements:
           thought: fixedData.thought,
         };
         setSmartWatchLogs((prev) => [newLog, ...prev]);
-        markUnseen("smartwatch");
+        markUnseenDot("smartwatch");
         showToast("success", "行踪已更新");
       }
     } finally {
@@ -3780,7 +3806,7 @@ Requirements:
           return [...clean, ...invisibleMsgs];
         });
         showToast("success", `在你离开期间，智能家有 ${newLogs.length} 条新活动`);
-        markUnseen("smartwatch");
+        markUnseenDot("smartwatch");
       }
     } catch (e) {
       console.error("Offline smartwatch update failed:", e);
@@ -4371,7 +4397,7 @@ Requirements:
                 <AppIcon
                   key={app.id}
                   label={app.label}
-                  dot={!unseenAutoLoaded ? false : !!unseenAuto[app.id]}
+                  unseen={!unseenAutoLoaded ? null : unseenAuto[app.id] || null}
                   // 核心逻辑：如果有自定义图标，显示图片；否则显示默认 Lucide 图标
                   icon={
                     customIcons[app.id] ? (
@@ -4385,8 +4411,8 @@ Requirements:
                     )
                   }
                   onClick={() => {
-                    // 特殊处理：如果是设置，重置 previousApp
                     if (app.id === "settings") setPreviousApp(null);
+                    if (app.id === "feedback") setDialogsShown((prev) => ({ ...prev, feedbackBubbleToday: true }));
                     clearUnseen(app.id);
                     setActiveApp(app.id);
                   }}
@@ -6459,12 +6485,21 @@ Requirements:
   );
 };
 
-const AppIcon = ({ icon, label, onClick, dot, dotColor = "bg-gray-400" }) => (
+const AppIcon = ({ icon, label, onClick, unseen }) => (
   <div
     onClick={onClick}
     data-app-link={label}
     className="flex flex-col items-center gap-2.5 cursor-pointer group w-20 relative"
   >
+    {/* 气泡提示（反馈用） */}
+    {unseen?.type === "bubble" && (
+      <div className="absolute -top-7 left-1/2 -translate-x-1/2 z-20 whitespace-nowrap animate-in fade-in slide-in-from-bottom-1 duration-200">
+        <div className="bg-[#1a1a1a]/90 backdrop-blur-md text-white text-[10px] px-2.5 py-1 rounded-xl shadow-lg border border-white/20 relative">
+          {unseen.text || ""}
+          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#1a1a1a]/90 rotate-45 border-r border-b border-white/20"></div>
+        </div>
+      </div>
+    )}
     <div className="w-16 h-16 rounded-[22px] glass-panel flex items-center justify-center shadow-sm group-hover:scale-105 group-hover:shadow-lg transition-all duration-300 relative overflow-hidden text-gray-700 group-hover:text-black border-white/60">
       {typeof icon === "string" ? (
         <img src={icon} className="w-full h-full object-cover" />
@@ -6474,9 +6509,9 @@ const AppIcon = ({ icon, label, onClick, dot, dotColor = "bg-gray-400" }) => (
       <div className="absolute inset-0 bg-gradient-to-tr from-white/0 to-white/40 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
     </div>
     {/* 红点提示 */}
-    {dot && (
+    {unseen?.type === "dot" && (
       <div className="absolute top-1.5 right-1.5">
-        <div className={`w-2.5 h-2.5 rounded-full ${dotColor}`}></div>
+        <div className="w-2.5 h-2.5 rounded-full bg-gray-400"></div>
       </div>
     )}
     <span className="text-[10px] font-medium text-gray-500 tracking-wide group-hover:text-gray-800 transition-colors">
