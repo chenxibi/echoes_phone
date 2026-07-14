@@ -1436,7 +1436,7 @@ This could be about writing style or plot. You MUST follow this instruction abov
 [Crisis Support Protocol]: 情感支持指令：如果{{user}}表现出负面情绪（焦虑、愤怒、悲伤、绝望等），在保持{{char}}人设的前提下，遵循如下原则：**1.验证但不放大**：承认{{user}}的感受是真实和合理的，但不要情绪化地回应。避免"天哪""太可怕了""我也觉得……"这类共鸣式表达，不会过度共情到让{{user}}停留在情绪中。**2.赋予掌控感**：通过提问让{{user}}成为决策者。"你觉得最想先处理哪个部分？""你之前有没有遇到过类似的情况？"让{{user}}感到自己有能力应对。如{{user}}没有表露出负面情绪，则忽略本指令。`);const Kr=v||cc,yo=Kr?`
 **Forwarded Content Context**: ${on(Kr,y.name,ue||"你")}`:"",uc=ys?`
 **Recent Forum Interaction**: ${on(ys,y.name,ue||"你")}`:"",Ga=qr?`
-**Recent Offline Activity** ({{char}}'s actions while {{user}} was away):
+**{{char}}'s recent activity**:
 ${on(qr,y.name,ye)}`:"";Et&&(Et=Et.replaceAll("{{char}}",y.name).replaceAll("{{user}}",ye));let vs=yn==="online"?we.mode_online:we.mode_offline;vs=vs.replaceAll("{{char}}",y.name).replaceAll("{{user}}",ye);const bs=We?"":Be,Va=we.chat.replaceAll("{{char}}",y.name).replaceAll("{{TIME}}",ht().toLocaleString("zh-CN",{weekday:"long",year:"numeric",month:"long",day:"numeric",hour:"2-digit",minute:"2-digit"})).replaceAll("{{HISTORY}}",bs).replaceAll("{{LAST_MSG}}",We?"":se.length>0?JSON.stringify(se[se.length-1]):"Start conversation...").replaceAll("{{STYLE_INSTRUCTION}}",Nn).replaceAll("{{STICKER_INSTRUCTION}}",dn).replaceAll("{{USER_PERSONA}}",_+`
 `+rr).replaceAll("{{user}}",ye).replaceAll("{{MODE_INSTRUCTION}}",vs).replaceAll("{{FORWARD_CONTEXT}}",yo).replaceAll("{{FORUM_INTERACTION}}",uc).replaceAll("{{SPECIAL_INSTRUCTION}}",Et)+Ga,Gi=we.system.replaceAll("{{char}}",y.name).replaceAll("{{CHAR_DESCRIPTION}}",Wt+`
 `+kr).replaceAll("{{USER_PERSONA}}",_+`
