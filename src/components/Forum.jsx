@@ -394,7 +394,7 @@ const Forum = ({
         isUserThread ||
         hasMainUserReplied ||
         mode === "Manual") &&
-      !isSmurfReply;
+      (!isSmurfReply || mode === "Manual");
     const aiPromptMode = (isCharThread || mode === "Manual" || hasMainUserReplied) ? "Manual" : "Auto";
     const currentUserName = userName || "User";
 
@@ -402,7 +402,7 @@ const Forum = ({
     if (isSmurfReply) {
       targetInstruction = `
         - **Context**: A netizen named "${userLastReply.author}" just commented.
-        - **Action**: Decide naturally whether to reply to "${userLastReply.author}" or others based on content interest.
+        - **Action**: {{char}} MUST reply directly to "${userLastReply.author}"'s comment. Respond naturally as you would to a stranger you find interesting.
        `;
     } else if (userLastReplyIndex === -1) {
       if (isUserThread) {
@@ -446,12 +446,12 @@ ${recentHistory}
 """
 [USER IDENTITY INFO - CRITICAL]:
 - Real User Name: "${currentUserName}"
-- User's Current Forum Nickname: "${userNick}"
+${isSmurfReply ? `- **CRITICAL**: The user "${currentUserName}" is currently posting as a netizen named "${smurfNick}". {{char}} MUST treat "${smurfNick}" as a COMPLETE STRANGER with no shared history. Do NOT reveal that you know "${currentUserName}". Do NOT reference any private conversations or relationship.` : `- User's Current Forum Nickname: "${userNick}"
 ${isUserThread ? `- **CRITICAL**: "${userNick}" IS the author (OP) of this thread. {{char}} and the NPCs will treat them as one identity. "${userNick}" is "${currentUserName}"'s forum nickname — they are the SAME PERSON.` : ""}
-- **Character Self-Awareness**: {{char}}'s forum nickname is "${charNick}". Any reply in the context from "${charNick}" is sent by {{char}}. When others reply targeting "${charNick}", they are talking to {{char}}.
 - **ABSOLUTE RULE**: "{{char}}" KNOWS that "${userNick}" is "${currentUserName}".
 - **Netizen Logic**: Random NPCs should react to "${userNick}" if they comment.
-${realNameContext}
+${realNameContext}`}
+- **Character Self-Awareness**: {{char}}'s forum nickname is "${charNick}". Any reply in the context from "${charNick}" is sent by {{char}}. When others reply targeting "${charNick}", they are talking to {{char}}.
 - **Character Logic**: 
   1. Tone must reflect the relationship in [DATA SOURCE 2].
   ${targetInstruction} 
@@ -461,7 +461,7 @@ ${realNameContext}
 [SCENARIO CONSTRAINT]:
 - This is a random background thread.
 - **Netizen Logic**: Normal internet users discussing the topic "{{TITLE}}".
-- **Character Logic**: {{char}} should ONLY reply if the topic is extremely interesting.
+- **Character Logic**: ${isSmurfReply ? `{{char}} MUST reply to "${smurfNick}" and interact with other netizens naturally.` : "{{char}} should ONLY reply if the topic is extremely interesting."}
 ${targetInstruction}`;
     }
 
@@ -486,8 +486,11 @@ ${targetInstruction}`;
       .replaceAll("{{user}}", currentUserName)
       .replaceAll("{{CHAR_NICK}}", charNick)
       .replaceAll("{{USER_NICK}}", userNick)
-      .replaceAll("{{SMURF_IDENTITY}}", hasSmurfCommented
-        ? `- **User Smurf Account Nickname**: "${smurfNick}" (this is also {{user}}'s alternate account, but {{char}} treats them as a STRANGER - do NOT reveal any private info, relationship, or familiarity)`
+      .replaceAll("{{USER_IDENTITY}}", isSmurfReply && !hasMainUserReplied
+        ? ""
+        : `- **User Forum Nickname**: "${userNick}" (Real name: ${currentUserName})`)
+      .replaceAll("{{SMURF_IDENTITY_NEW}}", hasSmurfCommented
+        ? `- **Netizen Smurf Account**: "${smurfNick}" (a stranger using a new account — {{char}} does NOT know who this is)`
         : "")
       .replaceAll("{{USER_REPLYTO_RULE}}", hasMainUserReplied
         ? ` When NPCs reply to "${userNick}" (${currentUserName}), set replyTo to "${userNick}".`

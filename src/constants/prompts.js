@@ -401,8 +401,8 @@ Author: {{AUTHOR}}
 [IDENTITY INFO]:
 - Character Real Name: "{{char}}"
 - **Character Forum Nickname**: "{{CHAR_NICK}}"
-- **User Forum Nickname**: "{{USER_NICK}}" (Real name: {{user}})
-{{SMURF_IDENTITY}}
+{{USER_IDENTITY}}
+{{SMURF_IDENTITY_NEW}}
 - **replyTo Rule**: When NPCs reply to "{{CHAR_NICK}}", set replyTo to "{{CHAR_NICK}}".{{USER_REPLYTO_RULE}}{{SMURF_REPLYTO_RULE}} When replying to another NPC, set replyTo to that NPC's nickname. For top-level comments with no target, set replyTo to null.
 Instructions:
 1. Generate 4-6 new replies from netizens. {{INTERACT_INSTRUCTION}}
