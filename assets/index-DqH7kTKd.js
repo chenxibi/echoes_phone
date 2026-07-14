@@ -966,7 +966,6 @@ User Guidance: {{GUIDANCE}}
 """
 {{CHAR_DESCRIPTION}}
 """
-**ABSOLUTE PROHIBITION**: NEVER generate any post or reply with author = "{{user}}" or author = "{{USER_NICK}}" ({{user}}). {{user}} is the real person using this app, not an AI-generated character.
 Instructions:
 1. Generate 2-4 threads with 2-5 initial comments each.
 2. **CRITICAL AUTHOR RESTRICTION**: The author MUST be random strangers. **ABSOLUTELY FORBIDDEN** to use "{{char}}" or any variation of their name.
