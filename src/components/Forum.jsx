@@ -71,6 +71,7 @@ const Forum = ({
   const [showForumSettings, setShowForumSettings] = useState(false);
   const [showPostModal, setShowPostModal] = useState(false);
   const [postTab, setPostTab] = useState("me"); // 'me' or 'char'
+  const [postIdentity, setPostIdentity] = useState("me"); // 'me' or 'smurf' (only when postTab === 'me')
 
   // 聊天事件触发发帖的弹窗状态
   const [showChatEventModal, setShowChatEventModal] = useState(false);
@@ -98,6 +99,7 @@ const Forum = ({
 
   // --- 辅助逻辑 ---
   const getForumName = (type) => {
+    if (type === "smurf") return forumSettings.smurfNick || "不是小号";
     if (type === "me") return forumSettings.userNick || "User本U";
     if (type === "char")
       return forumSettings.charNick || "匿名用户";
@@ -395,7 +397,7 @@ const Forum = ({
         hasMainUserReplied ||
         mode === "Manual") &&
       (!isSmurfReply || mode === "Manual");
-    const aiPromptMode = (isCharThread || mode === "Manual" || hasMainUserReplied) ? "Manual" : "Auto";
+    const aiPromptMode = (isCharThread || mode === "Manual" || hasMainUserReplied || (thread.authorType === "smurf" && mode === "Manual")) ? "Manual" : "Auto";
     const currentUserName = userName || "User";
 
     let targetInstruction = "";
@@ -700,10 +702,11 @@ ${targetInstruction}`;
     const draft = postTab === "me" ? postDrafts.me : postDrafts.char;
     if (!draft.title || !draft.content) return;
 
+    const authorType = postTab === "me" ? postIdentity : postTab;
     const newPost = {
-      id: `${postTab}_${Date.now()}`,
-      author: getForumName(postTab),
-      authorType: postTab,
+      id: `${authorType}_${Date.now()}`,
+      author: getForumName(authorType),
+      authorType: authorType,
       title: draft.title,
       content: draft.content,
       time: "刚刚",
@@ -850,6 +853,8 @@ ${targetInstruction}`;
         let newAuthor = p.author;
         if (p.authorType === "me")
           newAuthor = newSettings.userNick || "User本U";
+        else if (p.authorType === "smurf")
+          newAuthor = newSettings.smurfNick || "不是小号";
         else if (p.authorType === "char" || p.author === persona.name)
           newAuthor = newSettings.charNick || "匿名用户";
 
@@ -888,7 +893,7 @@ ${targetInstruction}`;
               <UserRound size={16} />
             </button>
             <button
-              onClick={() => setShowPostModal(true)}
+              onClick={() => { setPostIdentity("me"); setShowPostModal(true); }}
               className="bg-black text-white p-1.5 rounded-full hover:scale-105 shadow-md"
             >
               <Plus size={16} />
@@ -1413,6 +1418,26 @@ ${targetInstruction}`;
               </div>
             </div>
           </div>
+          {postTab === "me" && (
+            <div className="flex justify-end px-4 pb-6">
+              <div className="bg-black/80 backdrop-blur-md text-white text-[10px] p-1 pl-1 pr-1 rounded-lg flex items-center gap-1 shadow-lg">
+                <span className="opacity-60 ml-1">身份:</span>
+                <select
+                  value={postIdentity}
+                  onChange={(e) => setPostIdentity(e.target.value)}
+                  className="bg-transparent font-bold outline-none text-white appearance-none cursor-pointer text-center min-w-[60px]"
+                >
+                  <option value="me" className="text-black">
+                    大号 ({forumSettings.userNick || "User本U"})
+                  </option>
+                  <option value="smurf" className="text-black">
+                    小号 ({forumSettings.smurfNick || "不是小号"})
+                  </option>
+                </select>
+                <ChevronDown size={10} className="opacity-60 mr-1" />
+              </div>
+            </div>
+          )}
         </div>
       )}
 
