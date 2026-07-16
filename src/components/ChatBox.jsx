@@ -102,8 +102,8 @@ export const TransferBubble = ({ msg, isMe, onInteract }) => {
   const isAccepted = status === "accepted";
 
   // 颜色逻辑
-  const bgColor = isPending ? "bg-[#ff9f43]" : "bg-[#FFBD7E]";
-  const textColor = isPending ? "text-white" : "text-white/90";
+  const bgColor = isPending ? "bg-black/60" : "bg-black/40";
+  const textColor = "text-white";
 
   return (
     <div
@@ -148,7 +148,7 @@ export const TransferBubble = ({ msg, isMe, onInteract }) => {
                 e.stopPropagation();
                 onInteract("reject");
               }}
-              className="px-2 py-1 bg-white/20 hover:bg-white/30 text-white text-[10px] rounded-md font-bold backdrop-blur-sm"
+              className="px-2 py-1 bg-white hover:bg-gray-100 text-black text-[10px] rounded-md font-bold shadow-sm"
             >
               Decline
             </button>
@@ -157,7 +157,7 @@ export const TransferBubble = ({ msg, isMe, onInteract }) => {
                 e.stopPropagation();
                 onInteract("accept");
               }}
-              className="px-2 py-1 bg-white text-[#ff9f43] hover:bg-gray-50 text-[10px] rounded-md font-bold shadow-sm"
+              className="px-2 py-1 bg-white text-black hover:bg-gray-100 text-[10px] rounded-md font-bold shadow-sm"
             >
               Accept
             </button>
