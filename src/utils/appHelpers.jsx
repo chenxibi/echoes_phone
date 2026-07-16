@@ -1082,21 +1082,21 @@ export const TransferBubble = ({ msg, isMe, onInteract }) => {
 
   return (
     <div
-      className={`w-64 p-3 rounded-xl select-none transition-all shadow-sm ${bgColor} ${textColor} ${
+      className={`w-48 p-2 rounded-xl select-none transition-all shadow-sm ${bgColor} ${textColor} ${
         isMe ? "rounded-tr-none" : "rounded-tl-none"
       }`}
     >
       {/* 1. 顶部：图标与金额 */}
       {/* 如果没有备注，底部留一点 margin (mb-3)，如果有备注，mb-1 紧凑一点 */}
       <div className={`flex items-center gap-3 ${note ? "mb-1" : "mb-3"}`}>
-        <div className="p-2.5 rounded-full shrink-0 bg-white/20 text-white">
-          <Banknote size={24} />
+        <div className="p-1.5 rounded-full shrink-0 bg-white/20 text-white">
+          <Banknote size={18} />
         </div>
         <div className="overflow-hidden min-w-0">
-          <div className="text-[10px] font-bold opacity-90 mb-0.5 truncate">
+          <div className="text-[9px] font-bold opacity-90 mb-0.5 truncate">
             {isMe ? "向对方转账" : "向你转账"}
           </div>
-          <div className="text-xl font-bold tracking-tight truncate">
+          <div className="text-lg font-bold tracking-tight truncate">
             ¥ {amount}
           </div>
         </div>
@@ -1104,14 +1104,14 @@ export const TransferBubble = ({ msg, isMe, onInteract }) => {
 
       {/* 2. 备注区域 (仅当有备注时显示) */}
       {note && (
-        <div className="text-xs opacity-80 mb-2 pl-[52px] leading-tight break-words font-medium">
+        <div className="text-[9px] opacity-80 mb-1 pl-[42px] leading-tight break-words font-medium">
           {note}
         </div>
       )}
 
       {/* 3. 底部：状态栏 */}
-      <div className="flex justify-between items-center border-t border-white/20 pt-2">
-        <span className="text-xs font-bold opacity-90">
+      <div className="flex justify-between items-center border-t border-white/20 pt-1.5">
+        <span className="text-[9px] font-bold opacity-90">
           {isPending ? "等待确认" : isAccepted ? "已收款" : "已退还"}
         </span>
 
@@ -1123,7 +1123,7 @@ export const TransferBubble = ({ msg, isMe, onInteract }) => {
                 e.stopPropagation();
                 onInteract("reject");
               }}
-              className="px-2 py-1 bg-white hover:bg-gray-100 text-black text-[10px] rounded-md font-bold shadow-sm"
+              className="px-1.5 py-0.5 bg-white hover:bg-gray-100 text-black text-[9px] rounded font-bold shadow-sm"
             >
               退还
             </button>
