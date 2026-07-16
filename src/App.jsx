@@ -3106,6 +3106,22 @@ Requirements:
               }];
             }
 
+            // 如果 message 是转账对象(带 transfer 字段),视为转账消息
+            if (typeof item === "object" && item !== null && item.transfer) {
+              let amt = item.transfer.amount;
+              if (typeof amt === "object" && amt !== null) amt = amt.value || amt.price || String(amt);
+              const note = item.transfer.note || item.transfer.reason || "";
+              return [{
+                sender: "char",
+                text: `[转账] \u00a5${amt}${note ? ` (${note})` : ""}`,
+                isTransfer: true,
+                transfer: { amount: amt, status: "pending", note },
+                time: formatTime(getCurrentTimeObj()),
+                ...(realTimeEnabled ? { timestamp: Date.now() } : {}),
+                status: index === responseData.messages.length - 1 ? responseData.status : null,
+              }];
+            }
+
             let actualText =
               typeof item === "object" && item !== null && item.text
                 ? item.text
