@@ -3049,19 +3049,6 @@ Requirements:
           }
         }
 
-        // 处理 AI 掷骰子
-        if (responseData.dice && responseData.dice.result) {
-          const diceResult = responseData.dice.result;
-          newHistory.push({
-            sender: "char",
-            text: `[骰子] 🎲 ${diceResult}`,
-            time: formatTime(getCurrentTimeObj()),
-            isDice: true,
-            dice: { result: diceResult },
-            ...(realTimeEnabled ? { timestamp: Date.now() } : {}),
-          });
-        }
-
         // 更新状态历史
         if (responseData.status) {
           setStatusHistory((prev) => [
@@ -3155,46 +3142,6 @@ Requirements:
                   : null,
             }];
           });
-
-          // 处理表情包(兼容旧格式顶层 stickerId)
-          if (responseData.stickerId) {
-            const sticker = charStickers.find(
-              (s) => s.id === responseData.stickerId,
-            );
-            if (sticker) {
-              if (newMsgs.length > 0) delete newMsgs[newMsgs.length - 1].status;
-              newMsgs.push({
-                sender: "char",
-                sticker: sticker,
-                time: formatTime(getCurrentTimeObj()),
-                ...(realTimeEnabled ? { timestamp: Date.now() } : {}),
-                status: responseData.status,
-              });
-            }
-          }
-
-          // 处理 AI 发起的转账
-          if (responseData.transfer && responseData.transfer.amount) {
-            if (newMsgs.length > 0 && newMsgs[newMsgs.length - 1].status) {
-              delete newMsgs[newMsgs.length - 1].status;
-            }
-            let amount = responseData.transfer.amount;
-            // 防御：AI 有时把 amount 返回成对象而非数字
-            if (typeof amount === "object" && amount !== null) {
-              amount = amount.value || amount.price || String(amount);
-            }
-            const reason = responseData.transfer.reason || "";
-            newMsgs.push({
-              sender: "char",
-              text: `[转账] ¥${amount}${reason ? ` (${reason})` : ""}`,
-              isTransfer: true,
-              transfer: { amount, status: "pending", note: reason },
-              time: formatTime(getCurrentTimeObj()),
-              ...(realTimeEnabled ? { timestamp: Date.now() } : {}),
-              status: responseData.status,
-            });
-          }
-
           const finalizedMsgs = newMsgs.map((msg) => ({
             ...msg,
             id:
