@@ -5214,7 +5214,7 @@ Requirements:
                         {showNegativeGuide && (
                           <div className="absolute bottom-full mb-3 right-8 whitespace-nowrap animate-in slide-in-from-bottom-2 fade-in duration-300 z-50">
                             <div className="bg-[#1a1a1a]/90 backdrop-blur-md text-white text-[11px] font-medium px-4 py-2.5 rounded-2xl shadow-xl border border-white/20 text-center leading-relaxed max-w-[300px]">
-                            对AI的生成效果不满意时，您可点击对应的内容，再点击下方出现的刷新按钮，将其"重新生成"。
+                            对AI的生成效果不满意时，您可点击对应的内容，再点击下方出现的刷新按钮，将其“重新生成”。
                             </div>
                           </div>
                         )}
@@ -5222,7 +5222,7 @@ Requirements:
                         {showRegenGuide && (
                           <div className="absolute bottom-full mb-3 right-8 whitespace-nowrap animate-in slide-in-from-bottom-2 fade-in duration-300 z-50">
                             <div className="bg-[#1a1a1a]/90 backdrop-blur-md text-white text-[11px] font-medium px-4 py-2.5 rounded-2xl shadow-xl border border-white/20 text-center leading-relaxed max-w-[300px]">
-                            如果您有明确不希望AI使用的表达、做出的动作等，也可以通过修改角色设定、或在"世界书"中新增条目来规避。
+                            如果您有明确不希望AI使用的表达、做出的动作等，也可以通过修改角色设定、或在“世界书”中新增条目来规避。
                             </div>
                           </div>
                         )}
