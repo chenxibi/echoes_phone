@@ -6237,7 +6237,7 @@ Requirements:
                 <input
                   id="loc-name-input"
                   className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 pr-9 text-sm focus:border-[#7A2A3A] focus:outline-none transition-colors" // pr-9 留出按钮位置
-                  placeholder="可输入地点类型如"餐厅"并点击右侧按钮"
+                  placeholder={'可输入地点类型如"餐厅"并点击右侧按钮'}
                 />
                 {/* [复用] 位置弹窗里的代写按钮 */}
                 <GhostButton
