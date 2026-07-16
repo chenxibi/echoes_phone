@@ -5209,7 +5209,7 @@ Requirements:
                         {/* 无聊引导 */}
                         {showIdleGuide && (
                           <div className="absolute bottom-full mb-3 right-8 max-w-[280px] animate-in slide-in-from-bottom-2 fade-in duration-300 z-50">
-                            <div className="bg-[#1a1a1a]/90 backdrop-blur-md text-white text-[11px] font-medium px-4 py-2.5 rounded-2xl shadow-xl border border-white/20 text-center leading-relaxed">
+                            <div className="bg-black/70 backdrop-blur-md text-white text-[11px] font-medium px-4 py-2.5 rounded-2xl shadow-xl border border-white/10 text-center leading-relaxed">
                             有时如果不知道该聊什么，可以去小红书搜搜“番外指令”或“ai聊天梗”找找灵感。
                             </div>
                           </div>
@@ -5217,7 +5217,7 @@ Requirements:
                         {/* 负面词汇引导 */}
                         {showNegativeGuide && (
                           <div className="absolute bottom-full mb-3 right-8 max-w-[280px] animate-in slide-in-from-bottom-2 fade-in duration-300 z-50">
-                            <div className="bg-[#1a1a1a]/90 backdrop-blur-md text-white text-[11px] font-medium px-4 py-2.5 rounded-2xl shadow-xl border border-white/20 text-center leading-relaxed max-w-[300px]">
+                            <div className="bg-black/70 backdrop-blur-md text-white text-[11px] font-medium px-4 py-2.5 rounded-2xl shadow-xl border border-white/10 text-center leading-relaxed max-w-[300px]">
                             对AI的生成效果不满意时，您可点击对应的内容，再点击下方出现的刷新按钮，将其“重新生成”。
                             </div>
                           </div>
@@ -5225,7 +5225,7 @@ Requirements:
                         {/* 重新生成过多引导 */}
                         {showRegenGuide && (
                           <div className="absolute bottom-full mb-3 right-8 max-w-[280px] animate-in slide-in-from-bottom-2 fade-in duration-300 z-50">
-                            <div className="bg-[#1a1a1a]/90 backdrop-blur-md text-white text-[11px] font-medium px-4 py-2.5 rounded-2xl shadow-xl border border-white/20 text-center leading-relaxed max-w-[300px]">
+                            <div className="bg-black/70 backdrop-blur-md text-white text-[11px] font-medium px-4 py-2.5 rounded-2xl shadow-xl border border-white/10 text-center leading-relaxed max-w-[300px]">
                             如果您有明确不希望AI使用的表达、做出的动作等，也可以通过修改角色设定、或在“世界书”中新增条目来规避。
                             </div>
                           </div>
