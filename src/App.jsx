@@ -2048,8 +2048,8 @@ const App = () => {
             }
         }
 
-        // 位置移动触发 → 更新智能家（有就触发）
-        if (data.triggerLocation && savedSmartWatchLocations.length > 0) {
+        // 位置移动触发 → 更新智能家（80%概率）
+        if (data.triggerLocation && savedSmartWatchLocations.length > 0 && Math.random() < 0.8) {
           setTimeout(async () => {
             setLoading((prev) => ({ ...prev, sw_update: true }));
             const prompt = prompts.smartwatch_update
@@ -2102,8 +2102,8 @@ const App = () => {
             if (ok) { markUnseenDot("browser"); if (typeof showToast === "function") showToast("info", `${savedCharName}的浏览记录更新了`); }
           }, 3000);
         }
-        // 购物触发 → 更新账单（有就触发）
-        if (data.triggerReceipt) {
+        // 购物触发 → 更新账单（80%概率）
+        if (data.triggerReceipt && Math.random() < 0.8) {
           setTimeout(async () => {
             const ok = await runGenerator("receipt", setReceipts, prompts.receipt);
             if (ok) { markUnseenDot("receipt"); if (typeof showToast === "function") showToast("info", `${savedCharName}的账单更新了`); }
