@@ -5094,7 +5094,7 @@ Requirements:
                     </div>
                   ),
                   Footer: () => (
-                    <div className="">
+                    <div className="relative">
                       {(loading.chat || isTyping) && (
                         <div className="flex gap-2 items-center ml-12 pl-2 px-4 py-4">
                           <div className="w-1.5 h-1.5 bg-gray-400 rounded-full typing-dot" style={{ animationDelay: "0s" }}></div>
@@ -5201,7 +5201,7 @@ Requirements:
                         <X size={14} /> 取消生成
                       </button>
                     ) : (
-                      <div className="relative flex items-end gap-1">
+                      <>
                         {/* 无聊引导 */}
                         {showIdleGuide && (
                           <div className="absolute bottom-full mb-3 right-8 whitespace-nowrap animate-in slide-in-from-bottom-2 fade-in duration-300 z-50">
@@ -5359,7 +5359,7 @@ Requirements:
                             </div>
                           )}
                         </div>
-                      </div>
+                      </>
                     )}
                   </div>
                 )}
