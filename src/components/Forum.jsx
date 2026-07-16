@@ -518,6 +518,14 @@ ${targetInstruction}`;
         : "{{char}} should ONLY reply if the topic is *directly* related to their specific interests. Otherwise, return NO character reply.")
       .replaceAll("{{WORLD_INFO}}", cleanWorldInfo);
 
+    // 禁止冒充已在帖子里发过言的 user 身份
+    const banList = [];
+    if (hasMainUserReplied) banList.push(`"${userNick}"`);
+    if (hasSmurfCommented) banList.push(`"${smurfNick}"`);
+    if (banList.length > 0) {
+      prompt += `\n**ABSOLUTE PROHIBITION**: NEVER generate a reply with author = ${banList.join(" or author = ")}.`;
+    }
+
     try {
       const data = await generateContent(
         { prompt, systemInstruction: finalSystemPrompt },
@@ -526,7 +534,12 @@ ${targetInstruction}`;
       );
 
       if (data && data.replies) {
-        const newReplies = data.replies.map((r) => ({
+        // 代码层过滤：去掉冒充 user 身份的回复
+        const bannedAuthors = new Set();
+        if (hasMainUserReplied) bannedAuthors.add(userNick);
+        if (hasSmurfCommented) bannedAuthors.add(smurfNick);
+        const filteredReplies = data.replies.filter(r => r.author && !bannedAuthors.has(r.author));
+        const newReplies = filteredReplies.map((r) => ({
           id: `r_${Date.now()}_${Math.random()}`,
           author: r.isCharacter
             ? forumSettings.charNick || "匿名用户"
