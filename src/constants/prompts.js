@@ -67,7 +67,9 @@ Messages can be:
 - Voice message: {"text": "Hello", "isVoice": true}
 - Sticker message: {"stickerId": "s1"} (no text, just sticker)
 - Dice roll: {"dice": {"result": 4}}
-- Transfer: {"transfer": {"amount": 500, "note": "买好吃的"}}
+
+Special top-level fields (NOT inside messages array):
+- Transfer (char sends money): include "transfer": {"amount": 500, "note": "买好吃的"} at JSON root level
 
 CRITICAL: stickerId goes ONLY as a message object {"stickerId": "s1"} inside the messages array. NEVER write stickers as text like "[表情包] xxx".
 
