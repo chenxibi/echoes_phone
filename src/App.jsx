@@ -3083,6 +3083,19 @@ Requirements:
         // 处理 AI 返回的消息内容
         if (responseData.messages && Array.isArray(responseData.messages)) {
           const newMsgs = responseData.messages.flatMap((item, index) => {
+            // 如果 message 是对象且带 quote 字段,视为引用消息
+            if (typeof item === "object" && item !== null && item.quote && item.quote.text) {
+              const actualText = typeof item.text === "string" ? item.text : String(item);
+              return [{
+                sender: "char",
+                text: actualText,
+                quote: { sender: item.quote.sender || "user", text: item.quote.text },
+                time: formatTime(getCurrentTimeObj()),
+                ...(realTimeEnabled ? { timestamp: Date.now() } : {}),
+                status: index === responseData.messages.length - 1 ? responseData.status : null,
+              }];
+            }
+
             // 如果 message 是对象且带 stickerId(无 text),视为表情包消息
             if (typeof item === "object" && item !== null && item.stickerId && !item.text) {
               const sticker = charStickers.find((s) => s.id === item.stickerId);
@@ -5011,16 +5024,8 @@ Requirements:
                                 if (msg.isVoice) return <VoiceMessageBubble msg={msg} isMe={msg.sender === "me"} />;
                                 if (msg.isDice) return <DiceFace value={msg.dice?.result || 1} animate={!msg.diceRolled} onDone={() => { msg.diceRolled = true; }} />;
 
-                                // 解析 char 消息中的引用前缀
-                                let displayQuote = msg.quote || null;
-                                let displayText = msg.text || "";
-                                if (!displayQuote && msg.sender === "char") {
-                                  const quoteMatch = displayText.match(/^（引用(.+?)的消息[：:]\s*(.+?)）\s*/s);
-                                  if (quoteMatch) {
-                                    displayQuote = { sender: "user", text: quoteMatch[2].trim(), senderName: quoteMatch[1].trim() };
-                                    displayText = displayText.substring(quoteMatch[0].length);
-                                  }
-                                }
+                                const displayQuote = msg.quote || null;
+                                const displayText = msg.text || "";
 
                                 return (
                                   <div>
