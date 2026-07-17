@@ -5011,11 +5011,22 @@ Requirements:
                                 if (msg.isVoice) return <VoiceMessageBubble msg={msg} isMe={msg.sender === "me"} />;
                                 if (msg.isDice) return <DiceFace value={msg.dice?.result || 1} animate={!msg.diceRolled} onDone={() => { msg.diceRolled = true; }} />;
 
+                                // 解析 char 消息中的引用前缀
+                                let displayQuote = msg.quote || null;
+                                let displayText = msg.text || "";
+                                if (!displayQuote && msg.sender === "char") {
+                                  const quoteMatch = displayText.match(/^（引用(.+?)的消息[：:]\s*(.+?)）\s*/s);
+                                  if (quoteMatch) {
+                                    displayQuote = { sender: "user", text: quoteMatch[2].trim(), senderName: quoteMatch[1].trim() };
+                                    displayText = displayText.substring(quoteMatch[0].length);
+                                  }
+                                }
+
                                 return (
                                   <div>
-                                    {msg.quote && (
+                                    {displayQuote && (
                                       <div className={`text-xs opacity-70 mb-1 px-3 py-1 rounded-lg border-l-2 ${msg.sender === "me" ? "bg-white/10 border-white/30 text-white/70" : "bg-gray-50 border-gray-300 text-gray-400"}`}>
-                                        <span className="font-bold">{msg.quote.sender === "char" ? (persona?.name || "char") : "你"}:</span> {msg.quote.text?.substring(0, 80)}{msg.quote.text?.length > 80 ? "..." : ""}
+                                        <span className="font-bold">{displayQuote.sender === "char" ? (persona?.name || "char") : "你"}:</span> {displayQuote.text?.substring(0, 80)}{displayQuote.text?.length > 80 ? "..." : ""}
                                       </div>
                                     )}
                                     <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap select-text ${msg.sender === "me" ? "bg-[#2C2C2C] text-white rounded-tr-none" : "bg-white border border-gray-100 text-gray-800 rounded-tl-none"}`}>
@@ -5027,10 +5038,10 @@ Requirements:
                                       return (
                                         <div className="text-left max-w-[240px] pl-3 border-l-2 border-white/30 my-1">
                                           <div className="flex items-center gap-2 mb-1 opacity-70"><Share size={10} /><span className="text-[10px] font-bold uppercase tracking-wider">{typeLabel}</span></div>
-                                          {isForumType ? (<><div className="text-[10px] text-white/80 mb-1 font-bold">@{fwd?.author}</div><div className="text-xs text-white/80 line-clamp-3 leading-relaxed font-light">{fwd?.content}</div></>) : <div className="text-xs text-white/80 line-clamp-5 leading-relaxed">{msg.text}</div>}
+                                          {isForumType ? (<><div className="text-[10px] text-white/80 mb-1 font-bold">@{fwd?.author}</div><div className="text-xs text-white/80 line-clamp-3 leading-relaxed font-light">{fwd?.content}</div></>) : <div className="text-xs text-white/80 line-clamp-5 leading-relaxed">{displayText}</div>}
                                         </div>
                                       );
-                                    })() : msg.text}
+                                    })() : displayText}
                                   </div>
                                   </div>
                                 );
