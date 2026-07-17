@@ -2556,7 +2556,7 @@ Requirements:
         const qName = persona?.name || "char";
         const qText = qMsg.text || "";
         quoteData = { sender: qMsg.sender, text: qText, senderName: qName };
-        // AI 看到的格式: user引用了char的某条消息
+        // AI 看到的格式: user引用了char的某条消息, 显示上只渲染原始内容
         displayText = `（引用${qName}的消息：${qText}）${displayText}`;
         setQuoteTarget(null);
       }
@@ -5025,7 +5025,12 @@ Requirements:
                                 if (msg.isDice) return <DiceFace value={msg.dice?.result || 1} animate={!msg.diceRolled} onDone={() => { msg.diceRolled = true; }} />;
 
                                 const displayQuote = msg.quote || null;
-                                const displayText = msg.text || "";
+                                let displayText = msg.text || "";
+                                // 用户引用消息时，气泡内只显示用户输入的实际内容，不显示引用前缀
+                                if (displayQuote && msg.sender === "me") {
+                                  const idx = displayText.indexOf("）");
+                                  if (idx !== -1) displayText = displayText.substring(idx + 1).trim();
+                                }
 
                                 return (
                                   <div>
