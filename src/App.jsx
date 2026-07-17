@@ -815,6 +815,7 @@ const App = () => {
   const [editIndex, setEditIndex] = useState(null); // 当前正在编辑哪条消息
   const [editContent, setEditContent] = useState(""); // 编辑框的内容
   const longPressTimerRef = useRef(null);
+  const [quoteTarget, setQuoteTarget] = useState(null); // { index, text } 引用目标
   const [isSummarizing, setIsSummarizing] = useState(false); // Loading 状态
   const [isSimplifying, setIsSimplifying] = useState(false); // 记忆简化 loading
   const [simplifiedMemory, setSimplifiedMemory] = useState(null); // 简化后的临时文本
@@ -2547,6 +2548,20 @@ Requirements:
       displayText = content;
     }
 
+    // 引用：把被引用消息的信息附加到消息上
+    let quoteData = null;
+    if (quoteTarget) {
+      const qMsg = chatHistory[quoteTarget.index];
+      if (qMsg) {
+        const qName = persona?.name || "char";
+        const qText = qMsg.text || "";
+        quoteData = { sender: qMsg.sender, text: qText, senderName: qName };
+        // AI 看到的格式: user引用了char的某条消息
+        displayText = `（引用${qName}的消息：${qText}）${displayText}`;
+        setQuoteTarget(null);
+      }
+    }
+
     const newMsg = {
       sender: "me",
       text: displayText,
@@ -2554,6 +2569,9 @@ Requirements:
       isImage: type === "image",
       imageKey: extraData?.imageKey || null, // IndexedDB 中的 key
       imageData: extraData?.imageData || null, // base64 供渲染
+
+      // 引用
+      quote: quoteData,
 
       // [新增] 转账数据结构更新
       isTransfer: type === "transfer",
@@ -4994,8 +5012,14 @@ Requirements:
                                 if (msg.isDice) return <DiceFace value={msg.dice?.result || 1} animate={!msg.diceRolled} onDone={() => { msg.diceRolled = true; }} />;
 
                                 return (
-                                  <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap select-text ${msg.sender === "me" ? "bg-[#2C2C2C] text-white rounded-tr-none" : "bg-white border border-gray-100 text-gray-800 rounded-tl-none"}`}>
-                                    {msg.isForward ? (() => {
+                                  <div>
+                                    {msg.quote && (
+                                      <div className={`text-xs opacity-70 mb-1 px-3 py-1 rounded-lg border-l-2 ${msg.sender === "me" ? "bg-white/10 border-white/30 text-white/70" : "bg-gray-50 border-gray-300 text-gray-400"}`}>
+                                        <span className="font-bold">{msg.quote.sender === "char" ? (persona?.name || "char") : "你"}:</span> {msg.quote.text?.substring(0, 80)}{msg.quote.text?.length > 80 ? "..." : ""}
+                                      </div>
+                                    )}
+                                    <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap select-text ${msg.sender === "me" ? "bg-[#2C2C2C] text-white rounded-tr-none" : "bg-white border border-gray-100 text-gray-800 rounded-tl-none"}`}>
+                                      {msg.isForward ? (() => {
                                       const fwd = msg.forwardData;
                                       const isForumType = fwd?.type === "post" || fwd?.type === "comment";
                                       const labelMap = { post: "帖子", comment: "评论", diary: "日记", receipt: "消费", browser: "浏览", incognito: "隐私浏览", smartwatch: "监控日志" };
@@ -5008,6 +5032,7 @@ Requirements:
                                       );
                                     })() : msg.text}
                                   </div>
+                                  </div>
                                 );
                               })()}
                             </div>
@@ -5018,6 +5043,7 @@ Requirements:
                               <div className="bg-[#1a1a1a]/95 backdrop-blur-md text-white rounded-xl shadow-2xl p-1.5 flex gap-1 items-center border border-white/20">
                                 <button onClick={(e) => { e.stopPropagation(); handleCopy(msg.text); }} className="flex flex-col items-center gap-1 p-2 hover:bg-white/20 rounded-lg min-w-[40px]"><span className="text-[11px]">复制</span></button>
                                 <div className="w-[1px] h-4 bg-white/20"></div>
+                                {msg.sender === "char" && <><button onClick={(e) => { e.stopPropagation(); setQuoteTarget({ index: i, text: msg.text, sender: msg.sender }); setActiveMenuIndex(null); }} className="flex flex-col items-center gap-1 p-2 hover:bg-white/20 rounded-lg min-w-[40px]"><span className="text-[11px]">引用</span></button><div className="w-[1px] h-4 bg-white/20"></div></>}
                                 <button onClick={(e) => { e.stopPropagation(); startEdit(i, msg.text); }} className="flex flex-col items-center gap-1 p-2 hover:bg-white/20 rounded-lg min-w-[40px]"><span className="text-[11px]">改写</span></button>
                                 <div className="w-[1px] h-4 bg-white/20"></div>
                                 <button onClick={(e) => { e.stopPropagation(); setIsMultiSelectMode(true); setSelectedMsgs(new Set([i])); setActiveMenuIndex(null); }} className="flex flex-col items-center gap-1 p-2 hover:bg-white/20 rounded-lg min-w-[40px]"><span className="text-[11px]">多选</span></button>
@@ -5240,6 +5266,7 @@ Requirements:
                               if (showIdleGuide) { setShowIdleGuide(false); clearTimeout(idleGuideTimerRef.current); clearTimeout(idleGuideDismissRef.current); }
                               if (showNegativeGuide) { setShowNegativeGuide(false); clearTimeout(negativeGuideDismissRef.current); }
                               if (showRegenGuide) { setShowRegenGuide(false); clearTimeout(regenGuideDismissRef.current); }
+                              if (quoteTarget && !e.target.value.trim()) setQuoteTarget(null);
                               e.target.style.height = "auto";
                               e.target.style.height =
                                 Math.min(e.target.scrollHeight, 120) + "px";
@@ -5265,6 +5292,8 @@ Requirements:
                                 ? "语音..."
                                 : chatStyle === "novel" && !chatInput
                                   ? "点击右侧按钮可AI代写..."
+                                : quoteTarget
+                                  ? `引用 ${persona?.name || "char"}: ${(quoteTarget.text || "").substring(0, 30)}...`
                                   : "发消息..."
                             }
                             rows={1}
