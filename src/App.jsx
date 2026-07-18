@@ -5277,7 +5277,7 @@ Requirements:
 
                         <div className="relative flex-grow">
                           {quoteTarget && (
-                            <div className="flex items-center gap-2 mb-1 px-3 py-1.5 bg-black/60 backdrop-blur-md text-white text-[11px] rounded-lg border border-white/10 overflow-hidden" style={{ maxWidth: '100%' }}>
+                            <div className="flex items-center gap-2 mb-1 px-3 py-1.5 bg-black/60 backdrop-blur-md text-white text-[11px] rounded-lg border border-white/10 overflow-hidden" style={{ width: 'fit-content', maxWidth: '280px' }}>
                               <span className="flex-1 truncate min-w-0">
                                 <span className="font-bold opacity-70">引用 {(persona?.name || "char")}:</span> {(quoteTarget.text || "").substring(0, 30)}{(quoteTarget.text || "").length > 30 ? "..." : ""}
                               </span>
