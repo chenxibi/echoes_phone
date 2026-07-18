@@ -5033,10 +5033,10 @@ Requirements:
                                 }
 
                                 return (
-                                  <div>
+                                  <div className="max-w-[280px]">
                                     {displayQuote && (
-                                      <div className={`text-xs mb-1 px-3 py-1 rounded-lg border-l-2 max-w-full overflow-hidden ${msg.sender === "me" ? "bg-white/10 border-white/30 text-white/70" : "bg-black/10 border-gray-400 text-gray-600"}`}>
-                                        <span className="font-bold">{displayQuote.sender === "char" ? (persona?.name || "char") : "你"}:</span> <span className="line-clamp-2">{displayQuote.text}</span>
+                                      <div className={`text-xs mb-1 px-2.5 py-1 rounded-lg border-l-2 truncate ${msg.sender === "me" ? "bg-white/15 border-white/30 text-white/85" : "bg-black/10 border-gray-400 text-gray-600"}`}>
+                                        <span className="font-bold shrink-0">{displayQuote.sender === "char" ? (persona?.name || "char") : "你"}:</span> <span className="align-middle">{displayQuote.text?.length > 60 ? displayQuote.text.substring(0, 60) + "..." : displayQuote.text}</span>
                                       </div>
                                     )}
                                     <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap select-text ${msg.sender === "me" ? "bg-[#2C2C2C] text-white rounded-tr-none" : "bg-white border border-gray-100 text-gray-800 rounded-tl-none"}`}>
