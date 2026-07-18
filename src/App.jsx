@@ -4975,7 +4975,7 @@ Requirements:
                     )}
                     <div
                       onClick={() => { if (isMultiSelectMode) toggleMessageSelection(i); }}
-                      className={`flex flex-col gap-1 ${msg.sender === "me" ? "items-end" : "items-start"} group relative ${isMultiSelectMode ? "cursor-pointer hover:bg-gray-100/50 p-2 rounded-xl transition-colors" : ""}`}
+                      className={`flex flex-col gap-1 ${msg.sender === "me" ? "items-end self-end max-w-full" : "items-start self-start max-w-full"} group relative ${isMultiSelectMode ? "cursor-pointer hover:bg-gray-100/50 p-2 rounded-xl transition-colors" : ""}`}
                     >
                       <div className={`flex gap-3 relative ${msg.sender === "me" ? "flex-row-reverse" : "flex-row"} max-w-full`}>
                         {isMultiSelectMode && (
