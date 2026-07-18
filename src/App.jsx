@@ -5039,7 +5039,7 @@ Requirements:
                                         <div className="truncate"><span className="font-bold">{displayQuote.sender === "char" ? (persona?.name || "char") : "你"}:</span> {displayQuote.text?.length > 20 ? displayQuote.text.substring(0, 20) + "..." : displayQuote.text}</div>
                                       </div>
                                     )}
-                                    <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap select-text ${msg.sender === "me" ? "bg-[#2C2C2C] text-white rounded-tr-none" : "bg-white border border-gray-100 text-gray-800 rounded-tl-none"}`}>
+                                    <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap select-text ${msg.sender === "me" ? "bg-[#2C2C2C] text-white rounded-tr-none" : "bg-white border border-gray-100 text-gray-800 rounded-tl-none"}`} style={{ width: 'fit-content', maxWidth: '100%' }}>
                                       {msg.isForward ? (() => {
                                       const fwd = msg.forwardData;
                                       const isForumType = fwd?.type === "post" || fwd?.type === "comment";
