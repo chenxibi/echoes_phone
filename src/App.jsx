@@ -5033,7 +5033,7 @@ Requirements:
                                 }
 
                                 return (
-                                  <div style={{ width: 'fit-content', maxWidth: 'min(280px, 100%)', overflow: 'hidden' }} className={msg.sender === "me" ? "self-end" : "self-start"}>
+                                  <div className={`flex flex-col ${msg.sender === "me" ? "items-end" : "items-start"}`} style={{ width: 'fit-content', maxWidth: 'min(280px, 100%)', overflow: 'hidden' }}>
                                     {displayQuote && (
                                       <div className={`text-xs mb-1 px-2.5 py-1 rounded-lg border-l-2 overflow-hidden ${msg.sender === "me" ? "bg-white/90 border-white/50 text-gray-800" : "bg-black/10 border-gray-400 text-gray-600"}`} style={{ maxWidth: '240px' }}>
                                         <div className="truncate"><span className="font-bold">{displayQuote.sender === "char" ? (persona?.name || "char") : "你"}:</span> {displayQuote.text?.length > 20 ? displayQuote.text.substring(0, 20) + "..." : displayQuote.text}</div>
