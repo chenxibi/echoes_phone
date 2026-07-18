@@ -5035,7 +5035,7 @@ Requirements:
                                 return (
                                   <div className="max-w-[280px]">
                                     {displayQuote && (
-                                      <div className={`text-xs mb-1 px-2.5 py-1 rounded-lg border-l-2 truncate ${msg.sender === "me" ? "bg-white/15 border-white/30 text-white/85" : "bg-black/10 border-gray-400 text-gray-600"}`}>
+                                      <div className={`text-xs mb-1 px-2.5 py-1 rounded-lg border-l-2 truncate ${msg.sender === "me" ? "bg-white/90 border-white/50 text-gray-800" : "bg-black/10 border-gray-400 text-gray-600"}`}>
                                         <span className="font-bold shrink-0">{displayQuote.sender === "char" ? (persona?.name || "char") : "你"}:</span> <span className="align-middle">{displayQuote.text?.length > 60 ? displayQuote.text.substring(0, 60) + "..." : displayQuote.text}</span>
                                       </div>
                                     )}
