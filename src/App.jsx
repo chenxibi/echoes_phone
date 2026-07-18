@@ -6591,9 +6591,9 @@ const AppIcon = ({ icon, label, onClick, unseen }) => (
     {/* 气泡提示(反馈用) */}
     {unseen?.type === "bubble" && (
       <div className="absolute -top-7 left-1/2 -translate-x-1/2 z-20 whitespace-nowrap animate-in fade-in slide-in-from-bottom-1 duration-200">
-        <div className="bg-[#1a1a1a]/90 backdrop-blur-md text-white text-[10px] px-2.5 py-1 rounded-xl shadow-lg border border-white/20 relative">
+        <div className="bg-black/80 text-white text-[10px] px-2.5 py-1 rounded-xl shadow-lg border border-white/10 relative" style={{ backdropFilter: 'blur(8px)' }}>
           {unseen.text || ""}
-          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#1a1a1a]/90 rotate-45 border-r border-b border-white/20"></div>
+          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-black/80 rotate-45 border-r border-b border-white/10" style={{ backdropFilter: 'blur(8px)' }}></div>
         </div>
       </div>
     )}
