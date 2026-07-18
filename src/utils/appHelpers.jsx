@@ -1076,8 +1076,9 @@ export const TransferBubble = ({ msg, isMe, onInteract }) => {
   const isPending = status === "pending";
   const isAccepted = status === "accepted";
 
-  // 颜色逻辑
-  const bgColor = isPending ? "bg-black/60" : "bg-black/40";
+  // 颜色逻辑（默认橙，主题模式下跟随skin）
+  const bgColor = isPending ? "bg-[var(--skin-transfer-active,#ff9f43)]" : "bg-[var(--skin-transfer,#FFBD7E)]";
+  const btnTextColor = "text-[var(--skin-transfer-active,#ff9f43)]";
   const textColor = "text-white";
 
   return (
@@ -1123,7 +1124,7 @@ export const TransferBubble = ({ msg, isMe, onInteract }) => {
                 e.stopPropagation();
                 onInteract("reject");
               }}
-              className="px-1.5 py-0.5 bg-white/15 hover:bg-white/25 text-white text-[9px] rounded font-bold backdrop-blur-sm"
+              className="px-1.5 py-0.5 bg-white hover:bg-gray-100 text-[var(--skin-transfer-active,#ff9f43)] text-[9px] rounded font-bold shadow-sm"
             >
               退还
             </button>
@@ -1132,7 +1133,7 @@ export const TransferBubble = ({ msg, isMe, onInteract }) => {
                 e.stopPropagation();
                 onInteract("accept");
               }}
-              className="px-1.5 py-0.5 bg-white/15 hover:bg-white/25 text-white text-[9px] rounded font-bold backdrop-blur-sm"
+              className="px-1.5 py-0.5 bg-white hover:bg-gray-100 text-[var(--skin-transfer-active,#ff9f43)] text-[9px] rounded font-bold shadow-sm"
             >
               收款
             </button>
