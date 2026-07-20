@@ -1,0 +1,746 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Echoes Phone · 数据收集</title>
+  <style>
+    :root {
+      --bg: #f5f5f7;
+      --surface: #ffffff;
+      --border: #e0e0e0;
+      --text: #1a1a1a;
+      --text-muted: #666;
+      --accent: #e85a9b;
+      --accent-light: #fce4ec;
+      --success: #4caf50;
+      --warn: #ff9800;
+      --radius: 10px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 0;
+    }
+    /* Header */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow);
+    }
+    .header h1 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+    .header .subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    /* Buttons */
+    .btn {
+      padding: 8px 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-sm { padding: 4px 10px; font-size: 12px; }
+    .btn-danger { color: #d32f2f; border-color: #ffcdd2; }
+    .btn-danger:hover { background: #ffebee; border-color: #d32f2f; }
+    /* Layout */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    /* Toolbar */
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    /* Day tabs */
+    .day-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+    }
+    .day-tab {
+      padding: 8px 18px;
+      border: 1px solid var(--border);
+      border-radius: 8px 8px 0 0;
+      cursor: pointer;
+      font-size: 13px;
+      white-space: nowrap;
+      transition: all 0.15s;
+      background: #fafafa;
+    }
+    .day-tab.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+    .day-tab .count {
+      font-size: 11px;
+      opacity: 0.7;
+      margin-left: 4px;
+    }
+    /* Participant panel */
+    .participant-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+      padding: 12px 16px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .participant-chip {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .participant-chip.active {
+      background: var(--accent-light);
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .participant-chip .remove {
+      font-size: 14px;
+      color: #999;
+      cursor: pointer;
+      margin-left: 2px;
+    }
+    .participant-chip .remove:hover { color: #d32f2f; }
+    /* Response area */
+    .response-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    .response-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .response-card-header {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fafafa;
+    }
+    .response-card-header .label {
+      font-weight: 500;
+      font-size: 14px;
+    }
+    .response-card-header .meta {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .response-card-header .status-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+    .status-dot.filled { background: var(--success); }
+    .status-dot.empty { background: #ccc; }
+    .response-textarea {
+      width: 100%;
+      min-height: 200px;
+      border: none;
+      padding: 14px 16px;
+      font-size: 14px;
+      font-family: inherit;
+      resize: vertical;
+      outline: none;
+      line-height: 1.7;
+    }
+    .response-textarea:focus {
+      background: #fffde7;
+    }
+    .save-indicator {
+      padding: 6px 16px;
+      font-size: 11px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .save-indicator .saved { color: var(--success); }
+    /* Overview matrix */
+    .matrix-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    .matrix-card h3 {
+      padding: 12px 16px;
+      font-size: 14px;
+      border-bottom: 1px solid var(--border);
+      background: #fafafa;
+    }
+    .matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .matrix-table th, .matrix-table td {
+      padding: 8px 12px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .matrix-table th {
+      background: #fafafa;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+    .matrix-table td.filled { color: var(--success); font-weight: 500; }
+    .matrix-table td.empty { color: #ccc; }
+    .matrix-table td.label {
+      text-align: left;
+      font-weight: 500;
+    }
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+    }
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 24px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    }
+    .modal h2 { font-size: 16px; margin-bottom: 16px; }
+    .modal input, .modal textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      margin-bottom: 12px;
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    /* Export panel */
+    .export-panel {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .export-panel h3 { font-size: 14px; margin-bottom: 12px; }
+    .export-options {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .export-note {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #333;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      z-index: 300;
+      animation: fadeIn 0.2s;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header { padding: 12px 16px; }
+      .container { padding: 12px; }
+      .response-textarea { min-height: 150px; }
+    }
+    /* Hidden */
+    .hidden { display: none !important; }
+    /* Add participant input */
+    .add-participant-input {
+      padding: 6px 12px;
+      border: 1px dashed var(--border);
+      border-radius: 20px;
+      font-size: 13px;
+      outline: none;
+      width: 140px;
+    }
+    .add-participant-input:focus { border-color: var(--accent); border-style: solid; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>📋 Echoes Phone · 数据收集</h1>
+    <div class="subtitle">Probe Kit 参与者回答收集与导出工具</div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-sm" onclick="toggleExportPanel()">📊 导出 / 导入</button>
+    <button class="btn btn-sm" onclick="toggleMatrix()">✅ 完成度</button>
+    <button class="btn btn-sm" onclick="showHelp()">❓ 帮助</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Completion Matrix -->
+  <div id="matrixSection" class="matrix-card hidden">
+    <h3>📊 回答完成度矩阵</h3>
+    <div style="overflow-x:auto">
+      <table class="matrix-table" id="matrixTable"></table>
+    </div>
+  </div>
+
+  <!-- Export Panel -->
+  <div id="exportSection" class="export-panel hidden">
+    <h3>📊 数据导出 / 导入</h3>
+    <div class="export-options">
+      <button class="btn btn-primary btn-sm" onclick="exportCSV('long')">⬇ CSV (长格式)</button>
+      <button class="btn btn-primary btn-sm" onclick="exportCSV('wide')">⬇ CSV (宽格式)</button>
+      <button class="btn btn-sm" onclick="exportJSON()">⬇ JSON 备份</button>
+      <button class="btn btn-sm" onclick="document.getElementById('importFile').click()">⬆ 导入 JSON</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)" />
+    </div>
+    <div class="export-note">
+      <strong>CSV 长格式</strong>：每行一条回答（participant, day, response, timestamp），适合 SPSS/Nvivo 编码分析。<br>
+      <strong>CSV 宽格式</strong>：每行一个参与者，各天为列，适合快速浏览对比。<br>
+      <strong>JSON 备份</strong>：完整数据，可跨设备导入恢复。
+    </div>
+  </div>
+
+  <!-- Participant Bar -->
+  <div class="participant-bar">
+    <span style="font-size:13px;color:var(--text-muted);margin-right:4px">参与者：</span>
+    <div id="participantList" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"></div>
+    <input type="text" class="add-participant-input" id="newParticipantInput"
+      placeholder="+ 添加参与者" onkeydown="if(event.key==='Enter')addParticipant()" />
+    <button class="btn btn-sm" onclick="addParticipant()">添加</button>
+  </div>
+
+  <!-- Day Tabs -->
+  <div class="day-tabs" id="dayTabs"></div>
+
+  <!-- Response Grid -->
+  <div class="response-grid" id="responseGrid"></div>
+
+</div>
+
+<!-- Help Modal -->
+<div id="helpModal" class="modal-overlay hidden" onclick="if(event.target===this)hideHelp()">
+  <div class="modal">
+    <h2>使用说明</h2>
+    <div style="font-size:13px;line-height:1.8">
+      <p><strong>工作流程：</strong></p>
+      <p>1. 在「参与者」栏添加参与者（默认 P1、P2…，也可改为真实姓名）</p>
+      <p>2. 选择上方 Day 标签（Day 1 ~ Day 7）</p>
+      <p>3. 将每位参与者当天的回答粘贴到对应文本框中</p>
+      <p>4. 内容自动保存到浏览器本地（localStorage）</p>
+      <p>5. 点击「导出」下载 CSV 或 JSON 文件供分析</p>
+      <p style="margin-top:10px"><strong>数据安全：</strong></p>
+      <p>· 数据存储在当前浏览器本地，不会上传服务器</p>
+      <p>· 建议定期导出 JSON 备份</p>
+      <p>· 换设备时，导入 JSON 即可恢复全部数据</p>
+      <p>· 清除浏览器缓存会删除数据，请务必先备份</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-sm" onclick="hideHelp()">知道了</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast hidden"></div>
+
+<script>
+const DAYS = 7;
+const STORAGE_KEY = 'echoes_probe_data';
+let state = {
+  participants: [],
+  responses: {}, // { pid: { day1: "text", day2: "text", ... } }
+  activeDay: 1,
+};
+let saveTimers = {};
+
+// ---- Init ----
+function init() {
+  loadState();
+  if (state.participants.length === 0) {
+    // Default: create P1, P2, P3
+    for (let i = 1; i <= 3; i++) {
+      state.participants.push({ id: 'p' + i, name: '参与人' + i });
+      state.responses['p' + i] = {};
+    }
+    saveState();
+  }
+  renderDayTabs();
+  renderParticipants();
+  renderResponses();
+  renderMatrix();
+}
+
+// ---- Storage ----
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      state = { ...state, ...parsed };
+    }
+  } catch (e) { console.warn('Load state failed', e); }
+}
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (e) {
+    showToast('保存失败：' + e.message);
+  }
+}
+
+// ---- Participants ----
+function addParticipant() {
+  const input = document.getElementById('newParticipantInput');
+  const name = input.value.trim();
+  if (!name) return;
+  const id = 'p' + Date.now();
+  state.participants.push({ id, name });
+  state.responses[id] = {};
+  input.value = '';
+  saveState();
+  renderParticipants();
+  renderResponses();
+  renderMatrix();
+  showToast('已添加：' + name);
+}
+function removeParticipant(id) {
+  const p = state.participants.find(x => x.id === id);
+  if (!p) return;
+  if (!confirm('确认删除「' + p.name + '」及其所有回答？')) return;
+  state.participants = state.participants.filter(x => x.id !== id);
+  delete state.responses[id];
+  saveState();
+  renderParticipants();
+  renderResponses();
+  renderMatrix();
+  showToast('已删除：' + p.name);
+}
+function renameParticipant(id) {
+  const p = state.participants.find(x => x.id === id);
+  if (!p) return;
+  const newName = prompt('重命名参与者：', p.name);
+  if (newName && newName.trim()) {
+    p.name = newName.trim();
+    saveState();
+    renderParticipants();
+    renderResponses();
+    renderMatrix();
+  }
+}
+
+// ---- Day Tabs ----
+function renderDayTabs() {
+  const container = document.getElementById('dayTabs');
+  container.innerHTML = '';
+  for (let d = 1; d <= DAYS; d++) {
+    const tab = document.createElement('div');
+    tab.className = 'day-tab' + (state.activeDay === d ? ' active' : '');
+    const count = state.participants.filter(p => {
+      const text = state.responses[p.id]?.['day' + d];
+      return text && text.trim().length > 0;
+    }).length;
+    tab.innerHTML = `Day ${d} <span class="count">(${count}/${state.participants.length})</span>`;
+    tab.onclick = () => { state.activeDay = d; renderDayTabs(); renderResponses(); };
+    container.appendChild(tab);
+  }
+}
+
+// ---- Participants ----
+function renderParticipants() {
+  const container = document.getElementById('participantList');
+  container.innerHTML = '';
+  state.participants.forEach(p => {
+    const chip = document.createElement('span');
+    chip.className = 'participant-chip';
+    chip.innerHTML = `
+      <span onclick="renameParticipant('${p.id}')" title="点击重命名">${escapeHtml(p.name)}</span>
+      <span class="remove" onclick="removeParticipant('${p.id}')" title="删除">×</span>
+    `;
+    container.appendChild(chip);
+  });
+}
+
+// ---- Responses ----
+function renderResponses() {
+  const grid = document.getElementById('responseGrid');
+  grid.innerHTML = '';
+  state.participants.forEach(p => {
+    const dayKey = 'day' + state.activeDay;
+    const text = state.responses[p.id]?.[dayKey] || '';
+    const card = document.createElement('div');
+    card.className = 'response-card';
+    const hasContent = text.trim().length > 0;
+    const charCount = text.length;
+    const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
+    card.innerHTML = `
+      <div class="response-card-header">
+        <div>
+          <span class="status-dot ${hasContent ? 'filled' : 'empty'}"></span>
+          <span class="label">${escapeHtml(p.name)}</span>
+          <span class="meta"> · Day ${state.activeDay}</span>
+        </div>
+        <div class="meta">${charCount} 字符 · ${wordCount} 词</div>
+      </div>
+      <textarea class="response-textarea" id="resp_${p.id}_day${state.activeDay}"
+        placeholder="粘贴 ${escapeHtml(p.name)} 在 Day ${state.activeDay} 的回答..."
+        oninput="autoSave('${p.id}', 'day${state.activeDay}', this.value)">${escapeHtml(text)}</textarea>
+      <div class="save-indicator" id="save_${p.id}_day${state.activeDay}">
+        <span class="${hasContent ? 'saved' : ''}">${hasContent ? '✓ 已保存' : '未填写'}</span>
+        <span>${getTimestamp(p.id, dayKey)}</span>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function getTimestamp(pid, dayKey) {
+  const meta = state.responses[pid]?.['_meta_' + dayKey];
+  if (meta && meta.savedAt) {
+    const d = new Date(meta.savedAt);
+    return '更新于 ' + d.toLocaleString('zh-CN');
+  }
+  return '';
+}
+
+// ---- Auto Save ----
+function autoSave(pid, dayKey, value) {
+  if (saveTimers[pid + '_' + dayKey]) clearTimeout(saveTimers[pid + '_' + dayKey]);
+  saveTimers[pid + '_' + dayKey] = setTimeout(() => {
+    if (!state.responses[pid]) state.responses[pid] = {};
+    state.responses[pid][dayKey] = value;
+    if (!state.responses[pid]['_meta_' + dayKey]) state.responses[pid]['_meta_' + dayKey] = {};
+    state.responses[pid]['_meta_' + dayKey].savedAt = new Date().toISOString();
+    saveState();
+    // Update indicator
+    const indicator = document.getElementById('save_' + pid + '_' + dayKey);
+    if (indicator) {
+      const hasContent = value.trim().length > 0;
+      const span = indicator.querySelector('span:first-child');
+      span.className = hasContent ? 'saved' : '';
+      span.textContent = hasContent ? '✓ 已保存' : '未填写';
+      const timeSpan = indicator.querySelector('span:last-child');
+      timeSpan.textContent = '更新于 ' + new Date().toLocaleString('zh-CN');
+    }
+    // Update day tab count
+    renderDayTabs();
+  }, 500);
+}
+
+// ---- Matrix ----
+function renderMatrix() {
+  const table = document.getElementById('matrixTable');
+  if (!table) return;
+  let html = '<tr><th>参与者</th>';
+  for (let d = 1; d <= DAYS; d++) html += `<th>Day ${d}</th>`;
+  html += '<th>完成率</th></tr>';
+  state.participants.forEach(p => {
+    let filled = 0;
+    html += `<tr><td class="label">${escapeHtml(p.name)}</td>`;
+    for (let d = 1; d <= DAYS; d++) {
+      const text = state.responses[p.id]?.['day' + d];
+      const has = text && text.trim().length > 0;
+      if (has) filled++;
+      html += `<td class="${has ? 'filled' : 'empty'}">${has ? '✓' : '—'}</td>`;
+    }
+    const rate = Math.round(filled / DAYS * 100);
+    html += `<td>${filled}/${DAYS} (${rate}%)</td></tr>`;
+  });
+  table.innerHTML = html;
+}
+
+function toggleMatrix() {
+  const m = document.getElementById('matrixSection');
+  m.classList.toggle('hidden');
+  if (!m.classList.contains('hidden')) renderMatrix();
+}
+
+function toggleExportPanel() {
+  document.getElementById('exportSection').classList.toggle('hidden');
+}
+
+// ---- Export ----
+function exportCSV(format) {
+  let csv = '';
+  if (format === 'long') {
+    csv = 'participant,day,response,timestamp\n';
+    state.participants.forEach(p => {
+      for (let d = 1; d <= DAYS; d++) {
+        const text = state.responses[p.id]?.['day' + d] || '';
+        const meta = state.responses[p.id]?.['_meta_day' + d];
+        const ts = meta?.savedAt || '';
+        csv += `"${escapeCsv(p.name)}","Day ${d}","${escapeCsv(text)}","${ts}"\n`;
+      }
+    });
+  } else if (format === 'wide') {
+    let header = 'participant';
+    for (let d = 1; d <= DAYS; d++) header += `,Day ${d}`;
+    csv = header + '\n';
+    state.participants.forEach(p => {
+      let row = `"${escapeCsv(p.name)}"`;
+      for (let d = 1; d <= DAYS; d++) {
+        const text = state.responses[p.id]?.['day' + d] || '';
+        row += `,"${escapeCsv(text)}"`;
+      }
+      csv += row + '\n';
+    });
+  }
+  downloadFile(csv, 'echoes_responses_' + format + '_' + dateStr() + '.csv', 'text/csv;charset=utf-8');
+  showToast('CSV 已导出');
+}
+
+function exportJSON() {
+  const data = {
+    exportedAt: new Date().toISOString(),
+    participants: state.participants,
+    responses: state.responses,
+  };
+  const json = JSON.stringify(data, null, 2);
+  downloadFile(json, 'echoes_backup_' + dateStr() + '.json', 'application/json');
+  showToast('JSON 备份已导出');
+}
+
+function importJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.participants || !data.responses) throw new Error('格式不正确');
+      if (!confirm('导入将覆盖当前所有数据，确认继续？')) return;
+      state.participants = data.participants;
+      state.responses = data.responses;
+      saveState();
+      renderDayTabs();
+      renderParticipants();
+      renderResponses();
+      renderMatrix();
+      showToast('导入成功');
+    } catch (err) {
+      showToast('导入失败：' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// ---- Helpers ----
+function escapeHtml(s) {
+  const div = document.createElement('div');
+  div.textContent = s || '';
+  return div.innerHTML;
+}
+function escapeCsv(s) {
+  if (!s) return '';
+  return s.replace(/"/g, '""').replace(/\r?\n/g, ' ');
+}
+function downloadFile(content, filename, mime) {
+  const blob = new Blob(['\ufeff' + content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+function dateStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.remove('hidden');
+  setTimeout(() => t.classList.add('hidden'), 2500);
+}
+function showHelp() { document.getElementById('helpModal').classList.remove('hidden'); }
+function hideHelp() { document.getElementById('helpModal').classList.add('hidden'); }
+
+// ---- Boot ----
+init();
+</script>
+</body>
+</html>
