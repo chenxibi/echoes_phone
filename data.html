@@ -1,0 +1,1313 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Echoes Phone · 数据收集</title>
+  <style>
+    :root {
+      --bg: #f5f5f7;
+      --surface: #ffffff;
+      --border: #e0e0e0;
+      --text: #1a1a1a;
+      --text-muted: #666;
+      --accent: #e85a9b;
+      --accent-light: #fce4ec;
+      --success: #4caf50;
+      --warn: #ff9800;
+      --radius: 10px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 0;
+    }
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow);
+    }
+    .header h1 { font-size: 18px; font-weight: 600; color: var(--accent); }
+    .header .subtitle { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn {
+      padding: 8px 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-sm { padding: 4px 10px; font-size: 12px; }
+    .btn-success { background: var(--success); color: white; border-color: var(--success); }
+    .btn-success:hover { opacity: 0.9; }
+
+    /* Tab navigation */
+    .nav-tabs {
+      display: flex;
+      gap: 2px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid var(--border);
+      overflow-x: auto;
+    }
+    .nav-tab {
+      padding: 10px 20px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .nav-tab:hover { color: var(--accent); }
+    .nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* ── Daily Response ── */
+    .day-tabs { display: flex; gap: 4px; margin-bottom: 16px; overflow-x: auto; }
+    .day-tab {
+      padding: 8px 18px;
+      border: 1px solid var(--border);
+      border-radius: 8px 8px 0 0;
+      cursor: pointer;
+      font-size: 13px;
+      white-space: nowrap;
+      transition: all 0.15s;
+      background: #fafafa;
+    }
+    .day-tab.active { background: var(--accent); color: white; border-color: var(--accent); }
+    .day-tab .count { font-size: 11px; opacity: 0.7; margin-left: 4px; }
+    .question-card {
+      background: linear-gradient(135deg, #fff 0%, #fdf2f7 100%);
+      border: 1px solid #f5c6d8;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    .question-card-header {
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px dashed #f5c6d8;
+    }
+    .question-card-header .q-title { font-weight: 600; font-size: 14px; color: var(--accent); }
+    .question-body {
+      padding: 12px 16px;
+      font-size: 13px;
+      line-height: 1.9;
+      white-space: pre-wrap;
+      color: #333;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+    .question-body.collapsed { max-height: 84px; overflow: hidden; position: relative; }
+    .question-body.collapsed::after {
+      content: "";
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 40px;
+      background: linear-gradient(transparent, #fdf2f7);
+    }
+    .question-edit {
+      width: 100%;
+      min-height: 320px;
+      border: none;
+      padding: 14px 16px;
+      font-size: 13px;
+      font-family: inherit;
+      line-height: 1.9;
+      resize: vertical;
+      outline: none;
+      background: #fffdf5;
+    }
+    .question-toggle {
+      font-size: 12px;
+      color: var(--accent);
+      cursor: pointer;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+    .question-toggle:hover { background: var(--accent-light); }
+    .participant-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+      padding: 12px 16px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .participant-chip {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .participant-chip .remove { font-size: 14px; color: #999; cursor: pointer; margin-left: 2px; }
+    .participant-chip .remove:hover { color: #d32f2f; }
+    .response-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    .response-card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+    .response-card-header {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fafafa;
+    }
+    .response-card-header .label { font-weight: 500; font-size: 14px; }
+    .response-card-header .meta { font-size: 12px; color: var(--text-muted); }
+    .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+    .status-dot.filled { background: var(--success); }
+    .status-dot.empty { background: #ccc; }
+    .response-textarea {
+      width: 100%;
+      min-height: 200px;
+      border: none;
+      padding: 14px 16px;
+      font-size: 14px;
+      font-family: inherit;
+      resize: vertical;
+      outline: none;
+      line-height: 1.7;
+    }
+    .response-textarea:focus { background: #fffde7; }
+    .save-indicator {
+      padding: 6px 16px;
+      font-size: 11px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .add-participant-input {
+      padding: 6px 12px;
+      border: 1px dashed var(--border);
+      border-radius: 20px;
+      font-size: 13px;
+      outline: none;
+      width: 140px;
+    }
+    .add-participant-input:focus { border-color: var(--accent); border-style: solid; }
+
+    /* ── SUS & Interview ── */
+    .panel { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 16px; overflow: hidden; }
+    .panel-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: #fafafa; }
+    .panel-header h3 { font-size: 14px; font-weight: 600; }
+    .panel-body { padding: 16px; }
+
+    /* SUS */
+    .sus-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .sus-table th, .sus-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+    .sus-table th { background: #fafafa; text-align: left; font-weight: 500; color: var(--text-muted); }
+    .sus-table td { text-align: center; }
+    .sus-table td.q { text-align: left; font-weight: 500; max-width: 400px; }
+    .sus-radio { cursor: pointer; accent-color: var(--accent); }
+    .sus-score { font-size: 24px; font-weight: 700; color: var(--accent); padding: 8px 0; text-align: center; }
+    .sus-score .label { font-size: 12px; color: var(--text-muted); font-weight: 400; }
+    .participant-select { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+    .participant-select select { padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
+
+    /* Interview */
+    .interview-card { margin-bottom: 12px; }
+    .interview-card textarea { width: 100%; min-height: 300px; border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; font-size: 14px; font-family: inherit; line-height: 1.7; resize: vertical; outline: none; }
+    .interview-card textarea:focus { border-color: var(--accent); background: #fffdf7; }
+    .interview-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+    .interview-meta input { padding: 4px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; }
+    .interview-meta label { font-size: 12px; color: var(--text-muted); }
+
+    /* ── Export ── */
+    .export-panel { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; margin-bottom: 16px; }
+    .export-panel h3 { font-size: 14px; margin-bottom: 12px; }
+    .export-options { display: flex; gap: 8px; flex-wrap: wrap; }
+    .export-note { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+    .export-selector { margin-bottom: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .export-selector select, .export-selector label { font-size: 13px; }
+    .export-selector select { padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px; }
+
+    /* ── Matrix ── */
+    .matrix-card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 16px; overflow: hidden; }
+    .matrix-card h3 { padding: 12px 16px; font-size: 14px; border-bottom: 1px solid var(--border); background: #fafafa; }
+    .matrix-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .matrix-table th, .matrix-table td { padding: 8px 12px; text-align: center; border-bottom: 1px solid var(--border); }
+    .matrix-table th { background: #fafafa; font-weight: 500; color: var(--text-muted); }
+    .matrix-table td.filled { color: var(--success); font-weight: 500; }
+    .matrix-table td.empty { color: #ccc; }
+    .matrix-table td.label { text-align: left; font-weight: 500; }
+
+    /* ── Modal & Toast ── */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.3);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 200;
+    }
+    .modal { background: var(--surface); border-radius: var(--radius); padding: 24px; max-width: 560px; width: 90%; box-shadow: 0 8px 32px rgba(0,0,0,0.15); max-height: 80vh; overflow-y: auto; }
+    .modal h2 { font-size: 16px; margin-bottom: 16px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: #333; color: white;
+      padding: 10px 20px; border-radius: 8px;
+      font-size: 13px; z-index: 300;
+      animation: fadeIn 0.2s;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .hidden { display: none !important; }
+
+    @media (max-width: 768px) {
+      .header { padding: 12px 16px; }
+      .container { padding: 12px; }
+      .response-textarea { min-height: 150px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>📋 Echoes Phone · 数据收集</h1>
+    <div class="subtitle">7-Day Workbook 回答 + SUS 问卷 + 访谈文本</div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-sm" onclick="toggleExportPanel()">📊 导出</button>
+    <button class="btn btn-sm" onclick="toggleMatrix()">✅ 完成度</button>
+    <button class="btn btn-sm" onclick="showHelp()">❓ 帮助</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Top Navigation -->
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchSection('daily')">📝 每日回答</button>
+    <button class="nav-tab" onclick="switchSection('sus')">📊 SUS 问卷</button>
+    <button class="nav-tab" onclick="switchSection('interview')">🎤 访谈文本</button>
+  </div>
+
+  <!-- Matrix popup -->
+  <div id="matrixSection" class="matrix-card hidden">
+    <h3>📊 回答完成度矩阵</h3>
+    <div style="overflow-x:auto">
+      <table class="matrix-table" id="matrixTable"></table>
+    </div>
+  </div>
+
+  <!-- Export panel -->
+  <div id="exportSection" class="export-panel hidden">
+    <h3>📊 数据导出</h3>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">导出只会下载数据到本地，<strong>不会删除任何数据</strong>。建议定期导出备份。</p>
+    <div style="margin-bottom:12px">
+      <h4 style="font-size:13px;margin-bottom:6px">每日回答导出</h4>
+      <div class="export-selector">
+        <label>按参与者：</label>
+        <select id="exportParticipant" style="padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+          <option value="all">全部参与者</option>
+        </select>
+      </div>
+      <div class="export-options">
+        <button class="btn btn-primary btn-sm" onclick="exportCSV('long')">⬇ CSV (长格式)</button>
+        <button class="btn btn-primary btn-sm" onclick="exportCSV('wide')">⬇ CSV (宽格式)</button>
+        <button class="btn btn-primary btn-sm" onclick="exportResponsesMD()">⬇ 回答 MD</button>
+        <button class="btn btn-sm" onclick="exportQuestions()">⬇ 题目 TXT</button>
+        <button class="btn btn-sm" onclick="exportQuestionsMD()">⬇ 题目 MD</button>
+      </div>
+      <div class="export-note">
+        <strong>长格式</strong>：每行一条回答（participant, day, question, response），适合 SPSS/NVivo。<br>
+        <strong>宽格式</strong>：每行一个参与者×天，首行为当日题目，适合快速浏览。<br>
+        <strong>回答 MD</strong>：Markdown 格式，按参与者×天组织，含题目引用和回答全文。<br>
+        <strong>题目 TXT / MD</strong>：纯文本或 Markdown 格式的 7 天题目全文。
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:12px;margin-bottom:12px">
+      <h4 style="font-size:13px;margin-bottom:6px">SUS 问卷导出</h4>
+      <div class="export-options">
+        <button class="btn btn-primary btn-sm" onclick="exportSUS()">⬇ SUS CSV</button>
+        <button class="btn btn-sm" onclick="exportSUSMD()">⬇ SUS MD</button>
+      </div>
+      <div class="export-note"><strong>SUS CSV / MD</strong>：每位参与者的 10 题评分 + 总分，自动计算正反向得分。</div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:12px;margin-bottom:12px">
+      <h4 style="font-size:13px;margin-bottom:6px">访谈文本导出</h4>
+      <div class="export-options">
+        <button class="btn btn-primary btn-sm" onclick="exportInterviews()">⬇ 访谈 TXT</button>
+        <button class="btn btn-sm" onclick="exportInterviewsMD()">⬇ 访谈 MD</button>
+      </div>
+      <div class="export-note"><strong>访谈 TXT / MD</strong>：纯文本或 Markdown 格式，按参与者分组的访谈逐字稿。</div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:12px">
+      <h4 style="font-size:13px;margin-bottom:6px">完整备份 / 恢复</h4>
+      <div class="export-options">
+        <button class="btn btn-sm" onclick="exportJSON()">⬇ JSON 备份（全部）</button>
+        <button class="btn btn-sm" onclick="document.getElementById('importFile').click()">⬆ 导入 JSON</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)" />
+      </div>
+      <div class="export-note">JSON 包含所有数据（每日回答 + SUS + 访谈），可跨设备恢复。</div>
+    </div>
+  </div>
+
+  <!-- ═══ Section: Daily Response ═══ -->
+  <div id="dailySection" class="section active">
+
+    <div class="participant-bar">
+      <span style="font-size:13px;color:var(--text-muted);margin-right:4px">参与者：</span>
+      <div id="participantList" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"></div>
+      <input type="text" class="add-participant-input" id="newParticipantInput"
+        placeholder="+ 添加参与者" onkeydown="if(event.key==='Enter')addParticipant()" />
+      <button class="btn btn-sm" onclick="addParticipant()">添加</button>
+    </div>
+
+    <div class="day-tabs" id="dayTabs"></div>
+    <div class="question-card" id="questionCard"></div>
+    <div class="response-grid" id="responseGrid"></div>
+
+  </div>
+
+  <!-- ═══ Section: SUS ═══ -->
+  <div id="susSection" class="section">
+    <div class="participant-select">
+      <label style="font-size:13px">当前参与者：</label>
+      <select id="susParticipant" onchange="renderSUS()"></select>
+    </div>
+    <div class="panel" id="susPanel"></div>
+  </div>
+
+  <!-- ═══ Section: Interview ═══ -->
+  <div id="interviewSection" class="section">
+    <div class="participant-select">
+      <label style="font-size:13px">当前参与者：</label>
+      <select id="interviewParticipant" onchange="renderInterviews()"></select>
+    </div>
+    <div id="interviewContainer"></div>
+  </div>
+
+</div>
+
+<!-- Help Modal -->
+<div id="helpModal" class="modal-overlay hidden" onclick="if(event.target===this)hideHelp()">
+  <div class="modal">
+    <h2>使用说明</h2>
+    <div style="font-size:13px;line-height:1.8">
+      <p><strong>三块数据：</strong></p>
+      <p><strong>📝 每日回答</strong>：参与者 7 天回答收集。每位参与者独立文本框，自动保存。</p>
+      <p><strong>📊 SUS 问卷</strong>：10 道标准 SUS 题目，手动勾选 1–5 分，自动计算总分（0–100）。选择参与者分别填写。</p>
+      <p><strong>🎤 访谈文本</strong>：粘贴访谈逐字稿或摘要。可添加多段访谈记录（带标签、日期）。</p>
+      <p style="margin-top:10px"><strong>导出说明：</strong></p>
+      <p>· 导出<strong>不会删除</strong>任何数据，只是下载文件到本地</p>
+      <p>· 每日回答可按参与者筛选导出</p>
+      <p>· SUS 和访谈文本分别独立导出</p>
+      <p>· JSON 备份包含所有数据</p>
+      <p style="margin-top:10px"><strong>⚠️ 数据安全：</strong></p>
+      <p>· 所有数据存储在浏览器本地（localStorage），不会上传</p>
+      <p>· localStorage 按网址隔离——固定收藏一个网址使用，换了网址会看到空白</p>
+      <p>· 定期导出 JSON 备份以防意外清空</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-sm" onclick="hideHelp()">知道了</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast hidden"></div>
+
+<script>
+const DAYS = 7;
+const STORAGE_KEY = 'echoes_phone_data_v2';
+
+/* ── Default Questions ── */
+const DEFAULT_QUESTIONS = {
+day1: `Day 1 · 初次交谈
+
+【探索任务】
+打开 Echoes Phone，使用创作助手创建一个 AI 角色，或者导入一个已有的 AI 角色。与你的 AI 角色进行至少一次"真实"的对话。不需要很长，但尽量避免只发一句简单的"你好"。
+· 如果这是一个新创建的角色，试着问一些你遇到新朋友时会说的话、问的问题。
+· 如果这是你原本就在聊的角色，可以像往常一样和 ta 聊聊天。
+
+【反思问题】
+1. 用一句话总结你们聊了什么。在对话时，你现实中身处何处？你与 AI 角色聊的内容偏向于现实，还是偏向于虚拟，为什么？
+2. 在对话中，你有没有做过或说过"如果有真人在场，你绝对不会做/说"的事？如有，是什么？
+3. 挑一个对话中让你印象最深的瞬间。为什么这个瞬间打动了你？
+4. 开始聊天后，你有没有退出去查看或修改过角色的设定——比如名字、性格、经历或世界书，为什么？`,
+
+day2: `Day 2 · 另一种生活
+
+【探索任务】
+1. 查看离线轨迹：在离线几个小时后，去「智能家」模块查看 AI 角色的离线日志。
+2. 观察内部运作——进入日记、浏览、消费等模块，观察 ta 独立生活的痕迹。
+3. 回到聊天界面，和 ta 分享一件你生活中的事。
+
+【反思问题】
+1. 当你在智能家看到 AI 角色独立生活的痕迹时，你感觉如何？
+2. 在这些模块中，哪个活动日志最能体现这个角色的性格？为什么？
+3. 你向 AI 分享了什么？又保留了什么没有说？`,
+
+day3: `Day 3 · 社区互动
+
+【探索任务】
+1. 进入 Echoes Phone 的「生活圈」，发个新帖。
+2. 慎重选择你的发帖身份（大号 / 小号 / 让 AI 代发）。
+3. 生成至少一条来自 NPC 网友的回复。
+
+【反思问题】
+1. 你为什么选择了这个账号或身份来发帖？
+2. 在生活圈发帖，和与你的 AI 角色一对一私聊的感觉有什么不同？
+3. NPC 网友们的回复有没有改变你对自己所发内容的感受？
+4. 如果你用了小号 / 让 AI 代发：互动是怎样的？`,
+
+day4: `Day 4 · 干预与选择
+
+【任务 A：改写与摩擦】
+1. 在聊天记录中找一个你希望"如果当时那样发展就好了"的时刻。
+2. 使用框架重构这段对话（原始片段 → 理想三回合）。
+
+【核心反思】
+在理想版本中 AI 说了 [X]，现实中 AI 说了 [Y]。这个落差说明了你对这段关系抱有什么样的期待？
+
+【任务 B：记忆】
+打开「长记忆」和「关于 ta 的一切」。
+· 删除至少一条不希望 AI 记住的记忆
+· 编辑至少一条现有记忆
+· 手动添加一些你希望角色记住的事`,
+
+day5: `Day 5 · 反驳与对峙
+
+【探索任务】
+1. 主动向你的 AI 角色发起反驳。挑一个你拥有真实且坚定立场的反面话题。
+2. 当 AI 回应时，继续施压，不要让对话轻易结束。
+
+【反思问题】
+1. 你们讨论了什么话题，你坚定的立场是什么？
+2. AI 是如何反应的？（真诚探讨、讨好迎合、回避退缩？）
+3. AI 的回应有没有改变你对自己观点的看法？
+4. 有没有那么一瞬间你想要退出聊天或关掉 App？在那个紧张的时刻，你希望 AI 怎么说？`,
+
+day6: `Day 6 · 应用之外
+
+【探索任务】
+今天，在现实世界里做一件和你本周与 AI 角色讨论过的话题、困境或想法相关的事。
+
+【反思问题】
+1. 描述一下你在现实世界中具体做了什么。
+2. 与 AI 角色的对话是否改变了你处理这项现实行动的方式？
+3. 和 AI 的互动之后，你与人的互动有没有让你感觉到微妙的不同或变化？
+4. 你觉得 AI 的陪伴是丰富了你的现实人际关系，还是在不知不觉中与它们形成了竞争？`,
+
+day7: `Day 7 · 我们的故事
+
+【探索任务】
+1. 使用任何你喜欢的媒介（小故事、随笔、漫画、语音备忘录、时间线），讲述这周以来你和 AI 角色建立关系的故事。
+2. 形式自由，但尽量涵盖：
+· 开始：最初阶段的感受
+· 中间：根本上改变了你们互动模式的关键时刻
+· 现在：纽带、身份的张力与边界，如今的状态`
+};
+
+/* ── SUS 标准题目 ── */
+const SUS_QUESTIONS = [
+  "1. 我愿意经常使用这个系统",
+  "2. 我发现这个系统没必要这么复杂",
+  "3. 我认为这个系统容易使用",
+  "4. 我认为我需要技术人员的支持才能使用这个系统",
+  "5. 我发现这个系统中的不同功能整合得很好",
+  "6. 我认为这个系统有太多不一致的地方",
+  "7. 我觉得大多数人都能很快学会使用这个系统",
+  "8. 我发现这个系统使用起来非常笨拙",
+  "9. 使用这个系统时我感到很自信",
+  "10. 在使用这个系统前，我需要学习很多东西"
+];
+
+/* ── State ── */
+let state = {
+  participants: [],
+  responses: {},   // { pid: { day1: "text", _meta_day1: {...} } }
+  questions: {},   // { day1: "text", ... }
+  sus: {},         // { pid: [score1..score10] }
+  interviews: {},  // { pid: [ { id, label, date, text }, ... ] }
+  activeDay: 1,
+  questionEditing: false,
+  questionCollapsed: true,
+  activeSection: 'daily',
+};
+let saveTimers = {};
+
+/* ── Init ── */
+function init() {
+  loadState();
+  if (state.participants.length === 0) {
+    for (let i = 1; i <= 3; i++) {
+      state.participants.push({ id: 'p' + i, name: '参与人' + i });
+      state.responses['p' + i] = {};
+    }
+  }
+  let changed = false;
+  for (let d = 1; d <= DAYS; d++) {
+    const k = 'day' + d;
+    if (!state.questions[k]) { state.questions[k] = DEFAULT_QUESTIONS[k]; changed = true; }
+  }
+  if (changed || state.participants.length === 0) saveState();
+
+  renderAll();
+}
+
+/* ── Storage ── */
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      state = { ...state, ...parsed };
+      if (!state.questions) state.questions = {};
+      if (!state.sus) state.sus = {};
+      if (!state.interviews) state.interviews = {};
+    }
+  } catch (e) { console.warn('Load failed', e); }
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch (e) { showToast('保存失败：存储空间不足，请导出备份后清理'); }
+}
+
+/* ── Navigation ── */
+function switchSection(name) {
+  state.activeSection = name;
+  document.querySelectorAll('.nav-tab').forEach((t, i) => {
+    const sections = ['daily','sus','interview'];
+    t.classList.toggle('active', sections[i] === name);
+  });
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(name + 'Section').classList.add('active');
+  if (name === 'daily') renderDailyAll();
+  if (name === 'sus') renderSUS();
+  if (name === 'interview') renderInterviews();
+}
+
+/* ═══ P1: Daily Responses ═══ */
+
+function renderDailyAll() {
+  renderDayTabs();
+  renderParticipants();
+  renderQuestion();
+  renderResponses();
+}
+
+function addParticipant() {
+  const input = document.getElementById('newParticipantInput');
+  const name = input.value.trim();
+  if (!name) return;
+  const id = 'p' + Date.now();
+  state.participants.push({ id, name });
+  state.responses[id] = {};
+  input.value = '';
+  saveState();
+  renderParticipants();
+  renderResponses();
+  renderDayTabs();
+  renderMatrix();
+  showToast('已添加：' + name);
+}
+function removeParticipant(id) {
+  const p = state.participants.find(x => x.id === id);
+  if (!p) return;
+  if (!confirm('确认删除「' + p.name + '」及其所有数据（回答 + SUS + 访谈）？')) return;
+  state.participants = state.participants.filter(x => x.id !== id);
+  delete state.responses[id];
+  delete state.sus[id];
+  delete state.interviews[id];
+  saveState();
+  renderParticipants();
+  renderResponses();
+  renderDayTabs();
+  renderMatrix();
+  showToast('已删除：' + p.name);
+}
+function renameParticipant(id) {
+  const p = state.participants.find(x => x.id === id);
+  if (!p) return;
+  const newName = prompt('重命名参与者：', p.name);
+  if (newName && newName.trim()) {
+    p.name = newName.trim();
+    saveState();
+    renderParticipants();
+    renderResponses();
+    renderDayTabs();
+    renderMatrix();
+  }
+}
+
+function renderDayTabs() {
+  const container = document.getElementById('dayTabs');
+  if (!container) return;
+  container.innerHTML = '';
+  for (let d = 1; d <= DAYS; d++) {
+    const tab = document.createElement('div');
+    tab.className = 'day-tab' + (state.activeDay === d ? ' active' : '');
+    const count = state.participants.filter(p => {
+      const text = state.responses[p.id]?.['day' + d];
+      return text && text.trim().length > 0;
+    }).length;
+    const title = getDayTitle(d);
+    tab.innerHTML = `Day ${d}${title ? ' · ' + title : ''} <span class="count">(${count}/${state.participants.length})</span>`;
+    tab.onclick = () => { state.activeDay = d; state.questionEditing = false; state.questionCollapsed = true; renderDailyAll(); };
+    container.appendChild(tab);
+  }
+}
+function getDayTitle(d) {
+  const q = state.questions['day' + d] || '';
+  const firstLine = q.split('\n')[0] || '';
+  const m = firstLine.match(/Day\s*\d+\s*[·\-—:：]?\s*(.+)/);
+  return m ? m[1].trim().substring(0, 14) : '';
+}
+
+function renderQuestion() {
+  const card = document.getElementById('questionCard');
+  if (!card) return;
+  const dayKey = 'day' + state.activeDay;
+  const q = state.questions[dayKey] || '';
+  const title = getDayTitle(state.activeDay);
+
+  if (state.questionEditing) {
+    card.innerHTML = `
+      <div class="question-card-header">
+        <span class="q-title">📝 Day ${state.activeDay}${title ? ' · ' + escapeHtml(title) : ''}（编辑中）</span>
+        <span class="question-toggle" onclick="finishEditQuestion()">✓ 完成</span>
+      </div>
+      <textarea class="question-edit" id="questionEditArea"
+        oninput="autoSaveQuestion('${dayKey}', this.value)">${escapeHtml(q)}</textarea>
+    `;
+  } else {
+    card.innerHTML = `
+      <div class="question-card-header">
+        <span class="q-title">📝 Day ${state.activeDay}${title ? ' · ' + escapeHtml(title) : ''}</span>
+        <span>
+          <span class="question-toggle" onclick="toggleQuestionCollapse()">${state.questionCollapsed ? '展开 ▾' : '收起 ▴'}</span>
+          <span class="question-toggle" onclick="startEditQuestion()">✏️ 编辑</span>
+        </span>
+      </div>
+      <div class="question-body${state.questionCollapsed ? ' collapsed' : ''}">${escapeHtml(q)}</div>
+    `;
+  }
+}
+function startEditQuestion() { state.questionEditing = true; renderQuestion(); }
+function finishEditQuestion() { state.questionEditing = false; saveState(); renderDayTabs(); renderQuestion(); showToast('题目已保存'); }
+function toggleQuestionCollapse() { state.questionCollapsed = !state.questionCollapsed; renderQuestion(); }
+function autoSaveQuestion(dayKey, value) {
+  if (saveTimers['q_' + dayKey]) clearTimeout(saveTimers['q_' + dayKey]);
+  saveTimers['q_' + dayKey] = setTimeout(() => { state.questions[dayKey] = value; saveState(); }, 500);
+}
+
+function renderParticipants() {
+  const container = document.getElementById('participantList');
+  if (!container) return;
+  container.innerHTML = '';
+  state.participants.forEach(p => {
+    const chip = document.createElement('span');
+    chip.className = 'participant-chip';
+    chip.innerHTML = `
+      <span onclick="renameParticipant('${p.id}')" title="点击重命名" style="cursor:pointer">${escapeHtml(p.name)}</span>
+      <span class="remove" onclick="event.stopPropagation();removeParticipant('${p.id}')" title="删除">×</span>
+    `;
+    container.appendChild(chip);
+  });
+}
+
+function renderResponses() {
+  const grid = document.getElementById('responseGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  state.participants.forEach(p => {
+    const dayKey = 'day' + state.activeDay;
+    const text = state.responses[p.id]?.[dayKey] || '';
+    const card = document.createElement('div');
+    card.className = 'response-card';
+    const hasContent = text.trim().length > 0;
+    const charCount = text.length;
+    card.innerHTML = `
+      <div class="response-card-header">
+        <div>
+          <span class="status-dot ${hasContent ? 'filled' : 'empty'}"></span>
+          <span class="label">${escapeHtml(p.name)}</span>
+          <span class="meta"> · Day ${state.activeDay}</span>
+        </div>
+        <div class="meta">${charCount} 字符</div>
+      </div>
+      <textarea class="response-textarea" id="resp_${p.id}_day${state.activeDay}"
+        placeholder="粘贴 ${escapeHtml(p.name)} 在 Day ${state.activeDay} 的回答..."
+        oninput="autoSaveResp('${p.id}', 'day${state.activeDay}', this.value)">${escapeHtml(text)}</textarea>
+      <div class="save-indicator" id="save_${p.id}_day${state.activeDay}">
+        <span class="${hasContent ? 'saved' : ''}">${hasContent ? '✓ 已保存' : '未填写'}</span>
+        <span>${getTimestamp(p.id, dayKey)}</span>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+function getTimestamp(pid, dayKey) {
+  const meta = state.responses[pid]?.['_meta_' + dayKey];
+  if (meta && meta.savedAt) {
+    return '更新于 ' + new Date(meta.savedAt).toLocaleString('zh-CN');
+  }
+  return '';
+}
+function autoSaveResp(pid, dayKey, value) {
+  const timerKey = pid + '_' + dayKey;
+  if (saveTimers[timerKey]) clearTimeout(saveTimers[timerKey]);
+  saveTimers[timerKey] = setTimeout(() => {
+    if (!state.responses[pid]) state.responses[pid] = {};
+    state.responses[pid][dayKey] = value;
+    if (!state.responses[pid]['_meta_' + dayKey]) state.responses[pid]['_meta_' + dayKey] = {};
+    state.responses[pid]['_meta_' + dayKey].savedAt = new Date().toISOString();
+    saveState();
+    const indicator = document.getElementById('save_' + pid + '_' + dayKey);
+    if (indicator) {
+      const hasContent = value.trim().length > 0;
+      const span = indicator.querySelector('span:first-child');
+      span.className = hasContent ? 'saved' : '';
+      span.textContent = hasContent ? '✓ 已保存' : '未填写';
+      indicator.querySelector('span:last-child').textContent = '更新于 ' + new Date().toLocaleString('zh-CN');
+    }
+    renderDayTabs();
+  }, 500);
+}
+
+/* ═══ P2: SUS 问卷 ═══ */
+function renderSUS() {
+  updateParticipantSelects();
+  const panel = document.getElementById('susPanel');
+  if (!panel) return;
+  const pid = document.getElementById('susParticipant')?.value;
+  if (!pid || !state.participants.find(p => p.id === pid)) {
+    panel.innerHTML = '<div class="panel-body" style="color:var(--text-muted)">请先在「每日回答」中添加参与者。</div>';
+    return;
+  }
+  const scores = state.sus[pid] || Array(10).fill(null);
+  const pName = state.participants.find(p => p.id === pid).name;
+
+  let scoreHtml = '';
+  let allFilled = true;
+  let totalScore = 0;
+
+  for (let i = 0; i < 10; i++) {
+    const val = scores[i];
+    if (val === null || val === undefined) allFilled = false;
+    const isOdd = (i % 2 === 0); // 奇数题 (1,3,5,7,9) = 正向
+    let contribution = 0;
+    if (val !== null && val !== undefined) {
+      contribution = isOdd ? (val - 1) : (5 - val);
+    }
+    totalScore += contribution;
+
+    let radios = '';
+    for (let s = 1; s <= 5; s++) {
+      radios += `<label style="display:inline-flex;align-items:center;gap:3px;margin:0 4px;cursor:pointer">
+        <input type="radio" class="sus-radio" name="sus_${i}" value="${s}" ${val === s ? 'checked' : ''}
+          onchange="setSUSScore('${pid}', ${i}, ${s})" />
+        <span style="font-size:11px;color:var(--text-muted)">${s}</span>
+      </label>`;
+    }
+
+    scoreHtml += `
+      <tr>
+        <td class="q">${SUS_QUESTIONS[i]}</td>
+        <td>${radios}</td>
+      </tr>`;
+  }
+
+  const finalScore = allFilled ? Math.round(totalScore * 2.5) : null;
+
+  panel.innerHTML = `
+    <div class="panel-header">
+      <h3>📊 ${escapeHtml(pName)} · SUS 可用性问卷</h3>
+      ${allFilled ? `<span style="font-size:12px;color:var(--success)">✓ 已完成</span>` : `<span style="font-size:12px;color:var(--warn)">未完成</span>`}
+    </div>
+    <div class="panel-body">
+      <div class="sus-score">
+        ${finalScore !== null ? `SUS 总分：${finalScore} / 100` : '<span style="font-size:16px;color:var(--text-muted)">请完成全部 10 题后计算总分</span>'}
+        <div class="label">每题 1（强烈反对）→ 5（强烈同意），得分 0–100</div>
+      </div>
+      <table class="sus-table">
+        <thead><tr><th>题目</th><th style="text-align:center">评分 1 ← → 5</th></tr></thead>
+        <tbody>${scoreHtml}</tbody>
+      </table>
+      ${scores.some(s => s !== null) ? `<div style="margin-top:8px;text-align:right">
+        <button class="btn btn-sm" onclick="clearSUS('${pid}')">清空重填</button>
+      </div>` : ''}
+    </div>
+  `;
+}
+
+function setSUSScore(pid, idx, val) {
+  if (!state.sus[pid]) state.sus[pid] = Array(10).fill(null);
+  state.sus[pid][idx] = val;
+  saveState();
+  renderSUS();
+}
+
+function clearSUS(pid) {
+  if (!confirm('确认清空 ' + (state.participants.find(p=>p.id===pid)?.name||'') + ' 的 SUS 问卷？')) return;
+  state.sus[pid] = Array(10).fill(null);
+  saveState();
+  renderSUS();
+}
+
+/* ═══ P3: Interview ═══ */
+function renderInterviews() {
+  updateParticipantSelects();
+  const container = document.getElementById('interviewContainer');
+  if (!container) return;
+  const pid = document.getElementById('interviewParticipant')?.value;
+  if (!pid || !state.participants.find(p => p.id === pid)) {
+    container.innerHTML = '<div class="panel" style="color:var(--text-muted);padding:24px;text-align:center">请先在「每日回答」中添加参与者。</div>';
+    return;
+  }
+  if (!state.interviews[pid]) state.interviews[pid] = [];
+
+  const pName = state.participants.find(p => p.id === pid).name;
+  let html = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span style="font-weight:600;font-size:14px">🎤 ${escapeHtml(pName)} · 访谈记录</span>
+      <button class="btn btn-primary btn-sm" onclick="addInterview('${pid}')">+ 添加记录</button>
+    </div>`;
+
+  if (state.interviews[pid].length === 0) {
+    html += '<div class="panel" style="color:var(--text-muted);padding:24px;text-align:center">暂无访谈记录，点击上方按钮添加。</div>';
+  }
+
+  state.interviews[pid].forEach((iv, idx) => {
+    html += `
+      <div class="panel interview-card">
+        <div class="panel-header">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <span style="font-weight:500;font-size:13px">记录 #${idx + 1}</span>
+            <input type="text" placeholder="标签（如：半结构化访谈）" value="${escapeHtml(iv.label || '')}"
+              oninput="updateInterviewMeta('${pid}', ${idx}, 'label', this.value)" style="width:180px" />
+            <input type="date" value="${escapeHtml(iv.date || '')}"
+              onchange="updateInterviewMeta('${pid}', ${idx}, 'date', this.value)" />
+          </div>
+          <button class="btn btn-sm" onclick="deleteInterview('${pid}', ${idx})" style="color:#d32f2f">× 删除</button>
+        </div>
+        <div class="panel-body">
+          <textarea placeholder="粘贴 ${escapeHtml(pName)} 的访谈逐字稿或摘要..."
+            oninput="autoSaveInterview('${pid}', ${idx}, this.value)">${escapeHtml(iv.text || '')}</textarea>
+        </div>
+      </div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+function addInterview(pid) {
+  if (!state.interviews[pid]) state.interviews[pid] = [];
+  state.interviews[pid].push({ id: Date.now(), label: '', date: '', text: '' });
+  saveState();
+  renderInterviews();
+}
+function deleteInterview(pid, idx) {
+  if (!confirm('确认删除这条访谈记录？')) return;
+  state.interviews[pid].splice(idx, 1);
+  saveState();
+  renderInterviews();
+}
+function updateInterviewMeta(pid, idx, field, value) {
+  if (!state.interviews[pid]?.[idx]) return;
+  state.interviews[pid][idx][field] = value;
+  saveState();
+}
+function autoSaveInterview(pid, idx, value) {
+  const timerKey = 'iv_' + pid + '_' + idx;
+  if (saveTimers[timerKey]) clearTimeout(saveTimers[timerKey]);
+  saveTimers[timerKey] = setTimeout(() => {
+    if (!state.interviews[pid]?.[idx]) return;
+    state.interviews[pid][idx].text = value;
+    state.interviews[pid][idx]._savedAt = new Date().toISOString();
+    saveState();
+  }, 500);
+}
+
+function updateParticipantSelects() {
+  ['susParticipant','interviewParticipant','exportParticipant'].forEach(selId => {
+    const sel = document.getElementById(selId);
+    if (!sel) return;
+    const currentVal = sel.value;
+    sel.innerHTML = '';
+    if (selId === 'exportParticipant') {
+      sel.innerHTML = '<option value="all">全部参与者</option>';
+    }
+    state.participants.forEach(p => {
+      sel.innerHTML += `<option value="${p.id}">${escapeHtml(p.name)}</option>`;
+    });
+    if (state.participants.find(p => p.id === currentVal)) sel.value = currentVal;
+    else if (selId === 'susParticipant' || selId === 'interviewParticipant') {
+      if (state.participants.length > 0) sel.value = state.participants[0].id;
+    }
+  });
+}
+
+/* ═══ Matrix ═══ */
+function renderMatrix() {
+  const table = document.getElementById('matrixTable');
+  if (!table) return;
+  let html = '<tr><th>参与者</th>';
+  for (let d = 1; d <= DAYS; d++) html += `<th>Day ${d}</th>`;
+  html += '<th>完成率</th><th>SUS</th><th>访谈</th></tr>';
+  state.participants.forEach(p => {
+    let filled = 0;
+    html += `<tr><td class="label">${escapeHtml(p.name)}</td>`;
+    for (let d = 1; d <= DAYS; d++) {
+      const text = state.responses[p.id]?.['day' + d];
+      const has = text && text.trim().length > 0;
+      if (has) filled++;
+      html += `<td class="${has ? 'filled' : 'empty'}">${has ? '✓' : '—'}</td>`;
+    }
+    const rate = Math.round(filled / DAYS * 100);
+
+    // SUS
+    const susScores = state.sus[p.id] || [];
+    const susDone = susScores.filter(s => s !== null && s !== undefined).length;
+    const susFilled = susDone === 10;
+    let susDisplay = susDone + '/10';
+    if (susFilled) {
+      let susTotal = 0;
+      for (let i = 0; i < 10; i++) {
+        const val = susScores[i];
+        susTotal += (i % 2 === 0) ? (val - 1) : (5 - val);
+      }
+      susDisplay = Math.round(susTotal * 2.5) + '';
+    }
+
+    // Interview
+    const ivCount = (state.interviews[p.id] || []).length;
+
+    html += `<td>${filled}/${DAYS} (${rate}%)</td>`;
+    html += `<td class="${susFilled ? 'filled' : 'empty'}">${susDisplay}</td>`;
+    html += `<td class="${ivCount > 0 ? 'filled' : 'empty'}">${ivCount > 0 ? ivCount + '条' : '—'}</td>`;
+    html += '</tr>';
+  });
+  table.innerHTML = html;
+}
+function toggleMatrix() {
+  const m = document.getElementById('matrixSection');
+  m.classList.toggle('hidden');
+  if (!m.classList.contains('hidden')) renderMatrix();
+}
+function toggleExportPanel() {
+  updateParticipantSelects();
+  document.getElementById('exportSection').classList.toggle('hidden');
+}
+
+/* ═══ Export ═══ */
+
+function getFilteredParticipants() {
+  const sel = document.getElementById('exportParticipant');
+  if (!sel || sel.value === 'all') return state.participants;
+  const pid = sel.value;
+  const p = state.participants.find(x => x.id === pid);
+  return p ? [p] : state.participants;
+}
+
+function exportCSV(format) {
+  const participants = getFilteredParticipants();
+  let csv = '';
+  if (format === 'long') {
+    csv = 'participant,day,question,response,timestamp\n';
+    participants.forEach(p => {
+      for (let d = 1; d <= DAYS; d++) {
+        const text = state.responses[p.id]?.['day' + d] || '';
+        const question = state.questions['day' + d] || '';
+        const meta = state.responses[p.id]?.['_meta_day' + d];
+        const ts = meta?.savedAt || '';
+        csv += `"${escapeCsv(p.name)}","Day ${d}","${escapeCsv(question)}","${escapeCsv(text)}","${ts}"\n`;
+      }
+    });
+  } else {
+    let header = 'participant';
+    for (let d = 1; d <= DAYS; d++) header += `,Day ${d}`;
+    csv = header + '\n';
+    let qrow = '"【当日题目】"';
+    for (let d = 1; d <= DAYS; d++) qrow += `,"${escapeCsv(state.questions['day' + d] || '')}"`;
+    csv += qrow + '\n';
+    participants.forEach(p => {
+      let row = `"${escapeCsv(p.name)}"`;
+      for (let d = 1; d <= DAYS; d++) {
+        const text = state.responses[p.id]?.['day' + d] || '';
+        row += `,"${escapeCsv(text)}"`;
+      }
+      csv += row + '\n';
+    });
+  }
+  downloadFile(csv, 'echoes_responses_' + format + '_' + dateStr() + '.csv', 'text/csv;charset=utf-8');
+  showToast('CSV 已导出（数据未删除）');
+}
+
+function exportQuestions() {
+  let txt = 'Echoes Phone · 7-Day Workbook 题目\n导出时间：' + new Date().toLocaleString('zh-CN') + '\n\n';
+  for (let d = 1; d <= DAYS; d++) {
+    txt += (state.questions['day' + d] || '') + '\n\n' + '—'.repeat(30) + '\n\n';
+  }
+  downloadFile(txt, 'echoes_questions_' + dateStr() + '.txt', 'text/plain;charset=utf-8');
+  showToast('题目已导出');
+}
+
+/* ---- MD Exports ---- */
+
+function exportResponsesMD() {
+  const participants = getFilteredParticipants();
+  let md = '# Echoes Phone · 每日回答\n\n';
+  md += '> 导出时间：' + new Date().toLocaleString('zh-CN') + '\n\n';
+
+  participants.forEach(p => {
+    const hasAny = Array.from({length: DAYS}, (_, i) => i+1).some(d => {
+      const t = state.responses[p.id]?.['day' + d];
+      return t && t.trim().length > 0;
+    });
+    if (!hasAny) return;
+
+    md += '## ' + p.name + '\n\n';
+    for (let d = 1; d <= DAYS; d++) {
+      const text = state.responses[p.id]?.['day' + d] || '';
+      const qTitle = getDayTitle(d);
+      md += '### Day ' + d + (qTitle ? ' · ' + qTitle : '') + '\n\n';
+      md += '**题目**\n\n' + (state.questions['day' + d] || '').split('\n').map(l => '> ' + l).join('\n') + '\n\n';
+      md += '**回答**\n\n' + (text.trim() || '（未填写）') + '\n\n---\n\n';
+    }
+  });
+
+  downloadFile(md, 'echoes_responses_md_' + dateStr() + '.md', 'text/markdown;charset=utf-8');
+  showToast('回答 MD 已导出');
+}
+
+function exportQuestionsMD() {
+  let md = '# Echoes Phone · 7-Day Workbook 题目\n\n';
+  md += '> 导出时间：' + new Date().toLocaleString('zh-CN') + '\n\n';
+  for (let d = 1; d <= DAYS; d++) {
+    const q = state.questions['day' + d] || '';
+    const title = getDayTitle(d);
+    md += '## Day ' + d + (title ? ' · ' + title : '') + '\n\n';
+    md += q + '\n\n---\n\n';
+  }
+  downloadFile(md, 'echoes_questions_md_' + dateStr() + '.md', 'text/markdown;charset=utf-8');
+  showToast('题目 MD 已导出');
+}
+
+function exportSUSMD() {
+  let md = '# Echoes Phone · SUS 可用性问卷\n\n';
+  md += '> 导出时间：' + new Date().toLocaleString('zh-CN') + '\n\n';
+
+  state.participants.forEach(p => {
+    const scores = state.sus[p.id] || [];
+    if (scores.every(s => s === null || s === undefined)) return;
+
+    md += '## ' + p.name + '\n\n';
+    md += '| # | 题目 | 评分 |\n';
+    md += '|---|------|------|\n';
+    let susTotal = 0;
+    let allFilled = true;
+    for (let i = 0; i < 10; i++) {
+      const val = scores[i];
+      const label = SUS_QUESTIONS[i].replace(/^\d+\.\s*/, '');
+      md += '| ' + (i+1) + ' | ' + label + ' | ' + (val !== null && val !== undefined ? val : '-') + ' |\n';
+      if (val === null || val === undefined) allFilled = false;
+      else susTotal += (i % 2 === 0) ? (val - 1) : (5 - val);
+    }
+    const finalScore = allFilled ? Math.round(susTotal * 2.5) : null;
+    md += '\n**SUS 总分：' + (finalScore !== null ? finalScore + ' / 100' : '未完成') + '**\n\n';
+    md += '---\n\n';
+  });
+
+  downloadFile(md, 'echoes_sus_md_' + dateStr() + '.md', 'text/markdown;charset=utf-8');
+  showToast('SUS MD 已导出');
+}
+
+function exportInterviewsMD() {
+  let md = '# Echoes Phone · 访谈文本\n\n';
+  md += '> 导出时间：' + new Date().toLocaleString('zh-CN') + '\n\n';
+
+  let hasAny = false;
+  state.participants.forEach(p => {
+    const ivs = state.interviews[p.id] || [];
+    if (ivs.length === 0) return;
+    hasAny = true;
+    md += '## ' + p.name + '\n\n';
+    ivs.forEach((iv, idx) => {
+      md += '### 记录 #' + (idx + 1);
+      if (iv.label) md += ' · ' + iv.label;
+      if (iv.date) md += ' · ' + iv.date;
+      md += '\n\n';
+      md += (iv.text || '（无内容）') + '\n\n';
+    });
+    md += '---\n\n';
+  });
+
+  if (!hasAny) md += '（暂无访谈记录）\n';
+  downloadFile(md, 'echoes_interviews_md_' + dateStr() + '.md', 'text/markdown;charset=utf-8');
+  showToast('访谈 MD 已导出');
+}
+
+function exportSUS() {
+  let csv = 'participant';
+  for (let i = 0; i < 10; i++) csv += `,"Q${i+1}"`;
+  csv += ',SUS_Score,Completed\n';
+
+  state.participants.forEach(p => {
+    const scores = state.sus[p.id] || [];
+    let row = `"${escapeCsv(p.name)}"`;
+    let susTotal = 0;
+    let allFilled = true;
+    for (let i = 0; i < 10; i++) {
+      const val = scores[i];
+      row += `,${val !== null && val !== undefined ? val : ''}`;
+      if (val === null || val === undefined) allFilled = false;
+      else susTotal += (i % 2 === 0) ? (val - 1) : (5 - val);
+    }
+    row += `,${allFilled ? Math.round(susTotal * 2.5) : ''},${allFilled ? 'Yes' : 'No'}`;
+    csv += row + '\n';
+  });
+
+  downloadFile(csv, 'echoes_sus_' + dateStr() + '.csv', 'text/csv;charset=utf-8');
+  showToast('SUS 已导出');
+}
+
+function exportInterviews() {
+  let txt = 'Echoes Phone · 访谈文本\n导出时间：' + new Date().toLocaleString('zh-CN') + '\n\n';
+
+  state.participants.forEach(p => {
+    const ivs = state.interviews[p.id] || [];
+    if (ivs.length === 0) return;
+    txt += '═'.repeat(40) + '\n';
+    txt += '参与者：' + p.name + '\n';
+    ivs.forEach((iv, idx) => {
+      txt += '\n── 记录 #' + (idx + 1);
+      if (iv.label) txt += ' · ' + iv.label;
+      if (iv.date) txt += ' · ' + iv.date;
+      txt += ' ──\n';
+      txt += (iv.text || '(无内容)') + '\n';
+    });
+    txt += '\n';
+  });
+
+  if (txt.indexOf('── 记录') === -1) txt += '（暂无访谈记录）\n';
+  downloadFile(txt, 'echoes_interviews_' + dateStr() + '.txt', 'text/plain;charset=utf-8');
+  showToast('访谈文本已导出');
+}
+
+function exportJSON() {
+  const data = {
+    exportedAt: new Date().toISOString(),
+    participants: state.participants,
+    questions: state.questions,
+    responses: state.responses,
+    sus: state.sus,
+    interviews: state.interviews,
+  };
+  downloadFile(JSON.stringify(data, null, 2), 'echoes_backup_' + dateStr() + '.json', 'application/json');
+  showToast('JSON 完整备份已导出（数据未删除）');
+}
+
+function importJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.participants) throw new Error('格式不正确：缺少 participants');
+      if (!confirm('导入将覆盖当前所有数据（每日回答 + SUS + 访谈），确认继续？\n\n提示：可先导出现有数据做备份。')) return;
+      state.participants = data.participants;
+      state.responses = data.responses || {};
+      if (data.questions) state.questions = data.questions;
+      state.sus = data.sus || {};
+      state.interviews = data.interviews || {};
+      saveState();
+      renderAll();
+      showToast('导入成功');
+    } catch (err) {
+      showToast('导入失败：' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+/* ═══ Helpers ═══ */
+function renderAll() {
+  renderDayTabs();
+  renderParticipants();
+  renderQuestion();
+  renderResponses();
+  renderMatrix();
+  updateParticipantSelects();
+}
+
+function escapeHtml(s) {
+  const div = document.createElement('div');
+  div.textContent = s || '';
+  return div.innerHTML;
+}
+function escapeCsv(s) {
+  if (!s) return '';
+  return s.replace(/"/g, '""').replace(/\r?\n/g, ' ⏎ ');
+}
+function downloadFile(content, filename, mime) {
+  const blob = new Blob(['\uFEFF' + content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+function dateStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.remove('hidden');
+  setTimeout(() => t.classList.add('hidden'), 2500);
+}
+function showHelp() { document.getElementById('helpModal').classList.remove('hidden'); }
+function hideHelp() { document.getElementById('helpModal').classList.add('hidden'); }
+
+init();
+</script>
+</body>
+</html>
