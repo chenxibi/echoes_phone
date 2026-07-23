@@ -346,26 +346,32 @@
       <div class="export-options">
         <button class="btn btn-primary btn-sm" onclick="exportCSV('long')">⬇ CSV (长格式)</button>
         <button class="btn btn-primary btn-sm" onclick="exportCSV('wide')">⬇ CSV (宽格式)</button>
+        <button class="btn btn-primary btn-sm" onclick="exportResponsesMD()">⬇ 回答 MD</button>
         <button class="btn btn-sm" onclick="exportQuestions()">⬇ 题目 TXT</button>
+        <button class="btn btn-sm" onclick="exportQuestionsMD()">⬇ 题目 MD</button>
       </div>
       <div class="export-note">
         <strong>长格式</strong>：每行一条回答（participant, day, question, response），适合 SPSS/NVivo。<br>
         <strong>宽格式</strong>：每行一个参与者×天，首行为当日题目，适合快速浏览。<br>
-        <strong>题目 TXT</strong>：仅导出 7 天题目全文。
+        <strong>回答 MD</strong>：Markdown 格式，按参与者×天组织，含题目引用和回答全文。<br>
+        <strong>题目 TXT / MD</strong>：纯文本或 Markdown 格式的 7 天题目全文。
       </div>
     </div>
     <div style="border-top:1px solid var(--border);padding-top:12px;margin-bottom:12px">
       <h4 style="font-size:13px;margin-bottom:6px">SUS 问卷导出</h4>
       <div class="export-options">
         <button class="btn btn-primary btn-sm" onclick="exportSUS()">⬇ SUS CSV</button>
+        <button class="btn btn-sm" onclick="exportSUSMD()">⬇ SUS MD</button>
       </div>
-      <div class="export-note">每行一位参与者的 10 题评分 + 总分，自动计算正反向得分。</div>
+      <div class="export-note"><strong>SUS CSV / MD</strong>：每位参与者的 10 题评分 + 总分，自动计算正反向得分。</div>
     </div>
     <div style="border-top:1px solid var(--border);padding-top:12px;margin-bottom:12px">
       <h4 style="font-size:13px;margin-bottom:6px">访谈文本导出</h4>
       <div class="export-options">
         <button class="btn btn-primary btn-sm" onclick="exportInterviews()">⬇ 访谈 TXT</button>
+        <button class="btn btn-sm" onclick="exportInterviewsMD()">⬇ 访谈 MD</button>
       </div>
+      <div class="export-note"><strong>访谈 TXT / MD</strong>：纯文本或 Markdown 格式，按参与者分组的访谈逐字稿。</div>
     </div>
     <div style="border-top:1px solid var(--border);padding-top:12px">
       <h4 style="font-size:13px;margin-bottom:6px">完整备份 / 恢复</h4>
@@ -1078,6 +1084,101 @@ function exportQuestions() {
   }
   downloadFile(txt, 'echoes_questions_' + dateStr() + '.txt', 'text/plain;charset=utf-8');
   showToast('题目已导出');
+}
+
+/* ---- MD Exports ---- */
+
+function exportResponsesMD() {
+  const participants = getFilteredParticipants();
+  let md = '# Echoes Phone · 每日回答\n\n';
+  md += '> 导出时间：' + new Date().toLocaleString('zh-CN') + '\n\n';
+
+  participants.forEach(p => {
+    const hasAny = Array.from({length: DAYS}, (_, i) => i+1).some(d => {
+      const t = state.responses[p.id]?.['day' + d];
+      return t && t.trim().length > 0;
+    });
+    if (!hasAny) return;
+
+    md += '## ' + p.name + '\n\n';
+    for (let d = 1; d <= DAYS; d++) {
+      const text = state.responses[p.id]?.['day' + d] || '';
+      const qTitle = getDayTitle(d);
+      md += '### Day ' + d + (qTitle ? ' · ' + qTitle : '') + '\n\n';
+      md += '**题目**\n\n' + (state.questions['day' + d] || '').split('\n').map(l => '> ' + l).join('\n') + '\n\n';
+      md += '**回答**\n\n' + (text.trim() || '（未填写）') + '\n\n---\n\n';
+    }
+  });
+
+  downloadFile(md, 'echoes_responses_md_' + dateStr() + '.md', 'text/markdown;charset=utf-8');
+  showToast('回答 MD 已导出');
+}
+
+function exportQuestionsMD() {
+  let md = '# Echoes Phone · 7-Day Workbook 题目\n\n';
+  md += '> 导出时间：' + new Date().toLocaleString('zh-CN') + '\n\n';
+  for (let d = 1; d <= DAYS; d++) {
+    const q = state.questions['day' + d] || '';
+    const title = getDayTitle(d);
+    md += '## Day ' + d + (title ? ' · ' + title : '') + '\n\n';
+    md += q + '\n\n---\n\n';
+  }
+  downloadFile(md, 'echoes_questions_md_' + dateStr() + '.md', 'text/markdown;charset=utf-8');
+  showToast('题目 MD 已导出');
+}
+
+function exportSUSMD() {
+  let md = '# Echoes Phone · SUS 可用性问卷\n\n';
+  md += '> 导出时间：' + new Date().toLocaleString('zh-CN') + '\n\n';
+
+  state.participants.forEach(p => {
+    const scores = state.sus[p.id] || [];
+    if (scores.every(s => s === null || s === undefined)) return;
+
+    md += '## ' + p.name + '\n\n';
+    md += '| # | 题目 | 评分 |\n';
+    md += '|---|------|------|\n';
+    let susTotal = 0;
+    let allFilled = true;
+    for (let i = 0; i < 10; i++) {
+      const val = scores[i];
+      const label = SUS_QUESTIONS[i].replace(/^\d+\.\s*/, '');
+      md += '| ' + (i+1) + ' | ' + label + ' | ' + (val !== null && val !== undefined ? val : '-') + ' |\n';
+      if (val === null || val === undefined) allFilled = false;
+      else susTotal += (i % 2 === 0) ? (val - 1) : (5 - val);
+    }
+    const finalScore = allFilled ? Math.round(susTotal * 2.5) : null;
+    md += '\n**SUS 总分：' + (finalScore !== null ? finalScore + ' / 100' : '未完成') + '**\n\n';
+    md += '---\n\n';
+  });
+
+  downloadFile(md, 'echoes_sus_md_' + dateStr() + '.md', 'text/markdown;charset=utf-8');
+  showToast('SUS MD 已导出');
+}
+
+function exportInterviewsMD() {
+  let md = '# Echoes Phone · 访谈文本\n\n';
+  md += '> 导出时间：' + new Date().toLocaleString('zh-CN') + '\n\n';
+
+  let hasAny = false;
+  state.participants.forEach(p => {
+    const ivs = state.interviews[p.id] || [];
+    if (ivs.length === 0) return;
+    hasAny = true;
+    md += '## ' + p.name + '\n\n';
+    ivs.forEach((iv, idx) => {
+      md += '### 记录 #' + (idx + 1);
+      if (iv.label) md += ' · ' + iv.label;
+      if (iv.date) md += ' · ' + iv.date;
+      md += '\n\n';
+      md += (iv.text || '（无内容）') + '\n\n';
+    });
+    md += '---\n\n';
+  });
+
+  if (!hasAny) md += '（暂无访谈记录）\n';
+  downloadFile(md, 'echoes_interviews_md_' + dateStr() + '.md', 'text/markdown;charset=utf-8');
+  showToast('访谈 MD 已导出');
 }
 
 function exportSUS() {
