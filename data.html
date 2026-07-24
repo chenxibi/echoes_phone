@@ -373,6 +373,20 @@
       </div>
       <div class="export-note"><strong>访谈 TXT / MD</strong>：纯文本或 Markdown 格式，按参与者分组的访谈逐字稿。</div>
     </div>
+    <div style="border-top:1px solid var(--border);padding-top:12px;margin-bottom:12px">
+      <h4 style="font-size:13px;margin-bottom:6px">合并导出（回答 + 访谈）</h4>
+      <div class="export-selector">
+        <label>按参与者：</label>
+        <select id="exportCombinedParticipant" style="padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+          <option value="all">全部参与者</option>
+        </select>
+      </div>
+      <div class="export-options">
+        <button class="btn btn-primary btn-sm" onclick="exportCombinedCSV()">⬇ 合并 CSV</button>
+        <button class="btn btn-primary btn-sm" onclick="exportCombinedMD()">⬇ 合并 MD</button>
+      </div>
+      <div class="export-note"><strong>合并 CSV / MD</strong>：每位参与者的每日回答 + 访谈文本合并在同一份文件中导出。</div>
+    </div>
     <div style="border-top:1px solid var(--border);padding-top:12px">
       <h4 style="font-size:13px;margin-bottom:6px">完整备份 / 恢复</h4>
       <div class="export-options">
@@ -963,12 +977,12 @@ function autoSaveInterview(pid, idx, value) {
 }
 
 function updateParticipantSelects() {
-  ['susParticipant','interviewParticipant','exportParticipant'].forEach(selId => {
+  ['susParticipant','interviewParticipant','exportParticipant','exportCombinedParticipant'].forEach(selId => {
     const sel = document.getElementById(selId);
     if (!sel) return;
     const currentVal = sel.value;
     sel.innerHTML = '';
-    if (selId === 'exportParticipant') {
+    if (selId === 'exportParticipant' || selId === 'exportCombinedParticipant') {
       sel.innerHTML = '<option value="all">全部参与者</option>';
     }
     state.participants.forEach(p => {
@@ -1179,6 +1193,87 @@ function exportInterviewsMD() {
   if (!hasAny) md += '（暂无访谈记录）\n';
   downloadFile(md, 'echoes_interviews_md_' + dateStr() + '.md', 'text/markdown;charset=utf-8');
   showToast('访谈 MD 已导出');
+}
+
+/* ---- Combined Export ---- */
+
+function getCombinedFilteredParticipants() {
+  const sel = document.getElementById('exportCombinedParticipant');
+  if (!sel || sel.value === 'all') return state.participants;
+  const p = state.participants.find(x => x.id === sel.value);
+  return p ? [p] : state.participants;
+}
+
+function exportCombinedCSV() {
+  const participants = getCombinedFilteredParticipants();
+  let csv = 'participant,section,day,label,content,timestamp\n';
+
+  participants.forEach(p => {
+    // Daily responses
+    for (let d = 1; d <= DAYS; d++) {
+      const text = state.responses[p.id]?.['day' + d] || '';
+      if (!text.trim()) continue;
+      const meta = state.responses[p.id]?.['_meta_day' + d];
+      csv += `"${escapeCsv(p.name)}","每日回答","Day ${d}","${escapeCsv(getDayTitle(d))}","${escapeCsv(text)}","${meta?.savedAt || ''}"\n`;
+    }
+    // Interviews
+    (state.interviews[p.id] || []).forEach(iv => {
+      if (!iv.text || !iv.text.trim()) return;
+      const label = iv.label ? '访谈 · ' + iv.label : '访谈';
+      csv += `"${escapeCsv(p.name)}","访谈文本","","${escapeCsv(label)}","${escapeCsv(iv.text)}","${iv.date || ''}"\n`;
+    });
+  });
+
+  downloadFile(csv, 'echoes_combined_' + dateStr() + '.csv', 'text/csv;charset=utf-8');
+  showToast('合并 CSV 已导出');
+}
+
+function exportCombinedMD() {
+  const participants = getCombinedFilteredParticipants();
+  let md = '# Echoes Phone · 合并导出（回答 + 访谈）\n\n';
+  md += '> 导出时间：' + new Date().toLocaleString('zh-CN') + '\n\n';
+
+  participants.forEach(p => {
+    const hasResponses = Array.from({length: DAYS}, (_, i) => i+1).some(d => {
+      const t = state.responses[p.id]?.['day' + d];
+      return t && t.trim().length > 0;
+    });
+    const ivs = state.interviews[p.id] || [];
+    const hasInterviews = ivs.some(iv => iv.text && iv.text.trim());
+    if (!hasResponses && !hasInterviews) return;
+
+    md += '## ' + p.name + '\n\n';
+
+    // Daily responses
+    if (hasResponses) {
+      md += '### 📝 每日回答\n\n';
+      for (let d = 1; d <= DAYS; d++) {
+        const text = state.responses[p.id]?.['day' + d] || '';
+        if (!text.trim()) continue;
+        const qTitle = getDayTitle(d);
+        md += '#### Day ' + d + (qTitle ? ' · ' + qTitle : '') + '\n\n';
+        const q = state.questions['day' + d] || '';
+        md += '**题目**\n\n' + q.split('\n').map(l => '> ' + l).join('\n') + '\n\n';
+        md += '**回答**\n\n' + text.trim() + '\n\n---\n\n';
+      }
+    }
+
+    // Interviews
+    if (hasInterviews) {
+      md += '### 🎤 访谈文本\n\n';
+      ivs.forEach((iv, idx) => {
+        if (!iv.text || !iv.text.trim()) return;
+        md += '#### 记录 #' + (idx + 1);
+        if (iv.label) md += ' · ' + iv.label;
+        if (iv.date) md += ' · ' + iv.date;
+        md += '\n\n' + iv.text.trim() + '\n\n';
+      });
+      md += '---\n\n';
+    }
+  });
+
+  downloadFile(md, 'echoes_combined_' + dateStr() + '.md', 'text/markdown;charset=utf-8');
+  showToast('合并 MD 已导出');
 }
 
 function exportSUS() {
